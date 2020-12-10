@@ -11,12 +11,11 @@ from typing import (
     Dict,
     Optional,
     BinaryIO,
-    type_check_only
+    type_check_only,
+    Type
 )
 import enum
-from construct.lib import *
-from construct.expr import *
-from construct.version import *
+from construct.lib import Container, ListContainer, HexDisplayedBytes, HexDisplayedDict, HexDisplayedInteger
 
 StreamType = BinaryIO
 BufferType = Union[bytes, memoryview, bytearray]
@@ -100,7 +99,7 @@ class Construct(Generic[ParsedType, BuildTypes]):
     ) -> Array[ParsedType, BuildTypes]: ...
 
 @type_check_only
-class Context(Container[Any]):
+class Context(Container):
     _: Optional[Context]
     _params: Optional[Context]
     _root: Optional[Context]
@@ -112,7 +111,7 @@ class Context(Container[Any]):
     _index: Optional[int]
 
 ValueType = TypeVar("ValueType")
-ConstantOrContextCallable = Union[ValueType, Callable[[Context], Any]]
+ConstantOrContextLambda = Union[ValueType, Callable[[Context], Any]]
 
 class Subconstruct(Construct[ParsedType, BuildTypes]):
     def __init__(self, subcon: Construct[Any, Any]) -> None: ...
@@ -138,7 +137,7 @@ class Validator(SymmetricAdapter[Any, Any, ParsedType, Any]):
 # bytes and bits
 # ===============================================================================
 class Bytes(Construct[bytes, Union[bytes, bytearray, int]]):
-    def __init__(self, length: ConstantOrContextCallable[int]) -> None: ...
+    def __init__(self, length: ConstantOrContextLambda[int]) -> None: ...
 
 GreedyBytes: Construct[bytes, Union[bytes, bytearray, int]]
 
@@ -165,10 +164,10 @@ class FormatField(Construct[ParsedType, BuildTypes]):
     def __init__(self: FormatField[Any, Any], endianity: str, format: str) -> None: ...
 
 class BytesInteger(Construct[int, int]):
-    def __init__(self, length: ConstantOrContextCallable[int], signed: bool = ..., swapped: bool = ...) -> None: ...
+    def __init__(self, length: ConstantOrContextLambda[int], signed: bool = ..., swapped: bool = ...) -> None: ...
 
 class BitsInteger(Construct[int, int]):
-    def __init__(self, length: ConstantOrContextCallable[int], signed: bool = ..., swapped: bool = ...) -> None: ...
+    def __init__(self, length: ConstantOrContextLambda[int], signed: bool = ..., swapped: bool = ...) -> None: ...
 
 
 Bit: BitsInteger
@@ -240,7 +239,7 @@ class StringEncoded(Construct[str, str]):
         self, subcon: Construct[ParsedType, BuildTypes], encoding: ENCODING
     ) -> None: ...
 
-def PaddedString(length: ConstantOrContextCallable[int], encoding: StringEncoded.ENCODING) -> StringEncoded: ...
+def PaddedString(length: ConstantOrContextLambda[int], encoding: StringEncoded.ENCODING) -> StringEncoded: ...
 def PascalString(
     lengthfield: Construct[ParsedType, BuildTypes], encoding: StringEncoded.ENCODING
 ) -> StringEncoded: ...
@@ -259,7 +258,7 @@ class EnumIntegerString(str):
     def new(intvalue: int, stringvalue: str) -> EnumIntegerString: ...
 
 class Enum(Adapter[Union[EnumInteger, EnumIntegerString], Union[int, str], int, int]):
-    def __init__(self, subcon: Construct[int, int], *merge: Union[enum.IntEnum, enum.IntFlag], **mapping: int) -> None: ...
+    def __init__(self, subcon: Construct[int, int], *merge: Union[Type[enum.IntEnum], Type[enum.IntFlag]], **mapping: int) -> None: ...
     def __getattr__(self, name: str) -> EnumIntegerString: ...
 
 
@@ -267,7 +266,7 @@ class BitwisableString(str):
     def __or__(self, other: BitwisableString) -> BitwisableString: ...
 
 class FlagsEnum(Adapter[Container[bool], Union[int, str, Dict[str, bool]], int, int]):
-    def __init__(self, subcon: Construct[int, int], *merge: Union[enum.IntEnum, enum.IntFlag], **flags: int) -> None: ...
+    def __init__(self, subcon: Construct[int, int], *merge: Union[Type[enum.IntEnum], Type[enum.IntFlag]], **flags: int) -> None: ...
     def __getattr__(self, name: str) -> BitwisableString: ...
 
 
@@ -347,7 +346,7 @@ class Sequence(Construct[ListContainer[ParsedType], List[BuildTypes]]):
 class Array(Subconstruct[ListContainer[ParsedType], List[BuildTypes]]):
     def __init__(
         self,
-        count: ConstantOrContextCallable[int],
+        count: ConstantOrContextLambda[int],
         subcon: Construct[ParsedType, BuildTypes],
         discard: bool = ...,
     ) -> None: ...
@@ -398,25 +397,25 @@ def Const(value: bytes, subcon: Construct[ParsedType, BuildTypes]) -> Subconstru
 
 
 class Computed(Construct[ValueType, Any]):
-    def __init__(self, func: ConstantOrContextCallable[ValueType]) -> None: ...
+    def __init__(self, func: ConstantOrContextLambda[ValueType]) -> None: ...
 
 Index: Construct[int, Any]
 
 class Rebuild(Subconstruct[ValueType, BuildTypes]):
-    def __init__(self, subcon: Construct[ParsedType, BuildTypes], func: ConstantOrContextCallable[ValueType]) -> None: ...
+    def __init__(self, subcon: Construct[ParsedType, BuildTypes], func: ConstantOrContextLambda[ValueType]) -> None: ...
 
 class Default(Subconstruct[ValueType, Union[None, Any]]):
-    def __init__(self, subcon: Construct[ParsedType, Any], value: ConstantOrContextCallable[ValueType]) -> None: ...
+    def __init__(self, subcon: Construct[ParsedType, Any], value: ConstantOrContextLambda[ValueType]) -> None: ...
 
 class Check(Construct[None, None]):
-    def __init__(self, func: ConstantOrContextCallable[bool]) -> None: ...
+    def __init__(self, func: ConstantOrContextLambda[bool]) -> None: ...
 
 Error: Construct[None, None]
 
 class FocusedSeq(Construct[Any, Any]):
     def __init__(
         self,
-        parsebuildfrom: ConstantOrContextCallable[str],
+        parsebuildfrom: ConstantOrContextLambda[str],
         *subcons: Construct[Any, Any],
         **subconskw: Construct[Any, Any]
     ) -> None: ...
@@ -475,16 +474,16 @@ def Hex(
 #===============================================================================
 # alignment and padding
 #===============================================================================
-def Padding(length: ConstantOrContextCallable[int], pattern: bytes = ...) -> Padded[None, None]: ...
+def Padding(length: ConstantOrContextLambda[int], pattern: bytes = ...) -> Padded[None, None]: ...
 
 class Padded(Subconstruct[ParsedType, BuildTypes]):
-    def __init__(self, length: ConstantOrContextCallable[int], subcon: Construct[ParsedType, BuildTypes], pattern: bytes = ...) -> None: ...
+    def __init__(self, length: ConstantOrContextLambda[int], subcon: Construct[ParsedType, BuildTypes], pattern: bytes = ...) -> None: ...
 
 
 class Aligned(Subconstruct[ParsedType, BuildTypes]):
-    def __init__(self, modulus: ConstantOrContextCallable[int], subcon: Construct[ParsedType, BuildTypes], pattern: bytes = ...) -> None: ...
+    def __init__(self, modulus: ConstantOrContextLambda[int], subcon: Construct[ParsedType, BuildTypes], pattern: bytes = ...) -> None: ...
 
-def AlignedStruct(modulus: ConstantOrContextCallable[int], *subcons: Construct[Any, Any], **subconskw: Construct[Any, Any]) -> Struct: ...
+def AlignedStruct(modulus: ConstantOrContextLambda[int], *subcons: Construct[Any, Any], **subconskw: Construct[Any, Any]) -> Struct: ...
 
 def BitStruct(*subcons: Construct[Any, Any], **subconskw: Construct[Any, Any]) -> Struct: ...
 

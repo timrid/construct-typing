@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import Any, Type, Dict, TYPE_CHECKING, TypeVar, Union
 import typing
-from construct.core import Construct, Adapter
+from construct.core import Construct, Adapter, Struct
 from construct.lib.containers import Container
 
 
