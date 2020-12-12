@@ -2,7 +2,7 @@
 
 import enum
 from .declarativeunittest import common, raises
-from construct.core import (
+from construct import (
     Int8ub,
     Int16ub,
     Const,
@@ -26,12 +26,12 @@ def test_typed_struct():
 
     common(TypedStruct(Container1), b"\x00\x01\x02", Container1(a=1, b=2), 3)
 
-    class Container1Reversing(TypedContainer):
+    class Container1Swapped(TypedContainer):
         a: Subcon(Int16ub)
         b: Subcon(Int8ub)
 
     common(
-        TypedStruct(Container1Reversing, swapped=True),
+        TypedStruct(Container1Swapped, swapped=True),
         b"\x02\x00\x01",
         Container(a=1, b=2),
         3,

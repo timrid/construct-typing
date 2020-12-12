@@ -101,13 +101,14 @@ else:
 
 if TYPE_CHECKING:
     ContainerType = TypeVar("ContainerType", bound=TypedContainer)
-    class TypedStruct(Construct[ContainerType, Dict[str, Any]]):
+    class TypedStruct(Adapter[Container[Any], Dict[str, Any], ContainerType, Dict[str, Any]]):
         def __init__(self, container_type: Type[ContainerType], swapped: bool = False) -> None: ...
 else:
-    class TypedStruct(Struct):
+    class TypedStruct(Adapter):
         def __init__(self, container_type, swapped = False):
             if not issubclass(container_type, TypedContainer):
                 raise TypeError("the subcon has to be a TypedContainer")
+            self.container_type = container_type
 
             # extract the construct formats from the struct_type
             subcons = {}
@@ -118,4 +119,11 @@ else:
             for subcon_name, subcon_format in subcon_items:
                 subcons[subcon_name] = subcon_format
 
-            super(TypedStruct, self).__init__(**subcons)
+            # init Adatper with a Struct as subcon
+            super(TypedStruct, self).__init__(Struct(**subcons))
+
+        def _decode(self, obj, context, path):
+            return self.container_type(obj)
+
+        def _encode(self, obj, context, path):
+            return obj
