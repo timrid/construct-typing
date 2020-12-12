@@ -99,21 +99,27 @@ class Context(Container[t.Any]):
 ValueType = t.TypeVar("ValueType")
 ConstantOrContextLambda = t.Union[ValueType, t.Callable[[Context], t.Any]]
 
-class Subconstruct(Construct[ParsedType, BuildTypes]):
-    def __init__(self, subcon: Construct[t.Any, t.Any]) -> None: ...
+SubconParsedType = t.TypeVar("SubconParsedType")
+SubconBuildTypes = t.TypeVar("SubconBuildTypes")
 
-AdaptedParsedType = t.TypeVar("AdaptedParsedType")  # new parsed type that the adapter creates from the original parsed type
+@t.type_check_only
+class _Subconstruct(t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes], Construct[ParsedType, BuildTypes]):
+    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes]) -> None: ...
+
+def Subconstruct(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> _Subconstruct[SubconParsedType, SubconBuildTypes, t.Any, t.Any]: ...
+
+AdaptedParsedType = t.TypeVar("AdaptedParsedType")
 AdaptedBuildTypes = t.TypeVar("AdaptedBuildTypes")
 
-class Adapter(t.Generic[AdaptedParsedType, AdaptedBuildTypes, ParsedType, BuildTypes], Subconstruct[AdaptedParsedType, AdaptedBuildTypes]):
-    def __init__(self, subcon: Construct[ParsedType, BuildTypes]) -> None: ...
-    def _decode(self, obj: ParsedType, context: Context, path: PathType) -> AdaptedParsedType: ...
-    def _encode(self, obj: AdaptedBuildTypes, context: Context, path: PathType) -> BuildTypes: ...
+class Adapter(t.Generic[AdaptedParsedType, AdaptedBuildTypes, SubconParsedType, SubconBuildTypes], _Subconstruct[SubconParsedType, SubconBuildTypes, AdaptedParsedType, AdaptedBuildTypes]):
+    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes]) -> None: ...
+    def _decode(self, obj: SubconParsedType, context: Context, path: PathType) -> AdaptedParsedType: ...
+    def _encode(self, obj: AdaptedBuildTypes, context: Context, path: PathType) -> SubconBuildTypes: ...
 
-class SymmetricAdapter(Adapter[AdaptedParsedType, AdaptedBuildTypes, ParsedType, BuildTypes]): ...
+class SymmetricAdapter(Adapter[AdaptedParsedType, AdaptedBuildTypes, SubconParsedType, SubconBuildTypes]): ...
 
-class Validator(SymmetricAdapter[t.Any, t.Any, ParsedType, t.Any]):
-    def _validate(self, obj: ParsedType, context: Context, path: PathType) -> bool: ...
+class Validator(SymmetricAdapter[t.Any, t.Any, SubconParsedType, t.Any]):
+    def _validate(self, obj: SubconParsedType, context: Context, path: PathType) -> bool: ...
 
 # TODO: Tunnel
 
@@ -329,26 +335,26 @@ class Sequence(Construct[ListContainer[ParsedType], t.List[BuildTypes]]):
 # ===============================================================================
 # arrays ranges and repeaters
 # ===============================================================================
-class Array(Subconstruct[ListContainer[ParsedType], t.List[BuildTypes]]):
+class Array(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
     def __init__(
         self,
         count: ConstantOrContextLambda[int],
-        subcon: Construct[ParsedType, BuildTypes],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
         discard: bool = ...,
     ) -> None: ...
 
-class GreedyRange(Subconstruct[ListContainer[ParsedType], t.List[BuildTypes]]):
+class GreedyRange(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
     def __init__(
         self,
-        subcon: Construct[ParsedType, BuildTypes],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
         discard: bool = ...
     ) -> None: ...
 
-class RepeatUntil(Subconstruct[ListContainer[ParsedType], t.List[BuildTypes]]):
+class RepeatUntil(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
     def __init__(
         self,
-        predicate: t.Union[bool, t.Callable[[Construct[ParsedType, BuildTypes], ListContainer[ParsedType], Context], bool]], 
-        subcon: Construct[ParsedType, BuildTypes], 
+        predicate: t.Union[bool, t.Callable[[Construct[SubconParsedType, SubconBuildTypes], ListContainer[SubconParsedType], Context], bool]], 
+        subcon: Construct[SubconParsedType, SubconBuildTypes], 
         discard: bool = ...
     ) -> None: ...
 
@@ -375,11 +381,13 @@ class RepeatUntil(Subconstruct[ListContainer[ParsedType], t.List[BuildTypes]]):
 #              d: Subcon(Const(b"\x00"))
 #
 # Workaround: We pretend that this class it is a method so that we can use @t.overload. 
+@t.type_check_only
+class _Const(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]): ...
 
 @t.overload
-def Const(value: bytes) -> Subconstruct[bytes, t.Union[bytes, bytearray, int]]: ...
+def Const(value: bytes) -> _Const[bytes, t.Union[bytes, bytearray, int]]: ...
 @t.overload
-def Const(value: bytes, subcon: Construct[ParsedType, BuildTypes]) -> Subconstruct[ParsedType, BuildTypes]: ...
+def Const(value: SubconBuildTypes, subcon: Construct[SubconParsedType, SubconBuildTypes]) -> _Const[SubconParsedType, SubconBuildTypes]: ...
 
 
 class Computed(Construct[ValueType, t.Any]):
@@ -387,11 +395,11 @@ class Computed(Construct[ValueType, t.Any]):
 
 Index: Construct[int, t.Any]
 
-class Rebuild(Subconstruct[ValueType, BuildTypes]):
-    def __init__(self, subcon: Construct[ParsedType, BuildTypes], func: ConstantOrContextLambda[ValueType]) -> None: ...
+class Rebuild(_Subconstruct[SubconParsedType, SubconBuildTypes, ValueType, SubconBuildTypes]):
+    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes], func: ConstantOrContextLambda[ValueType]) -> None: ...
 
-class Default(Subconstruct[ValueType, t.Union[None, t.Any]]):
-    def __init__(self, subcon: Construct[ParsedType, t.Any], value: ConstantOrContextLambda[ValueType]) -> None: ...
+class Default(_Subconstruct[SubconParsedType, SubconBuildTypes, ValueType, t.Union[None, t.Any]]):
+    def __init__(self, subcon: Construct[SubconParsedType, t.Any], value: ConstantOrContextLambda[ValueType]) -> None: ...
 
 class Check(Construct[None, None]):
     def __init__(self, func: ConstantOrContextLambda[bool]) -> None: ...
@@ -516,12 +524,12 @@ class StopIf(Construct[None, None]):
 #===============================================================================
 def Padding(length: ConstantOrContextLambda[int], pattern: bytes = ...) -> Padded[None, None]: ...
 
-class Padded(Subconstruct[ParsedType, BuildTypes]):
-    def __init__(self, length: ConstantOrContextLambda[int], subcon: Construct[ParsedType, BuildTypes], pattern: bytes = ...) -> None: ...
+class Padded(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(self, length: ConstantOrContextLambda[int], subcon: Construct[SubconParsedType, SubconBuildTypes], pattern: bytes = ...) -> None: ...
 
 
-class Aligned(Subconstruct[ParsedType, BuildTypes]):
-    def __init__(self, modulus: ConstantOrContextLambda[int], subcon: Construct[ParsedType, BuildTypes], pattern: bytes = ...) -> None: ...
+class Aligned(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(self, modulus: ConstantOrContextLambda[int], subcon: Construct[SubconParsedType, SubconBuildTypes], pattern: bytes = ...) -> None: ...
 
 def AlignedStruct(modulus: ConstantOrContextLambda[int], *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]) -> Struct: ...
 
@@ -531,7 +539,6 @@ def BitStruct(*subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t
 #===============================================================================
 # stream manipulation
 #===============================================================================
-
 Tell: Construct[int, None]
 Pass: Construct[None, None]
 Terminated: Construct[None, None]
