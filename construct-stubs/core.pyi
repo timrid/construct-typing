@@ -1,26 +1,12 @@
-from typing import (
-    Callable,
-    Generic,
-    NoReturn,
-    TypeVar,
-    Union,
-    List,
-    Any,
-    Literal,
-    overload,
-    Dict,
-    Optional,
-    BinaryIO,
-    type_check_only,
-    Type
-)
+import typing as t
 import enum
 from construct.lib import Container, ListContainer, HexDisplayedBytes, HexDisplayedDict, HexDisplayedInteger
+# unfortunately, there are a few duplications with "typing", e.g. Union and Optional, which is why the t. prefix must be used everywhere
 
-StreamType = BinaryIO
-BufferType = Union[bytes, memoryview, bytearray]
+StreamType = t.BinaryIO
+BufferType = t.Union[bytes, memoryview, bytearray]
 PathType = str
-ContextKWType = Any
+ContextKWType = t.Any
 
 # ===============================================================================
 # exceptions
@@ -58,10 +44,10 @@ class CancelParsing(ConstructError): ...
 # ===============================================================================
 # abstract constructs
 # ===============================================================================
-ParsedType = TypeVar("ParsedType")
-BuildTypes = TypeVar("BuildTypes")
+ParsedType = t.TypeVar("ParsedType")
+BuildTypes = t.TypeVar("BuildTypes")
 
-class Construct(Generic[ParsedType, BuildTypes]):
+class Construct(t.Generic[ParsedType, BuildTypes]):
     def parse(self, data: BufferType, **contextkw: ContextKWType) -> ParsedType: ...
     def parse_stream(
         self, stream: StreamType, **contextkw: ContextKWType
@@ -83,50 +69,50 @@ class Construct(Generic[ParsedType, BuildTypes]):
     def benchmark(self, sampledata: BufferType, filename: str = ...) -> str: ...
     def export_ksy(self, schemaname: str = ..., filename: str = ...) -> str: ...
     def __rtruediv__(self, name: str) -> Construct[ParsedType, BuildTypes]: ...
-    __rdiv__: Callable[[str], Construct[ParsedType, BuildTypes]]
+    __rdiv__: t.Callable[[str], Construct[ParsedType, BuildTypes]]
     def __mul__(
         self,
-        other: Union[str, bytes, Callable[[ParsedType, Context], NoReturn]],
+        other: t.Union[str, bytes, t.Callable[[ParsedType, Context], t.NoReturn]],
     ) -> Construct[ParsedType, BuildTypes]: ...
     def __rmul__(
         self,
-        other: Union[str, bytes, Callable[[ParsedType, Context], NoReturn]],
+        other: t.Union[str, bytes, t.Callable[[ParsedType, Context], t.NoReturn]],
     ) -> Construct[ParsedType, BuildTypes]: ...
-    def __add__(self, other: Construct[Any, Any]) -> Struct: ...
-    def __rshift__(self, other: Construct[Any, Any]) -> Sequence[Any, Any]: ...
+    def __add__(self, other: Construct[t.Any, t.Any]) -> Struct: ...
+    def __rshift__(self, other: Construct[t.Any, t.Any]) -> Sequence[t.Any, t.Any]: ...
     def __getitem__(
-        self, count: Union[int, Callable[[Context], int]]
+        self, count: t.Union[int, t.Callable[[Context], int]]
     ) -> Array[ParsedType, BuildTypes]: ...
 
-@type_check_only
-class Context(Container):
-    _: Optional[Context]
-    _params: Optional[Context]
-    _root: Optional[Context]
+@t.type_check_only
+class Context(Container[t.Any]):
+    _: t.Optional[Context]
+    _params: t.Optional[Context]
+    _root: t.Optional[Context]
     _parsing: bool
     _building: bool
     _sizing: bool
-    _subcons: Container[Construct[Any, Any]]
-    _io: Optional[StreamType]
-    _index: Optional[int]
+    _subcons: Container[Construct[t.Any, t.Any]]
+    _io: t.Optional[StreamType]
+    _index: t.Optional[int]
 
-ValueType = TypeVar("ValueType")
-ConstantOrContextLambda = Union[ValueType, Callable[[Context], Any]]
+ValueType = t.TypeVar("ValueType")
+ConstantOrContextLambda = t.Union[ValueType, t.Callable[[Context], t.Any]]
 
 class Subconstruct(Construct[ParsedType, BuildTypes]):
-    def __init__(self, subcon: Construct[Any, Any]) -> None: ...
+    def __init__(self, subcon: Construct[t.Any, t.Any]) -> None: ...
 
-AdaptedParsedType = TypeVar("AdaptedParsedType")  # new parsed type that the adapter creates from the original parsed type
-AdaptedBuildTypes = TypeVar("AdaptedBuildTypes")
+AdaptedParsedType = t.TypeVar("AdaptedParsedType")  # new parsed type that the adapter creates from the original parsed type
+AdaptedBuildTypes = t.TypeVar("AdaptedBuildTypes")
 
-class Adapter(Generic[AdaptedParsedType, AdaptedBuildTypes, ParsedType, BuildTypes], Subconstruct[AdaptedParsedType, AdaptedBuildTypes]):
+class Adapter(t.Generic[AdaptedParsedType, AdaptedBuildTypes, ParsedType, BuildTypes], Subconstruct[AdaptedParsedType, AdaptedBuildTypes]):
     def __init__(self, subcon: Construct[ParsedType, BuildTypes]) -> None: ...
     def _decode(self, obj: ParsedType, context: Context, path: PathType) -> AdaptedParsedType: ...
     def _encode(self, obj: AdaptedBuildTypes, context: Context, path: PathType) -> BuildTypes: ...
 
 class SymmetricAdapter(Adapter[AdaptedParsedType, AdaptedBuildTypes, ParsedType, BuildTypes]): ...
 
-class Validator(SymmetricAdapter[Any, Any, ParsedType, Any]):
+class Validator(SymmetricAdapter[t.Any, t.Any, ParsedType, t.Any]):
     def _validate(self, obj: ParsedType, context: Context, path: PathType) -> bool: ...
 
 # TODO: Tunnel
@@ -136,10 +122,10 @@ class Validator(SymmetricAdapter[Any, Any, ParsedType, Any]):
 # ===============================================================================
 # bytes and bits
 # ===============================================================================
-class Bytes(Construct[bytes, Union[bytes, bytearray, int]]):
+class Bytes(Construct[bytes, t.Union[bytes, bytearray, int]]):
     def __init__(self, length: ConstantOrContextLambda[int]) -> None: ...
 
-GreedyBytes: Construct[bytes, Union[bytes, bytearray, int]]
+GreedyBytes: Construct[bytes, t.Union[bytes, bytearray, int]]
 
 def Bitwise(
     subcon: Construct[ParsedType, BuildTypes]
@@ -153,15 +139,15 @@ def Bytewise(
 # integers and floats
 # ===============================================================================
 class FormatField(Construct[ParsedType, BuildTypes]):
-    ENDIANITY = Union[Literal["=", "<", ">"], str]
-    FORMAT_INT = Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
-    FORMAT_FLOAT = Literal["f", "d", "e"]
-    @overload
+    ENDIANITY = t.Union[t.Literal["=", "<", ">"], str]
+    FORMAT_INT = t.Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
+    FORMAT_FLOAT = t.Literal["f", "d", "e"]
+    @t.overload
     def __init__(self: FormatField[int, int], endianity: str, format: FORMAT_INT) -> None: ...
-    @overload
+    @t.overload
     def __init__(self: FormatField[float, float], endianity: str, format: FORMAT_FLOAT) -> None: ...
-    @overload
-    def __init__(self: FormatField[Any, Any], endianity: str, format: str) -> None: ...
+    @t.overload
+    def __init__(self: FormatField[t.Any, t.Any], endianity: str, format: str) -> None: ...
 
 class BytesInteger(Construct[int, int]):
     def __init__(self, length: ConstantOrContextLambda[int], signed: bool = ..., swapped: bool = ...) -> None: ...
@@ -231,10 +217,10 @@ VarInt: Construct[int, int]
 # strings
 # ===============================================================================
 class StringEncoded(Construct[str, str]):
-    ENCODING_1 = Literal["ascii", "utf8", "utf_8", "u8"]
-    ENCODING_2 = Literal["utf16", "utf_16", "u16", "utf_16_be", "utf_16_le"]
-    ENCODING_4 = Literal["utf32", "utf_32", "u32", "utf_32_be", "utf_32_le"]
-    ENCODING = Union[str, ENCODING_1, ENCODING_2, ENCODING_4]
+    ENCODING_1 = t.Literal["ascii", "utf8", "utf_8", "u8"]
+    ENCODING_2 = t.Literal["utf16", "utf_16", "u16", "utf_16_be", "utf_16_le"]
+    ENCODING_4 = t.Literal["utf32", "utf_32", "u32", "utf_32_be", "utf_32_le"]
+    ENCODING = t.Union[str, ENCODING_1, ENCODING_2, ENCODING_4]
     def __init__(
         self, subcon: Construct[ParsedType, BuildTypes], encoding: ENCODING
     ) -> None: ...
@@ -257,27 +243,27 @@ class EnumIntegerString(str):
     @staticmethod
     def new(intvalue: int, stringvalue: str) -> EnumIntegerString: ...
 
-class Enum(Adapter[Union[EnumInteger, EnumIntegerString], Union[int, str], int, int]):
-    def __init__(self, subcon: Construct[int, int], *merge: Union[Type[enum.IntEnum], Type[enum.IntFlag]], **mapping: int) -> None: ...
+class Enum(Adapter[t.Union[EnumInteger, EnumIntegerString], t.Union[int, str], int, int]):
+    def __init__(self, subcon: Construct[int, int], *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]], **mapping: int) -> None: ...
     def __getattr__(self, name: str) -> EnumIntegerString: ...
 
 
 class BitwisableString(str):
     def __or__(self, other: BitwisableString) -> BitwisableString: ...
 
-class FlagsEnum(Adapter[Container[bool], Union[int, str, Dict[str, bool]], int, int]):
-    def __init__(self, subcon: Construct[int, int], *merge: Union[Type[enum.IntEnum], Type[enum.IntFlag]], **flags: int) -> None: ...
+class FlagsEnum(Adapter[Container[bool], t.Union[int, str, t.Dict[str, bool]], int, int]):
+    def __init__(self, subcon: Construct[int, int], *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]], **flags: int) -> None: ...
     def __getattr__(self, name: str) -> BitwisableString: ...
 
 
 # ===============================================================================
 # structures and sequences
 # ===============================================================================
-class Struct(Construct[Container[Any], Dict[str, Any]]):
+class Struct(Construct[Container[t.Any], t.Dict[str, t.Any]]):
     def __init__(
         self,
-        *subcons: Construct[Any, Any],
-        **subconskw: Construct[Any, Any]
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any]
     ) -> None: ...
 
 # There are two possible alternatives for the "Struct" stub, so that a "Struct" automatically knows, which
@@ -288,7 +274,7 @@ class Struct(Construct[Container[Any], Dict[str, Any]]):
 
 # Alternative 1:
 # --------------
-# class StructAlternative1(Construct[Container[ParsedType], Dict[str, BuildTypes]]):
+# class StructAlternative1(Construct[Container[ParsedType], t.Dict[str, BuildTypes]]):
 #     def __init__(
 #         self, *subcons: Construct[ParsedType, BuildTypes], **subconskw: Construct[ParsedType, BuildTypes]
 #     ) -> None: ...
@@ -296,46 +282,46 @@ class Struct(Construct[Container[Any], Dict[str, Any]]):
 # s_alt1 = StructAlternative1(a=CString("utf8"), b=BytesInteger(2))
 
 # this one complains about 
-# - s_alt1:          Type of "s_alt1" is partially unknown
-#                    Type of "s_alt1" is "StructAlternative1[Unknown, Unknown]" Pylance (reportUnknownVariableType)
+# - s_alt1:          t.Type of "s_alt1" is partially unknown
+#                    t.Type of "s_alt1" is "StructAlternative1[Unknown, Unknown]" Pylance (reportUnknownVariableType)
 # - CString("utf8"): Argument of type "StringEncoded" cannot be assigned to parameter "a" of type "Construct[ParsedType, BuildTypes]" in function "__init__"
-#                    TypeVar "ParsedType" is invariant
-#                    Type "str | int" cannot be assigned to type "str" Pylance (reportGeneralTypeIssues)
+#                    t.TypeVar "ParsedType" is invariant
+#                    t.Type "str | int" cannot be assigned to type "str" Pylance (reportGeneralTypeIssues)
 # - BytesInteger(2): Argument of type "BytesInteger" cannot be assigned to parameter "b" of type "Construct[ParsedType, BuildTypes]" in function "__init__"
-#                    TypeVar "ParsedType" is invariant
-#                    Type "str | int" cannot be assigned to type "int" Pylance (reportGeneralTypeIssues)
+#                    t.TypeVar "ParsedType" is invariant
+#                    t.Type "str | int" cannot be assigned to type "int" Pylance (reportGeneralTypeIssues)
 
 # Alternative 2:
 # --------------
-# def StructAlternative2(*subcons: Construct[ParsedType, BuildTypes], **subconskw: Construct[ParsedType, BuildTypes]) -> Construct[Container[ParsedType], Dict[str, BuildTypes]]: ...
+# def StructAlternative2(*subcons: Construct[ParsedType, BuildTypes], **subconskw: Construct[ParsedType, BuildTypes]) -> Construct[Container[ParsedType], t.Dict[str, BuildTypes]]: ...
 
 # s_alt2 = StructAlternative2(a=CString("utf8"), b=BytesInteger(2))
 
 # This one is a little bit better than the "StructAlternative1", because "s_alt2" is correctly recognised
-# as "Construct[Container[str | int], Dict[str, str | int]]". But it does not reflect the real implementation,
+# as "Construct[Container[str | int], t.Dict[str, str | int]]". But it does not reflect the real implementation,
 # because "Struct" is implemented as a class.
 
 # this one complains about:
 # - CString("utf8"): Argument of type "StringEncoded" cannot be assigned to parameter "a" of type "Construct[ParsedType, BuildTypes]" in function "StructAlternative2"
-#                    TypeVar "ParsedType" is invariant
-#                    Type "str | int" cannot be assigned to type "str"Pylance (reportGeneralTypeIssues)
+#                    t.TypeVar "ParsedType" is invariant
+#                    t.Type "str | int" cannot be assigned to type "str"Pylance (reportGeneralTypeIssues)
 # - BytesInteger(2): Argument of type "BytesInteger" cannot be assigned to parameter "b" of type "Construct[ParsedType, BuildTypes]" in function "StructAlternative2"
-#                    TypeVar "ParsedType" is invariant
-#                    Type "str | int" cannot be assigned to type "int"Pylance (reportGeneralTypeIssues)
+#                    t.TypeVar "ParsedType" is invariant
+#                    t.Type "str | int" cannot be assigned to type "int"Pylance (reportGeneralTypeIssues)
 
 
-class Sequence(Construct[ListContainer[ParsedType], List[BuildTypes]]):
-    @overload
+class Sequence(Construct[ListContainer[ParsedType], t.List[BuildTypes]]):
+    @t.overload
     def __init__(
         self: Sequence[ParsedType, BuildTypes],
         *subcons: Construct[ParsedType, BuildTypes],
         **subconskw: Construct[ParsedType, BuildTypes]
     ) -> None: ...
-    @overload
+    @t.overload
     def __init__(
-        self: Sequence[Any, Any],
-        *subcons: Construct[Any, Any],
-        **subconskw: Construct[Any, Any]
+        self: Sequence[t.Any, t.Any],
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any]
     ) -> None: ...
 
 # There are two possible alternatives for the "Sequence" stub. These work the same way as with "Struct".
@@ -343,7 +329,7 @@ class Sequence(Construct[ListContainer[ParsedType], List[BuildTypes]]):
 # ===============================================================================
 # arrays ranges and repeaters
 # ===============================================================================
-class Array(Subconstruct[ListContainer[ParsedType], List[BuildTypes]]):
+class Array(Subconstruct[ListContainer[ParsedType], t.List[BuildTypes]]):
     def __init__(
         self,
         count: ConstantOrContextLambda[int],
@@ -351,17 +337,17 @@ class Array(Subconstruct[ListContainer[ParsedType], List[BuildTypes]]):
         discard: bool = ...,
     ) -> None: ...
 
-class GreedyRange(Subconstruct[ListContainer[ParsedType], List[BuildTypes]]):
+class GreedyRange(Subconstruct[ListContainer[ParsedType], t.List[BuildTypes]]):
     def __init__(
         self,
         subcon: Construct[ParsedType, BuildTypes],
         discard: bool = ...
     ) -> None: ...
 
-class RepeatUntil(Subconstruct[ListContainer[ParsedType], List[BuildTypes]]):
+class RepeatUntil(Subconstruct[ListContainer[ParsedType], t.List[BuildTypes]]):
     def __init__(
         self,
-        predicate: Union[bool, Callable[[Construct[ParsedType, BuildTypes], ListContainer[ParsedType], Context], bool]], 
+        predicate: t.Union[bool, t.Callable[[Construct[ParsedType, BuildTypes], ListContainer[ParsedType], Context], bool]], 
         subcon: Construct[ParsedType, BuildTypes], 
         discard: bool = ...
     ) -> None: ...
@@ -371,12 +357,12 @@ class RepeatUntil(Subconstruct[ListContainer[ParsedType], List[BuildTypes]]):
 # ===============================================================================
 
 # class Const(Subconstruct[ParsedType, BuildTypes]):
-#     @overload
+#     @t.overload
 #     def __init__(
-#         self: Const[bytes, Union[bytes, bytearray, int]],
+#         self: Const[bytes, t.Union[bytes, bytearray, int]],
 #         value: bytes,
 #     ) -> None: ...
-#     @overload
+#     @t.overload
 #     def __init__(
 #         self,
 #         value: BuildTypes,
@@ -388,87 +374,118 @@ class RepeatUntil(Subconstruct[ListContainer[ParsedType], List[BuildTypes]]):
 #          class Container3(TypedContainer):
 #              d: Subcon(Const(b"\x00"))
 #
-# Workaround: We pretend that this class it is a method so that we can use @overload. 
+# Workaround: We pretend that this class it is a method so that we can use @t.overload. 
 
-@overload
-def Const(value: bytes) -> Subconstruct[bytes, Union[bytes, bytearray, int]]: ...
-@overload
+@t.overload
+def Const(value: bytes) -> Subconstruct[bytes, t.Union[bytes, bytearray, int]]: ...
+@t.overload
 def Const(value: bytes, subcon: Construct[ParsedType, BuildTypes]) -> Subconstruct[ParsedType, BuildTypes]: ...
 
 
-class Computed(Construct[ValueType, Any]):
+class Computed(Construct[ValueType, t.Any]):
     def __init__(self, func: ConstantOrContextLambda[ValueType]) -> None: ...
 
-Index: Construct[int, Any]
+Index: Construct[int, t.Any]
 
 class Rebuild(Subconstruct[ValueType, BuildTypes]):
     def __init__(self, subcon: Construct[ParsedType, BuildTypes], func: ConstantOrContextLambda[ValueType]) -> None: ...
 
-class Default(Subconstruct[ValueType, Union[None, Any]]):
-    def __init__(self, subcon: Construct[ParsedType, Any], value: ConstantOrContextLambda[ValueType]) -> None: ...
+class Default(Subconstruct[ValueType, t.Union[None, t.Any]]):
+    def __init__(self, subcon: Construct[ParsedType, t.Any], value: ConstantOrContextLambda[ValueType]) -> None: ...
 
 class Check(Construct[None, None]):
     def __init__(self, func: ConstantOrContextLambda[bool]) -> None: ...
 
 Error: Construct[None, None]
 
-class FocusedSeq(Construct[Any, Any]):
+class FocusedSeq(Construct[t.Any, t.Any]):
     def __init__(
         self,
         parsebuildfrom: ConstantOrContextLambda[str],
-        *subcons: Construct[Any, Any],
-        **subconskw: Construct[Any, Any]
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any]
     ) -> None: ...
 
 
 
-K = TypeVar("K")
-V = TypeVar("V")
+K = t.TypeVar("K")
+V = t.TypeVar("V")
 # class Hex(Adapter[ParsedType, BuildTypes, ParsedType, BuildTypes]):
-#     @overload
+#     @t.overload
 #     def __init__(
 #         self: Adapter[HexDisplayedInteger, BuildTypes, int, BuildTypes],
 #         subcon: Construct[int, BuildTypes]
 #     ) -> None: ...
-#     @overload
+#     @t.overload
 #     def __init__(
 #         self: Adapter[HexDisplayedBytes, BuildTypes, bytes, BuildTypes],
 #         subcon: Construct[bytes, BuildTypes]
 #     ) -> None: ...
-#     @overload
+#     @t.overload
 #     def __init__(
-#         self: Adapter[HexDisplayedDict[K, V], BuildTypes, Dict[K, V], BuildTypes],
-#         subcon: Construct[Dict[K, V], BuildTypes]
+#         self: Adapter[HexDisplayedDict[K, V], BuildTypes, t.Dict[K, V], BuildTypes],
+#         subcon: Construct[t.Dict[K, V], BuildTypes]
 #     ) -> None: ...
-#     @overload
+#     @t.overload
 #     def __init__(
 #         self,
 #         subcon: Construct[ParsedType, BuildTypes]
 #     ) -> None: ...
 
 # Problem: The above works just with a weird declaration like this:
-#     d: Hex[HexDisplayedInteger, Union[bytes, bytearray, int]] = Hex(Bytes(5))
+#     d: Hex[HexDisplayedInteger, t.Union[bytes, bytearray, int]] = Hex(Bytes(5))
 # Maybe its a bug in Pylance?
 #
-# Workaround: We pretend that this class it is a method so that we can use @overload. Now
+# Workaround: We pretend that this class it is a method so that we can use @t.overload. Now
 # the declaration looks like this:
 #     d = Hex(Bytes(5))
-@overload
+@t.overload
 def Hex(
     subcon: Construct[int, BuildTypes]
 ) -> Construct[HexDisplayedInteger, BuildTypes]: ...
-@overload
+@t.overload
 def Hex(
     subcon: Construct[bytes, BuildTypes]
 ) -> Construct[HexDisplayedBytes, BuildTypes]: ...
-@overload
+@t.overload
 def Hex(
-    subcon: Construct[Dict[K, V], BuildTypes]
+    subcon: Construct[t.Dict[K, V], BuildTypes]
 ) -> Construct[HexDisplayedDict[K, V], BuildTypes]: ...
-@overload
+@t.overload
 def Hex(
     subcon: Construct[ParsedType, BuildTypes]
 ) -> Construct[ParsedType, BuildTypes]: ...
+
+
+#===============================================================================
+# conditional
+#===============================================================================
+# this can maybe made better when variadic generics are available (see current discussions: https://mail.python.org/archives/list/typing-sig@python.org/thread/SQVTQYWIOI4TIO7NNBTFFWFMSMS2TA4J/)
+@t.type_check_only
+class _Select(Construct[ParsedType, BuildTypes]): ...
+
+def Select(
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any]
+    ) -> _Select[t.Any, t.Any]: ...
+
+def Optional(subcon: Construct[ParsedType, BuildTypes]) -> _Select[t.Union[ParsedType, None], t.Union[BuildTypes, None]]: ...
+
+
+ThenParsedType = t.TypeVar("ThenParsedType")
+ThenBuildTypes = t.TypeVar("ThenBuildTypes")
+ElseParsedType = t.TypeVar("ElseParsedType")
+ElseBuildTypes = t.TypeVar("ElseBuildTypes")
+
+class IfThenElse(t.Generic[ThenParsedType, ThenBuildTypes, ElseParsedType, ElseBuildTypes], Construct[t.Union[ThenParsedType, ElseParsedType], t.Union[ThenBuildTypes, ElseBuildTypes]]):
+    def __init__(
+        self, 
+        condfunc: ConstantOrContextLambda[bool], 
+        thensubcon: Construct[ThenParsedType, ThenBuildTypes], 
+        elsesubcon: Construct[ElseParsedType, ElseBuildTypes]
+    ) -> None: ...
+
+def If(condfunc: ConstantOrContextLambda[bool], subcon: Construct[ThenParsedType, ThenBuildTypes]) -> IfThenElse[ThenParsedType, ThenBuildTypes, None, None]: ...
 
 
 #===============================================================================
@@ -483,9 +500,9 @@ class Padded(Subconstruct[ParsedType, BuildTypes]):
 class Aligned(Subconstruct[ParsedType, BuildTypes]):
     def __init__(self, modulus: ConstantOrContextLambda[int], subcon: Construct[ParsedType, BuildTypes], pattern: bytes = ...) -> None: ...
 
-def AlignedStruct(modulus: ConstantOrContextLambda[int], *subcons: Construct[Any, Any], **subconskw: Construct[Any, Any]) -> Struct: ...
+def AlignedStruct(modulus: ConstantOrContextLambda[int], *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]) -> Struct: ...
 
-def BitStruct(*subcons: Construct[Any, Any], **subconskw: Construct[Any, Any]) -> Struct: ...
+def BitStruct(*subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]) -> Struct: ...
 
 
 #===============================================================================
@@ -503,14 +520,14 @@ class ExprAdapter(Adapter[AdaptedParsedType, AdaptedBuildTypes, ParsedType, Buil
     def __init__(
         self, 
         subcon: Construct[ParsedType, BuildTypes], 
-        decoder: Callable[[ParsedType, Context], AdaptedParsedType], 
-        encoder: Callable[[AdaptedBuildTypes, Context], BuildTypes]
+        decoder: t.Callable[[ParsedType, Context], AdaptedParsedType], 
+        encoder: t.Callable[[AdaptedBuildTypes, Context], BuildTypes]
     ) -> None: ...
 
 class ExprSymmetricAdapter(ExprAdapter[AdaptedParsedType, AdaptedBuildTypes, ParsedType, BuildTypes]):
-    def __init__(self, subcon: Construct[ParsedType, BuildTypes], encoder: Callable[[AdaptedBuildTypes, Context], BuildTypes]) -> None: ...
+    def __init__(self, subcon: Construct[ParsedType, BuildTypes], encoder: t.Callable[[AdaptedBuildTypes, Context], BuildTypes]) -> None: ...
 
 
 class ExprValidator(Validator[ParsedType]):
-    def __init__(self, subcon: Construct[ParsedType, Any], validator: Callable[[ParsedType, Context], bool]) -> None: ...
+    def __init__(self, subcon: Construct[ParsedType, t.Any], validator: t.Callable[[ParsedType, Context], bool]) -> None: ...
 

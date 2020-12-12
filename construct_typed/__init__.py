@@ -127,3 +127,7 @@ else:
 
         def _encode(self, obj, context, path):
             return obj
+
+
+
+# TODO: TypedUnion

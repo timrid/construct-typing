@@ -1,10 +1,10 @@
-from typing import TypeVar
+import typing as t
 
 class HexDisplayedInteger(int): ...
 class HexDisplayedBytes(bytes): ...
 
-K = TypeVar("K")
-V = TypeVar("V")
+K = t.TypeVar("K")
+V = t.TypeVar("V")
 
 class HexDisplayedDict(dict[K, V]): ...
 class HexDumpDisplayedBytes(bytes): ...

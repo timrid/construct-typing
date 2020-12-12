@@ -1,12 +1,12 @@
-from typing import Optional, Callable, Any
-from construct import Construct, Subconstruct
+import typing as t
+from construct.core import Construct, Subconstruct
 from construct.core import Context
 
-ContextLambda = Callable[[Context], Any]
+ContextLambda = t.Callable[[Context], t.Any]
 
 class Probe(Construct[None, None]):
     def __init__(
-        self, into: Optional[ContextLambda] = ..., lookahead: int = ...
+        self, into: t.Optional[ContextLambda] = ..., lookahead: int = ...
     ) -> None: ...
 
 class Debugger(Subconstruct[None, None]): ...
