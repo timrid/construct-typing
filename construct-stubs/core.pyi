@@ -488,6 +488,25 @@ class IfThenElse(t.Generic[ThenParsedType, ThenBuildTypes, ElseParsedType, ElseB
 def If(condfunc: ConstantOrContextLambda[bool], subcon: Construct[ThenParsedType, ThenBuildTypes]) -> IfThenElse[ThenParsedType, ThenBuildTypes, None, None]: ...
 
 
+SwitchType = t.TypeVar("SwitchType")
+
+@t.type_check_only
+class _Switch(Construct[ParsedType, BuildTypes]): ...
+
+@t.overload
+def Switch(
+    keyfunc: ConstantOrContextLambda[SwitchType],
+    cases: t.Dict[SwitchType, Construct[int, int]],
+    default: t.Optional[Construct[int, int]] = ...
+) -> _Switch[int, int]: ...
+
+@t.overload
+def Switch(
+    keyfunc: ConstantOrContextLambda[SwitchType],
+    cases: t.Dict[SwitchType, Construct[t.Any, t.Any]],
+    default: t.Optional[Construct[t.Any, t.Any]] = ...
+) -> _Switch[t.Any, t.Any]: ...
+
 #===============================================================================
 # alignment and padding
 #===============================================================================
