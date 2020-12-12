@@ -507,6 +507,10 @@ def Switch(
     default: t.Optional[Construct[t.Any, t.Any]] = ...
 ) -> _Switch[t.Any, t.Any]: ...
 
+
+class StopIf(Construct[None, None]):
+    def __init__(self, condfunc: ConstantOrContextLambda[bool]) -> None: ...
+
 #===============================================================================
 # alignment and padding
 #===============================================================================
