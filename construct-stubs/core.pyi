@@ -3,6 +3,12 @@ import enum
 from construct.lib import Container, ListContainer, HexDisplayedBytes, HexDisplayedDict, HexDisplayedInteger
 # unfortunately, there are a few duplications with "typing", e.g. Union and Optional, which is why the t. prefix must be used everywhere
 
+# Some of the Constructs can be optimised when the following typing optimisations are available:
+#   - Variadic Generics: https://mail.python.org/archives/list/typing-sig@python.org/thread/SQVTQYWIOI4TIO7NNBTFFWFMSMS2TA4J/
+#   - Higher Kinded Types: https://github.com/python/typing/issues/548
+#   - Higher Kinded Types: https://sobolevn.me/2020/10/higher-kinded-types-in-python
+
+
 StreamType = t.BinaryIO
 BufferType = t.Union[bytes, memoryview, bytearray]
 PathType = str
@@ -68,16 +74,16 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     ) -> Construct[ParsedType, BuildTypes]: ...
     def benchmark(self, sampledata: BufferType, filename: str = ...) -> str: ...
     def export_ksy(self, schemaname: str = ..., filename: str = ...) -> str: ...
-    def __rtruediv__(self, name: str) -> Construct[ParsedType, BuildTypes]: ...
+    def __rtruediv__(self, name: str) -> Renamed[ParsedType, BuildTypes]: ...
     __rdiv__: t.Callable[[str], Construct[ParsedType, BuildTypes]]
     def __mul__(
         self,
         other: t.Union[str, bytes, t.Callable[[ParsedType, Context], t.NoReturn]],
-    ) -> Construct[ParsedType, BuildTypes]: ...
+    ) -> Renamed[ParsedType, BuildTypes]: ...
     def __rmul__(
         self,
         other: t.Union[str, bytes, t.Callable[[ParsedType, Context], t.NoReturn]],
-    ) -> Construct[ParsedType, BuildTypes]: ...
+    ) -> Renamed[ParsedType, BuildTypes]: ...
     def __add__(self, other: Construct[t.Any, t.Any]) -> Struct: ...
     def __rshift__(self, other: Construct[t.Any, t.Any]) -> Sequence[t.Any, t.Any]: ...
     def __getitem__(
@@ -265,6 +271,7 @@ class FlagsEnum(Adapter[Container[bool], t.Union[int, str, t.Dict[str, bool]], i
 # ===============================================================================
 # structures and sequences
 # ===============================================================================
+# this can maybe made better when variadic generics are available 
 class Struct(Construct[Container[t.Any], t.Dict[str, t.Any]]):
     def __init__(
         self,
@@ -272,50 +279,7 @@ class Struct(Construct[Container[t.Any], t.Dict[str, t.Any]]):
         **subconskw: Construct[t.Any, t.Any]
     ) -> None: ...
 
-# There are two possible alternatives for the "Struct" stub, so that a "Struct" automatically knows, which
-# types it contains. But they both work only, if all struct entries have the same ParsedType / BuildTypes.
-# Maybe these alternatives work in the future... Maybe one of the following links help:
-#   - https://github.com/python/typing/issues/548
-#   - https://sobolevn.me/2020/10/higher-kinded-types-in-python
-
-# Alternative 1:
-# --------------
-# class StructAlternative1(Construct[Container[ParsedType], t.Dict[str, BuildTypes]]):
-#     def __init__(
-#         self, *subcons: Construct[ParsedType, BuildTypes], **subconskw: Construct[ParsedType, BuildTypes]
-#     ) -> None: ...
-
-# s_alt1 = StructAlternative1(a=CString("utf8"), b=BytesInteger(2))
-
-# this one complains about 
-# - s_alt1:          t.Type of "s_alt1" is partially unknown
-#                    t.Type of "s_alt1" is "StructAlternative1[Unknown, Unknown]" Pylance (reportUnknownVariableType)
-# - CString("utf8"): Argument of type "StringEncoded" cannot be assigned to parameter "a" of type "Construct[ParsedType, BuildTypes]" in function "__init__"
-#                    t.TypeVar "ParsedType" is invariant
-#                    t.Type "str | int" cannot be assigned to type "str" Pylance (reportGeneralTypeIssues)
-# - BytesInteger(2): Argument of type "BytesInteger" cannot be assigned to parameter "b" of type "Construct[ParsedType, BuildTypes]" in function "__init__"
-#                    t.TypeVar "ParsedType" is invariant
-#                    t.Type "str | int" cannot be assigned to type "int" Pylance (reportGeneralTypeIssues)
-
-# Alternative 2:
-# --------------
-# def StructAlternative2(*subcons: Construct[ParsedType, BuildTypes], **subconskw: Construct[ParsedType, BuildTypes]) -> Construct[Container[ParsedType], t.Dict[str, BuildTypes]]: ...
-
-# s_alt2 = StructAlternative2(a=CString("utf8"), b=BytesInteger(2))
-
-# This one is a little bit better than the "StructAlternative1", because "s_alt2" is correctly recognised
-# as "Construct[Container[str | int], t.Dict[str, str | int]]". But it does not reflect the real implementation,
-# because "Struct" is implemented as a class.
-
-# this one complains about:
-# - CString("utf8"): Argument of type "StringEncoded" cannot be assigned to parameter "a" of type "Construct[ParsedType, BuildTypes]" in function "StructAlternative2"
-#                    t.TypeVar "ParsedType" is invariant
-#                    t.Type "str | int" cannot be assigned to type "str"Pylance (reportGeneralTypeIssues)
-# - BytesInteger(2): Argument of type "BytesInteger" cannot be assigned to parameter "b" of type "Construct[ParsedType, BuildTypes]" in function "StructAlternative2"
-#                    t.TypeVar "ParsedType" is invariant
-#                    t.Type "str | int" cannot be assigned to type "int"Pylance (reportGeneralTypeIssues)
-
-
+# this can maybe made better when variadic generics are available
 class Sequence(Construct[ListContainer[ParsedType], t.List[BuildTypes]]):
     @t.overload
     def __init__(
@@ -329,8 +293,6 @@ class Sequence(Construct[ListContainer[ParsedType], t.List[BuildTypes]]):
         *subcons: Construct[t.Any, t.Any],
         **subconskw: Construct[t.Any, t.Any]
     ) -> None: ...
-
-# There are two possible alternatives for the "Sequence" stub. These work the same way as with "Struct".
 
 # ===============================================================================
 # arrays ranges and repeaters
@@ -357,6 +319,18 @@ class RepeatUntil(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContaine
         subcon: Construct[SubconParsedType, SubconBuildTypes], 
         discard: bool = ...
     ) -> None: ...
+
+#===============================================================================
+# specials
+#===============================================================================
+class Renamed(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(
+        self, 
+        subcon: Construct[SubconParsedType, SubconBuildTypes], newname: t.Optional[str] = ..., 
+        newdocs: t.Optional[str] = ..., 
+        newparsed: t.Optional[t.Callable[[t.Any, Context], None]] = ...
+    ) -> None: ...
+
 
 # ===============================================================================
 # miscellaneous
