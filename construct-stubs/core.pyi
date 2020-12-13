@@ -140,11 +140,11 @@ class Bytes(Construct[bytes, t.Union[bytes, bytearray, int]]):
 GreedyBytes: Construct[bytes, t.Union[bytes, bytearray, int]]
 
 def Bitwise(
-    subcon: Construct[ParsedType, BuildTypes]
-) -> Construct[ParsedType, BuildTypes]: ...
+    subcon: Construct[SubconParsedType, SubconBuildTypes]
+) -> t.Union[Transformed[SubconParsedType, SubconBuildTypes], Restreamed[SubconParsedType, SubconBuildTypes]]: ...
 def Bytewise(
-    subcon: Construct[ParsedType, BuildTypes]
-) -> Construct[ParsedType, BuildTypes]: ...
+    subcon: Construct[SubconParsedType, SubconBuildTypes]
+) -> t.Union[Transformed[SubconParsedType, SubconBuildTypes], Restreamed[SubconParsedType, SubconBuildTypes]]: ...
 
 
 # ===============================================================================
@@ -326,7 +326,8 @@ class RepeatUntil(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContaine
 class Renamed(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
     def __init__(
         self, 
-        subcon: Construct[SubconParsedType, SubconBuildTypes], newname: t.Optional[str] = ..., 
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        newname: t.Optional[str] = ..., 
         newdocs: t.Optional[str] = ..., 
         newparsed: t.Optional[t.Callable[[t.Any, Context], None]] = ...
     ) -> None: ...
@@ -516,6 +517,36 @@ def BitStruct(*subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t
 Tell: Construct[int, None]
 Pass: Construct[None, None]
 Terminated: Construct[None, None]
+
+#===============================================================================
+# tunneling and byte/bit swapping
+#===============================================================================
+
+def ByteSwapped(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> Transformed[SubconParsedType, SubconBuildTypes]: ...
+def BitsSwapped(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> t.Union[Transformed[SubconParsedType, SubconBuildTypes], Restreamed[SubconParsedType, SubconBuildTypes]]: ...
+
+
+
+class Transformed(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(
+        self, 
+        subcon: Construct[SubconParsedType, SubconBuildTypes], 
+        decodefunc: t.Callable[[bytes], bytes],
+        decodeamount: int,
+        encodefunc: t.Callable[[bytes], bytes],
+        encodeamount: int
+    ) -> None: ...
+
+class Restreamed(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(
+        self, 
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        decoder: t.Callable[[bytes], bytes],
+        decoderunit: int,
+        encoder: t.Callable[[bytes], bytes],
+        encoderunit: int,
+        sizecomputer: t.Callable[[int], int]
+    ) -> None: ...
 
 #===============================================================================
 # adapters and validators
