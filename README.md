@@ -1,7 +1,7 @@
 # construct-typing
-This project is an extension of the python package `construct`. This Repository consitst of two packages:
+This project is an extension of the python package *construct*. This Repository consitst of two packages:
 
-- **construct-stubs**: Adding .pyi for the whole `construct` package (according to  [PEP 561 stub-only packages](https://www.python.org/dev/peps/pep-0561/#stub-only-packages))
+- **construct-stubs**: Adding .pyi for the whole *construct* package (according to  [PEP 561 stub-only packages](https://www.python.org/dev/peps/pep-0561/#stub-only-packages))
 - **construct_typed**: Adding the additional classes that help with autocompletion and additional type hints.
 
 ## Installation
@@ -18,7 +18,7 @@ I'm mostly working with VSCode and Pylance (which works really great) ??? But i 
 
 ## Explanation
 ### Stubs
-The **construct-stubs** is used for creating type hints for the orignial `construct` package. In particular the `build` and `parse` methods get type hints. So the core of the stubs  are the `TypeVar`s `ParsedType` and `BuildTypes`:
+The **construct-stubs** package is used for creating type hints for the orignial *construct* package. In particular the `build` and `parse` methods get type hints. So the core of the stubs  are the `TypeVar`'s `ParsedType` and `BuildTypes`:
 - The `build` method of a `Construct` converts an object of one of the types defined by `BuildTypes` to a `bytes` object.
 - The `parse` method of a `Construct` converts a `bytes` object to an object of type `ParsedType`.
 
@@ -31,12 +31,12 @@ For example:
 The problem is to describe the more complex constructs like:
  - `Sequence` which has heterogenous subcons in comparison to an `Array` with only homogenous subcons. 
  - `Struct`, `BitStruct`, `Union` which has heterogenous and named subcons.
-Currently only the very unspecific type `Any` can be used as type hint (maybe in the future it can be optimised a little, when variadic generics become available).
-The biggest disadvantage is that autocompletion for the named subcons is not available.
+
+Currently only the very unspecific type `typing.Any` can be used as type hint (maybe in the future it can be optimised a little, when variadic generics become available). But the biggest disadvantage is that autocompletion for the named subcons is not available.
 
 
 ### Typed
-To further enhance the type hints and include and autocompletion for these complex constructs the **construct_typed** package is used.
+To include autocompletion and further enhance the type hints for these complex constructs the **construct_typed** package is used as an extension to the original *construct* package.
 
 It implements the following new types:
 - TypedEnum
@@ -48,8 +48,8 @@ It implements the following new types:
 An example of the added `TypedStruct` class:
 
 ```python
-from construct import *
-from construct_typed import *
+from construct import Const, Int8ub, Array, this, Byte
+from construct_typed import TypedContainer, Subcon, TypedStruct
 
 class Image(TypedContainer):
     signature: Subcon(Const(b"BMP"))
