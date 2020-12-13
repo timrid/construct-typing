@@ -12,7 +12,12 @@ You just have to type:
 pip install construct-typing
 ```
 
-## Stubs
+## Usage
+I'm mostly working with VSCode and Pylance (which works really great) ??? But i have also tested the stubs with mypy. ????
+
+
+## Explanation
+### Stubs
 The **construct-stubs** is used for creating type hints for the orignial `construct` package. In particular the `build` and `parse` methods get type hints. So the core of the stubs  are the `TypeVar`s `ParsedType` and `BuildTypes`:
 - The `build` method of a `Construct` converts an object of one of the types defined by `BuildTypes` to a `bytes` object.
 - The `parse` method of a `Construct` converts a `bytes` object to an object of type `ParsedType`.
@@ -30,7 +35,7 @@ Currently only the very unspecific type `Any` can be used as type hint (maybe in
 The biggest disadvantage is that autocompletion for the named subcons is not available.
 
 
-## Typed
+### Typed
 To further enhance the type hints and include and autocompletion for these complex constructs the **construct_typed** package is used.
 
 It implements the following new types:
@@ -39,12 +44,6 @@ It implements the following new types:
 - TypedBitStruct
 - TypedUnion
 
-
-## Usage
-I'm mostly working with VSCode and Pylance (which works really great) ??? But i have also tested the stubs with mypy. ????
-
-
-## Examples
 
 An example of the added `TypedStruct` class:
 
