@@ -1,12 +1,47 @@
 # construct-typing
-
-## 
 This project is an extension of the python package `construct`. This Repository consitst of two packages:
 
 - **construct-stubs**: Adding .pyi for the whole `construct` package (according to  [PEP 561 stub-only packages](https://www.python.org/dev/peps/pep-0561/#stub-only-packages))
-- **construct-typed**: Adding the additional classes `TypedStruct` and `TypedEnum` that help with autocompletion in cooperation with the stubs.
+- **construct_typed**: Adding the additional classes that help with autocompletion and additional type hints.
 
-## Motivation
+## Installation
+This package comply to PEP 561. So most of the static code analysers will recognise the stubs automatically.
+
+You just have to type:
+```
+pip install construct-typing
+```
+
+## Stubs
+The **construct-stubs** is used for creating type hints for the orignial `construct` package. In particular the `build` and `parse` methods get type hints. So the core of the stubs  are the `TypeVar`s `ParsedType` and `BuildTypes`:
+- The `build` method of a `Construct` converts an object of one of the types defined by `BuildTypes` to a `bytes` object.
+- The `parse` method of a `Construct` converts a `bytes` object to an object of type `ParsedType`.
+
+For each of the `Construct`s it is defined which type it is parsed to and from which it can be build. 
+For example:
+ - an `Int16ub` construct parses to an `int` and can be build from an `int`.
+ - an `Bytes` construct parsed to a `bytes` and can be build from an `bytes`, `bytearray` or `memoryview`.
+ - an `Array(5, Int16ub)` construct parses to a `ListContainer[int]` and can be build from an `List[int]`. 
+
+The problem is to describe the more complex constructs like:
+ - `Sequence` which has heterogenous subcons in comparison to an `Array` with only homogenous subcons. 
+ - `Struct`, `BitStruct`, `Union` which has heterogenous and named subcons.
+Currently only the very unspecific type `Any` can be used as type hint (maybe in the future it can be optimised a little, when variadic generics become available).
+The biggest disadvantage is that autocompletion for the named subcons is not available.
+
+
+## Typed
+To further enhance the type hints and include and autocompletion for these complex constructs the **construct_typed** package is used.
+
+It implements the following new types:
+- TypedEnum
+- TypedStruct
+- TypedBitStruct
+- TypedUnion
+
+
+## Usage
+I'm mostly working with VSCode and Pylance (which works really great) ??? But i have also tested the stubs with mypy. ????
 
 
 ## Examples
