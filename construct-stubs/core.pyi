@@ -121,15 +121,13 @@ class Subconstruct(t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, Bui
         **kwargs: t.Any
     ) -> Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
 
-AdaptedParsedType = t.TypeVar("AdaptedParsedType")
-AdaptedBuildTypes = t.TypeVar("AdaptedBuildTypes")
 
-class Adapter(t.Generic[AdaptedParsedType, AdaptedBuildTypes, SubconParsedType, SubconBuildTypes], Subconstruct[SubconParsedType, SubconBuildTypes, AdaptedParsedType, AdaptedBuildTypes]):
+class Adapter(t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes], Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
     def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes]) -> None: ...
-    def _decode(self, obj: SubconParsedType, context: Context, path: PathType) -> AdaptedParsedType: ...
-    def _encode(self, obj: AdaptedBuildTypes, context: Context, path: PathType) -> SubconBuildTypes: ...
+    def _decode(self, obj: SubconParsedType, context: Context, path: PathType) -> ParsedType: ...
+    def _encode(self, obj: BuildTypes, context: Context, path: PathType) -> SubconBuildTypes: ...
 
-class SymmetricAdapter(Adapter[AdaptedParsedType, AdaptedBuildTypes, SubconParsedType, SubconBuildTypes]): ...
+class SymmetricAdapter(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]): ...
 
 class Validator(SymmetricAdapter[t.Any, t.Any, SubconParsedType, t.Any]):
     def _validate(self, obj: SubconParsedType, context: Context, path: PathType) -> bool: ...
@@ -262,16 +260,26 @@ class EnumIntegerString(str):
     @staticmethod
     def new(intvalue: int, stringvalue: str) -> EnumIntegerString: ...
 
-class Enum(Adapter[t.Union[EnumInteger, EnumIntegerString], t.Union[int, str], int, int]):
-    def __init__(self, subcon: Construct[int, int], *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]], **mapping: int) -> None: ...
+class Enum(Adapter[int, int, t.Union[EnumInteger, EnumIntegerString], t.Union[int, str]]):
+    def __init__(
+        self, 
+        subcon: Construct[int, int],
+        *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
+        **mapping: int
+    ) -> None: ...
     def __getattr__(self, name: str) -> EnumIntegerString: ...
 
 
 class BitwisableString(str):
     def __or__(self, other: BitwisableString) -> BitwisableString: ...
 
-class FlagsEnum(Adapter[Container[bool], t.Union[int, str, t.Dict[str, bool]], int, int]):
-    def __init__(self, subcon: Construct[int, int], *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]], **flags: int) -> None: ...
+class FlagsEnum(Adapter[int, int, Container[bool], t.Union[int, str, t.Dict[str, bool]]]):
+    def __init__(
+        self,
+        subcon: Construct[int, int],
+        *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
+        **flags: int
+    ) -> None: ...
     def __getattr__(self, name: str) -> BitwisableString: ...
 
 
@@ -361,11 +369,19 @@ class Computed(Construct[ValueType, None]):
 
 Index: Construct[int, t.Any]
 
-class Rebuild(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, None]):
-    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes], func: ConstantOrContextLambda[SubconBuildTypes]) -> None: ...
+class Rebuild(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    def __new__(
+        cls, 
+        subcon: Construct[SubconParsedType, SubconBuildTypes], 
+        func: ConstantOrContextLambda[SubconBuildTypes]
+    ) -> Rebuild[SubconParsedType, SubconBuildTypes, SubconParsedType, None]: ...
 
-class Default(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, t.Union[None, SubconBuildTypes]]):
-    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes], value: ConstantOrContextLambda[SubconBuildTypes]) -> None: ...
+class Default(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        value: ConstantOrContextLambda[SubconBuildTypes]
+    ) -> Default[SubconParsedType, SubconBuildTypes, SubconParsedType, t.Optional[SubconBuildTypes]]: ...
 
 class Check(Construct[None, None]):
     def __init__(self, func: ConstantOrContextLambda[bool]) -> None: ...
@@ -384,66 +400,42 @@ class FocusedSeq(Construct[t.Any, t.Any]):
 
 K = t.TypeVar("K")
 V = t.TypeVar("V")
-# class Hex(Adapter[ParsedType, BuildTypes, ParsedType, BuildTypes]):
-#     @t.overload
-#     def __init__(
-#         self: Adapter[HexDisplayedInteger, BuildTypes, int, BuildTypes],
-#         subcon: Construct[int, BuildTypes]
-#     ) -> None: ...
-#     @t.overload
-#     def __init__(
-#         self: Adapter[HexDisplayedBytes, BuildTypes, bytes, BuildTypes],
-#         subcon: Construct[bytes, BuildTypes]
-#     ) -> None: ...
-#     @t.overload
-#     def __init__(
-#         self: Adapter[HexDisplayedDict[K, V], BuildTypes, t.Dict[K, V], BuildTypes],
-#         subcon: Construct[t.Dict[K, V], BuildTypes]
-#     ) -> None: ...
-#     @t.overload
-#     def __init__(
-#         self,
-#         subcon: Construct[ParsedType, BuildTypes]
-#     ) -> None: ...
-
-# Problem: The above works just with a weird declaration like this:
-#     d: Hex[HexDisplayedInteger, t.Union[bytes, bytearray, int]] = Hex(Bytes(5))
-# Maybe its a bug in Pylance?
-#
-# Workaround: We pretend that this class it is a method so that we can use @t.overload. Now
-# the declaration looks like this:
-#     d = Hex(Bytes(5))
-@t.overload
-def Hex(
-    subcon: Construct[int, BuildTypes]
-) -> Construct[HexDisplayedInteger, BuildTypes]: ...
-@t.overload
-def Hex(
-    subcon: Construct[bytes, BuildTypes]
-) -> Construct[HexDisplayedBytes, BuildTypes]: ...
-@t.overload
-def Hex(
-    subcon: Construct[t.Dict[K, V], BuildTypes]
-) -> Construct[HexDisplayedDict[K, V], BuildTypes]: ...
-@t.overload
-def Hex(
-    subcon: Construct[ParsedType, BuildTypes]
-) -> Construct[ParsedType, BuildTypes]: ...
+class Hex(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[int, BuildTypes]
+    ) -> Hex[int, BuildTypes, HexDisplayedInteger, BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[bytes, BuildTypes]
+    ) -> Hex[bytes, BuildTypes, HexDisplayedBytes, BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[t.Dict[K, V], BuildTypes]
+    ) -> Hex[t.Dict[K, V], BuildTypes, HexDisplayedDict[K, V], BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> Hex[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]: ...
 
 
 #===============================================================================
 # conditional
 #===============================================================================
-# this can maybe made better when variadic generics are available (see current discussions: https://mail.python.org/archives/list/typing-sig@python.org/thread/SQVTQYWIOI4TIO7NNBTFFWFMSMS2TA4J/)
-@t.type_check_only
-class _Select(Construct[ParsedType, BuildTypes]): ...
-
-def Select(
+# this can maybe made better when variadic generics are available
+class Select(Construct[ParsedType, BuildTypes]):
+    def __new__(
+        cls,
         *subcons: Construct[t.Any, t.Any],
         **subconskw: Construct[t.Any, t.Any]
-    ) -> _Select[t.Any, t.Any]: ...
+    ) -> Select[t.Any, t.Any]: ...
 
-def Optional(subcon: Construct[ParsedType, BuildTypes]) -> _Select[t.Union[ParsedType, None], t.Union[BuildTypes, None]]: ...
+def Optional(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> Select[t.Union[SubconParsedType, None], t.Union[SubconBuildTypes, None]]: ...
+
 
 
 ThenParsedType = t.TypeVar("ThenParsedType")
@@ -464,22 +456,22 @@ def If(condfunc: ConstantOrContextLambda[bool], subcon: Construct[ThenParsedType
 
 SwitchType = t.TypeVar("SwitchType")
 
-@t.type_check_only
-class _Switch(Construct[ParsedType, BuildTypes]): ...
+class Switch(Construct[ParsedType, BuildTypes]):
+    @t.overload
+    def __new__(
+        cls,
+        keyfunc: ConstantOrContextLambda[SwitchType],
+        cases: t.Dict[SwitchType, Construct[int, int]],
+        default: t.Optional[Construct[int, int]] = ...
+    ) -> Switch[int, int]: ...
 
-@t.overload
-def Switch(
-    keyfunc: ConstantOrContextLambda[SwitchType],
-    cases: t.Dict[SwitchType, Construct[int, int]],
-    default: t.Optional[Construct[int, int]] = ...
-) -> _Switch[int, int]: ...
-
-@t.overload
-def Switch(
-    keyfunc: ConstantOrContextLambda[SwitchType],
-    cases: t.Dict[SwitchType, Construct[t.Any, t.Any]],
-    default: t.Optional[Construct[t.Any, t.Any]] = ...
-) -> _Switch[t.Any, t.Any]: ...
+    @t.overload
+    def __new__(
+        cls,
+        keyfunc: ConstantOrContextLambda[SwitchType],
+        cases: t.Dict[SwitchType, Construct[t.Any, t.Any]],
+        default: t.Optional[Construct[t.Any, t.Any]] = ...
+    ) -> Switch[t.Any, t.Any]: ...
 
 
 class StopIf(Construct[None, None]):
@@ -491,7 +483,12 @@ class StopIf(Construct[None, None]):
 def Padding(length: ConstantOrContextLambda[int], pattern: bytes = ...) -> Padded[None, None]: ...
 
 class Padded(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
-    def __init__(self, length: ConstantOrContextLambda[int], subcon: Construct[SubconParsedType, SubconBuildTypes], pattern: bytes = ...) -> None: ...
+    def __init__(
+        self,
+        length: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        pattern: bytes = ...
+    ) -> None: ...
 
 
 class Aligned(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
@@ -541,16 +538,16 @@ class Restreamed(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedTy
 #===============================================================================
 # adapters and validators
 #===============================================================================
-class ExprAdapter(Adapter[AdaptedParsedType, AdaptedBuildTypes, ParsedType, BuildTypes]):
+class ExprAdapter(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
     def __init__(
         self, 
-        subcon: Construct[ParsedType, BuildTypes], 
-        decoder: t.Callable[[ParsedType, Context], AdaptedParsedType], 
-        encoder: t.Callable[[AdaptedBuildTypes, Context], BuildTypes]
+        subcon: Construct[SubconParsedType, SubconBuildTypes], 
+        decoder: t.Callable[[SubconParsedType, Context], ParsedType], 
+        encoder: t.Callable[[BuildTypes, Context], SubconBuildTypes]
     ) -> None: ...
 
-class ExprSymmetricAdapter(ExprAdapter[AdaptedParsedType, AdaptedBuildTypes, ParsedType, BuildTypes]):
-    def __init__(self, subcon: Construct[ParsedType, BuildTypes], encoder: t.Callable[[AdaptedBuildTypes, Context], BuildTypes]) -> None: ...
+class ExprSymmetricAdapter(ExprAdapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes], encoder: t.Callable[[BuildTypes, Context], SubconBuildTypes]) -> None: ...
 
 
 class ExprValidator(Validator[ParsedType]):
