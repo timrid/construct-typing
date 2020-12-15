@@ -1,6 +1,7 @@
 import typing as t
 import enum
-from construct.lib import Container, ListContainer, HexDisplayedBytes, HexDisplayedDict, HexDisplayedInteger
+import arrow  # type: ignore
+from construct.lib import Container, ListContainer, HexDisplayedBytes, HexDisplayedDict, HexDisplayedInteger, HexDumpDisplayedBytes, HexDumpDisplayedDict
 # unfortunately, there are a few duplications with "typing", e.g. Union and Optional, which is why the t. prefix must be used everywhere
 
 # Some of the Constructs can be optimised when the following typing optimisations are available:
@@ -409,6 +410,27 @@ class NamedTuple(Adapter[SubconParsedType, SubconBuildTypes, t.Tuple[t.Any, ...]
     ) -> None: ...
 
 
+@t.overload
+def Timestamp(
+    subcon: Construct[int, int],
+    unit: t.Literal["msdos"],
+    epoch: t.Literal["msdos"]
+) -> Adapter[int, int, arrow.Arrow, arrow.Arrow]: ...
+
+@t.overload
+def Timestamp(
+    subcon: Construct[int, int],
+    unit: t.Union[int, float],
+    epoch: t.Union[int, arrow.Arrow]
+) -> Adapter[int, int, arrow.Arrow, arrow.Arrow]: ...
+
+@t.overload
+def Timestamp(
+    subcon: Construct[float, float],
+    unit: t.Union[int, float],
+    epoch: t.Union[int, arrow.Arrow]
+) -> Adapter[float, float, arrow.Arrow, arrow.Arrow]: ...
+
 
 K = t.TypeVar("K")
 V = t.TypeVar("V")
@@ -434,10 +456,37 @@ class Hex(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
         subcon: Construct[SubconParsedType, SubconBuildTypes]
     ) -> Hex[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]: ...
 
+class HexDump(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[bytes, BuildTypes]
+    ) -> HexDump[bytes, BuildTypes, HexDumpDisplayedBytes, BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[t.Dict[K, V], BuildTypes]
+    ) -> HexDump[t.Dict[K, V], BuildTypes, HexDumpDisplayedDict[K, V], BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> HexDump[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]: ...
+
 
 #===============================================================================
 # conditional
 #===============================================================================
+# this can maybe made better when variadic generics are available 
+class Union(Construct[Container[t.Any], t.Dict[str, t.Any]]):
+    def __init__(
+        self,
+        parsefrom: t.Optional[ConstantOrContextLambda[t.Union[int, str]]],
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any]
+    ) -> None: ...
+
+
 # this can maybe made better when variadic generics are available
 class Select(Construct[ParsedType, BuildTypes]):
     def __new__(
