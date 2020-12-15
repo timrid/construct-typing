@@ -509,7 +509,19 @@ Terminated: Construct[None, None]
 #===============================================================================
 # tunneling and byte/bit swapping
 #===============================================================================
-class RawCopy(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]): ...
+@t.type_check_only
+class RawCopyObj(t.Generic[ParsedType], Container[t.Any]):
+    data: bytes
+    value: ParsedType
+    offset1: int
+    offset2: int
+    length: int
+
+class RawCopy(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> RawCopy[SubconParsedType, SubconBuildTypes, RawCopyObj[SubconParsedType], t.Dict[str, t.Union[SubconBuildTypes, BufferType]]]: ...
 
 def ByteSwapped(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> Transformed[SubconParsedType, SubconBuildTypes]: ...
 def BitsSwapped(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> t.Union[Transformed[SubconParsedType, SubconBuildTypes], Restreamed[SubconParsedType, SubconBuildTypes]]: ...
