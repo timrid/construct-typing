@@ -108,16 +108,23 @@ ConstantOrContextLambda = t.Union[ValueType, t.Callable[[Context], t.Any]]
 SubconParsedType = t.TypeVar("SubconParsedType")
 SubconBuildTypes = t.TypeVar("SubconBuildTypes")
 
-@t.type_check_only
-class _Subconstruct(t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes], Construct[ParsedType, BuildTypes]):
-    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes]) -> None: ...
-
-def Subconstruct(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> _Subconstruct[SubconParsedType, SubconBuildTypes, t.Any, t.Any]: ...
+class Subconstruct(t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes], Construct[ParsedType, BuildTypes]):
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls,
+        *args: t.Any,
+        **kwargs: t.Any
+    ) -> Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
 
 AdaptedParsedType = t.TypeVar("AdaptedParsedType")
 AdaptedBuildTypes = t.TypeVar("AdaptedBuildTypes")
 
-class Adapter(t.Generic[AdaptedParsedType, AdaptedBuildTypes, SubconParsedType, SubconBuildTypes], _Subconstruct[SubconParsedType, SubconBuildTypes, AdaptedParsedType, AdaptedBuildTypes]):
+class Adapter(t.Generic[AdaptedParsedType, AdaptedBuildTypes, SubconParsedType, SubconBuildTypes], Subconstruct[SubconParsedType, SubconBuildTypes, AdaptedParsedType, AdaptedBuildTypes]):
     def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes]) -> None: ...
     def _decode(self, obj: SubconParsedType, context: Context, path: PathType) -> AdaptedParsedType: ...
     def _encode(self, obj: AdaptedBuildTypes, context: Context, path: PathType) -> SubconBuildTypes: ...
@@ -297,7 +304,7 @@ class Sequence(Construct[ListContainer[ParsedType], t.List[BuildTypes]]):
 # ===============================================================================
 # arrays ranges and repeaters
 # ===============================================================================
-class Array(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
+class Array(Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
     def __init__(
         self,
         count: ConstantOrContextLambda[int],
@@ -305,14 +312,14 @@ class Array(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[Subc
         discard: bool = ...,
     ) -> None: ...
 
-class GreedyRange(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
+class GreedyRange(Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         discard: bool = ...
     ) -> None: ...
 
-class RepeatUntil(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
+class RepeatUntil(Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
     def __init__(
         self,
         predicate: t.Union[bool, t.Callable[[Construct[SubconParsedType, SubconBuildTypes], ListContainer[SubconParsedType], Context], bool]], 
@@ -323,7 +330,7 @@ class RepeatUntil(_Subconstruct[SubconParsedType, SubconBuildTypes, ListContaine
 #===============================================================================
 # specials
 #===============================================================================
-class Renamed(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+class Renamed(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
     def __init__(
         self, 
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -357,7 +364,7 @@ class Renamed(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType
 #
 # Workaround: We pretend that this class it is a method so that we can use @t.overload. 
 @t.type_check_only
-class _Const(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]): ...
+class _Const(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]): ...
 
 @t.overload
 def Const(value: bytes) -> _Const[bytes, t.Union[bytes, bytearray, int]]: ...
@@ -365,16 +372,16 @@ def Const(value: bytes) -> _Const[bytes, t.Union[bytes, bytearray, int]]: ...
 def Const(value: SubconBuildTypes, subcon: Construct[SubconParsedType, SubconBuildTypes]) -> _Const[SubconParsedType, SubconBuildTypes]: ...
 
 
-class Computed(Construct[ValueType, t.Any]):
+class Computed(Construct[ValueType, None]):
     def __init__(self, func: ConstantOrContextLambda[ValueType]) -> None: ...
 
 Index: Construct[int, t.Any]
 
-class Rebuild(_Subconstruct[SubconParsedType, SubconBuildTypes, ValueType, SubconBuildTypes]):
-    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes], func: ConstantOrContextLambda[ValueType]) -> None: ...
+class Rebuild(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, None]):
+    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes], func: ConstantOrContextLambda[SubconBuildTypes]) -> None: ...
 
-class Default(_Subconstruct[SubconParsedType, SubconBuildTypes, ValueType, t.Union[None, t.Any]]):
-    def __init__(self, subcon: Construct[SubconParsedType, t.Any], value: ConstantOrContextLambda[ValueType]) -> None: ...
+class Default(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, t.Union[None, SubconBuildTypes]]):
+    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes], value: ConstantOrContextLambda[SubconBuildTypes]) -> None: ...
 
 class Check(Construct[None, None]):
     def __init__(self, func: ConstantOrContextLambda[bool]) -> None: ...
@@ -499,16 +506,16 @@ class StopIf(Construct[None, None]):
 #===============================================================================
 def Padding(length: ConstantOrContextLambda[int], pattern: bytes = ...) -> Padded[None, None]: ...
 
-class Padded(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+class Padded(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
     def __init__(self, length: ConstantOrContextLambda[int], subcon: Construct[SubconParsedType, SubconBuildTypes], pattern: bytes = ...) -> None: ...
 
 
-class Aligned(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+class Aligned(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
     def __init__(self, modulus: ConstantOrContextLambda[int], subcon: Construct[SubconParsedType, SubconBuildTypes], pattern: bytes = ...) -> None: ...
 
 def AlignedStruct(modulus: ConstantOrContextLambda[int], *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]) -> Struct: ...
 
-def BitStruct(*subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]) -> Struct: ...
+def BitStruct(*subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]) -> t.Union[Transformed[Container[t.Any], t.Dict[str, t.Any]], Restreamed[Container[t.Any], t.Dict[str, t.Any]]]: ...
 
 
 #===============================================================================
@@ -521,13 +528,12 @@ Terminated: Construct[None, None]
 #===============================================================================
 # tunneling and byte/bit swapping
 #===============================================================================
+class RawCopy(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]): ...
 
 def ByteSwapped(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> Transformed[SubconParsedType, SubconBuildTypes]: ...
 def BitsSwapped(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> t.Union[Transformed[SubconParsedType, SubconBuildTypes], Restreamed[SubconParsedType, SubconBuildTypes]]: ...
 
-
-
-class Transformed(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+class Transformed(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
     def __init__(
         self, 
         subcon: Construct[SubconParsedType, SubconBuildTypes], 
@@ -537,7 +543,7 @@ class Transformed(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsed
         encodeamount: int
     ) -> None: ...
 
-class Restreamed(_Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+class Restreamed(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
     def __init__(
         self, 
         subcon: Construct[SubconParsedType, SubconBuildTypes],
