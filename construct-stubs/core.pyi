@@ -563,6 +563,21 @@ def BitStruct(*subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t
 #===============================================================================
 # stream manipulation
 #===============================================================================
+class Pointer(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(
+        self,
+        offset: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        stream: t.Optional[t.Callable[[Context], StreamType]] = ...
+    ) -> None: ...
+
+class Peek(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, t.Any]): ...
+
+
+class Seek(Construct[int, None]):
+    def __init__(self, at: ConstantOrContextLambda[int], whence: ConstantOrContextLambda[t.Literal[0, 1, 2]] = ...) -> None: ...
+
+
 Tell: Construct[int, None]
 Pass: Construct[None, None]
 Terminated: Construct[None, None]
