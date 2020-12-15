@@ -343,34 +343,18 @@ class Renamed(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType,
 # ===============================================================================
 # miscellaneous
 # ===============================================================================
-
-# class Const(Subconstruct[ParsedType, BuildTypes]):
-#     @t.overload
-#     def __init__(
-#         self: Const[bytes, t.Union[bytes, bytearray, int]],
-#         value: bytes,
-#     ) -> None: ...
-#     @t.overload
-#     def __init__(
-#         self,
-#         value: BuildTypes,
-#         subcon: Construct[ParsedType, BuildTypes]
-#     ) -> None: ...
-
-# Problem: The above implementation work in most cases, but unfortunately not in all.
-#          This for Example gives an error:
-#          class Container3(TypedContainer):
-#              d: Subcon(Const(b"\x00"))
-#
-# Workaround: We pretend that this class it is a method so that we can use @t.overload. 
-@t.type_check_only
-class _Const(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]): ...
-
-@t.overload
-def Const(value: bytes) -> _Const[bytes, t.Union[bytes, bytearray, int]]: ...
-@t.overload
-def Const(value: SubconBuildTypes, subcon: Construct[SubconParsedType, SubconBuildTypes]) -> _Const[SubconParsedType, SubconBuildTypes]: ...
-
+class Const(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    @t.overload
+    def __new__(
+        cls,
+        value: bytes,
+    ) -> Const[None, None, bytes, t.Union[bytes, bytearray, int]]: ...
+    @t.overload
+    def __new__(
+        cls,
+        value: SubconBuildTypes,
+        subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> Const[None, None, SubconParsedType, SubconBuildTypes]: ...
 
 class Computed(Construct[ValueType, None]):
     def __init__(self, func: ConstantOrContextLambda[ValueType]) -> None: ...
