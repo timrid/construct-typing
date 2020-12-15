@@ -396,6 +396,18 @@ class FocusedSeq(Construct[t.Any, t.Any]):
         **subconskw: Construct[t.Any, t.Any]
     ) -> None: ...
 
+Pickled: Construct[t.Any, t.Any]
+
+Numpy: Construct[t.Any, t.Any]
+
+class NamedTuple(Adapter[SubconParsedType, SubconBuildTypes, t.Tuple[t.Any, ...], t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]]]):
+    def __init__(
+        self,
+        tuplename: str,
+        tuplefields: str,
+        subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> None: ...
+
 
 
 K = t.TypeVar("K")
