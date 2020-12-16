@@ -25,17 +25,15 @@ def test_typed_struct():
         b: Subcon(Int8ub)
 
     common(TypedStruct(Container1), b"\x00\x01\x02", Container1(a=1, b=2), 3)
-
-    class Container1Swapped(TypedContainer):
-        a: Subcon(Int16ub)
-        b: Subcon(Int8ub)
-
     common(
-        TypedStruct(Container1Swapped, swapped=True),
+        TypedStruct(Container1, swapped=True),
         b"\x02\x00\x01",
         Container(a=1, b=2),
         3,
     )
+    normal = TypedStruct(Container1)
+    swapped = TypedStruct(Container1, swapped=True)
+    assert str(normal.parse(b"\x00\x01\x02")) == str(swapped.parse(b"\x02\x00\x01"))
 
     class Container2(TypedContainer):
         class InnerContainer(TypedContainer):
@@ -79,6 +77,10 @@ def test_typed_struct():
 
     d = TypedStruct(Container6)
     assert d.build({}) == d.build({})
+
+
+def test_typed_bit_struct():
+    assert False
 
 
 def test_enum():

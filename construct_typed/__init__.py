@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import Any, Type, Dict, TYPE_CHECKING, TypeVar, Union
 import typing
-from construct.core import Construct, Adapter, Struct
+from construct.core import Construct, Adapter, Struct, BitStruct
 from construct.lib.containers import Container
 
 
@@ -95,12 +95,12 @@ else:
 if TYPE_CHECKING:
     class TypedContainer(Container[Any]):
         ...
+    ContainerType = TypeVar("ContainerType", bound=TypedContainer)
 else:
     class TypedContainer(Container):
         pass
 
 if TYPE_CHECKING:
-    ContainerType = TypeVar("ContainerType", bound=TypedContainer)
     class TypedStruct(Adapter[Container[Any], Dict[str, Any], ContainerType, Dict[str, Any]]):
         def __init__(self, container_type: Type[ContainerType], swapped: bool = False) -> None: ...
 else:
@@ -109,6 +109,7 @@ else:
             if not issubclass(container_type, TypedContainer):
                 raise TypeError("the subcon has to be a TypedContainer")
             self.container_type = container_type
+            self.swapped = swapped
 
             # extract the construct formats from the struct_type
             subcons = {}
@@ -123,12 +124,48 @@ else:
             super(TypedStruct, self).__init__(Struct(**subcons))
 
         def _decode(self, obj, context, path):
-            return self.container_type(obj)
+            if self.swapped:
+                return self.container_type({k: v for k, v in reversed(list(obj.items()))})
+            else:
+                return self.container_type(obj)
+
+        def _encode(self, obj, context, path):
+            return obj
+
+if TYPE_CHECKING:
+    class TypedBitStruct(Adapter[Container[Any], Dict[str, Any], ContainerType, Dict[str, Any]]):
+        def __init__(self, container_type: Type[ContainerType], swapped: bool = False) -> None: ...
+else:
+    class TypedBitStruct(Adapter):
+        def __init__(self, container_type, swapped = False):
+            if not issubclass(container_type, TypedContainer):
+                raise TypeError("the subcon has to be a TypedContainer")
+            self.container_type = container_type
+            self.swapped = swapped
+
+            # extract the construct formats from the struct_type
+            subcons = {}
+            subcon_formats = typing.get_type_hints(container_type)
+            subcon_items = subcon_formats.items()
+            if swapped:
+                subcon_items = reversed(subcon_items)
+            for subcon_name, subcon_format in subcon_items:
+                subcons[subcon_name] = subcon_format
+
+            # init Adatper with a Struct as subcon
+            super(TypedBitStruct, self).__init__(BitStruct(**subcons))
+
+        def _decode(self, obj, context, path):
+            if self.swapped:
+                return self.container_type({k: v for k, v in reversed(list(obj.items()))})
+            else:
+                return self.container_type(obj)
 
         def _encode(self, obj, context, path):
             return obj
 
 
-
 # TODO: TypedUnion
-# TODO: AnonymSubcon:
+# TODO: TypedLazyStruct
+# TODO: TypedSequence: Based on typing.namedtuple
+# TODO: FocusedSeq: Based on typing.namedtuple
