@@ -1,8 +1,8 @@
 {
     "python.languageServer": "Pylance",
-    "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false,
-    "python.testing.pytestEnabled": true,
+    // "python.testing.unittestEnabled": false,
+    // "python.testing.nosetestsEnabled": false,
+    // "python.testing.pytestEnabled": true,
     "pythonTestExplorer.testFramework": "pytest",
     "python.formatting.provider": "black",
     "python.analysis.typeCheckingMode": "strict",

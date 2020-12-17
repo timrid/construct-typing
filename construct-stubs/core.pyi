@@ -283,12 +283,14 @@ class FlagsEnum(Adapter[int, int, Container[bool], t.Union[int, str, t.Dict[str,
     ) -> None: ...
     def __getattr__(self, name: str) -> BitwisableString: ...
 
+class Mapping(Adapter[SubconParsedType, SubconBuildTypes, t.Any, t.Any]):
+    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes], mapping: t.Dict[t.Any, t.Any]) -> None: ...
 
 # ===============================================================================
 # structures and sequences
 # ===============================================================================
 # this can maybe made better when variadic generics are available 
-class Struct(Construct[Container[t.Any], t.Dict[str, t.Any]]):
+class Struct(Construct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]):
     def __init__(
         self,
         *subcons: Construct[t.Any, t.Any],
@@ -296,16 +298,9 @@ class Struct(Construct[Container[t.Any], t.Dict[str, t.Any]]):
     ) -> None: ...
 
 # this can maybe made better when variadic generics are available
-class Sequence(Construct[ListContainer[ParsedType], t.List[BuildTypes]]):
-    @t.overload
+class Sequence(Construct[ListContainer[t.Any], t.Optional[t.List[t.Any]]]):
     def __init__(
-        self: Sequence[ParsedType, BuildTypes],
-        *subcons: Construct[ParsedType, BuildTypes],
-        **subconskw: Construct[ParsedType, BuildTypes]
-    ) -> None: ...
-    @t.overload
-    def __init__(
-        self: Sequence[t.Any, t.Any],
+        self,
         *subcons: Construct[t.Any, t.Any],
         **subconskw: Construct[t.Any, t.Any]
     ) -> None: ...
@@ -331,7 +326,7 @@ class GreedyRange(Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer
 class RepeatUntil(Subconstruct[SubconParsedType, SubconBuildTypes, ListContainer[SubconParsedType], t.List[SubconBuildTypes]]):
     def __init__(
         self,
-        predicate: t.Union[bool, t.Callable[[Construct[SubconParsedType, SubconBuildTypes], ListContainer[SubconParsedType], Context], bool]], 
+        predicate: t.Union[bool, t.Callable[[SubconParsedType, ListContainer[SubconParsedType], Context], bool]], 
         subcon: Construct[SubconParsedType, SubconBuildTypes], 
         discard: bool = ...
     ) -> None: ...

@@ -29,11 +29,10 @@ For example:
  - an `Array(5, Int16ub)` construct parses to a `ListContainer[int]` and can be build from an `List[int]`. 
 
 The problem is to describe the more complex constructs like:
- - `Sequence` which has heterogenous subcons in comparison to an `Array` with only homogenous subcons. 
- - `Struct`, `BitStruct`, `Union` which has heterogenous and named subcons.
+ - `Sequence`, `FocusedSeq` which has heterogenous subcons in comparison to an `Array` with only homogenous subcons. 
+ - `Struct`, `BitStruct`, `LazyStruct`, `Union` which has heterogenous and named subcons.
 
-Currently only the very unspecific type `typing.Any` can be used as type hint (maybe in the future it can be optimised a little, when variadic generics become available). But the biggest disadvantage is that autocompletion for the named subcons is not available.
-
+Currently only the very unspecific type `typing.Any` can be used as type hint (maybe in the future it can be optimised a little, when [variadic generics](https://mail.python.org/archives/list/typing-sig@python.org/thread/SQVTQYWIOI4TIO7NNBTFFWFMSMS2TA4J/) become available). But the biggest disadvantage is that autocompletion for the named subcons is not available.
 
 ### Typed
 To include autocompletion and further enhance the type hints for these complex constructs the **construct_typed** package is used as an extension to the original *construct* package.
@@ -64,4 +63,3 @@ print(format.parse(b"BMP\x03\x02\x07\x08\t\x0b\x0c\r"))
 ```
 
 An example of the added `TypedEnum` class:
-
