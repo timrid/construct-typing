@@ -1,5 +1,6 @@
 import typing as t
 import enum
+import io
 import arrow  # type: ignore
 from construct.lib import Container, ListContainer, HexDisplayedBytes, HexDisplayedDict, HexDisplayedInteger, HexDumpDisplayedBytes, HexDumpDisplayedDict
 # unfortunately, there are a few duplications with "typing", e.g. Union and Optional, which is why the t. prefix must be used everywhere
@@ -592,19 +593,59 @@ class RawCopy(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
     def __new__(
         cls,
         subcon: Construct[SubconParsedType, SubconBuildTypes]
-    ) -> RawCopy[SubconParsedType, SubconBuildTypes, RawCopyObj[SubconParsedType], t.Dict[str, t.Union[SubconBuildTypes, BufferType]]]: ...
+    ) -> RawCopy[SubconParsedType, SubconBuildTypes, RawCopyObj[SubconParsedType], t.Optional[t.Dict[str, t.Union[SubconBuildTypes, BufferType]]]]: ...
 
 def ByteSwapped(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> Transformed[SubconParsedType, SubconBuildTypes]: ...
 def BitsSwapped(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> t.Union[Transformed[SubconParsedType, SubconBuildTypes], Restreamed[SubconParsedType, SubconBuildTypes]]: ...
+
+class Prefixed(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(
+        self, 
+        lengthfield: Construct[int, int], 
+        subcon: Construct[SubconParsedType, SubconBuildTypes], 
+        includelength: t.Optional[bool] = ...
+    ) -> None: ...
+
+def PrefixedArray(
+    countfield: Construct[int, int],
+    subcon: Construct[SubconParsedType, SubconBuildTypes]
+) -> Array[SubconParsedType, SubconBuildTypes]: ...
+
+class FixedSized(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(
+        self,
+        length: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> None: ...
+
+class NullTerminated(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(
+        self,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        term: bytes = ...,
+        include: t.Optional[bool] = ...,
+        consume: t.Optional[bool] = ...,
+        require: t.Optional[bool] = ...
+    ) -> None: ...
+
+class NullStripped(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
+    def __init__(self, subcon: Construct[SubconParsedType, SubconBuildTypes], pad: bytes = ...) -> None: ...
+
+class RestreamData(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, None]):
+    def __init__(
+        self,
+        datafunc: t.Union[bytes, io.BytesIO, Construct[bytes, t.Any], t.Callable[[Context], bytes]],
+        subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> None: ...
 
 class Transformed(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
     def __init__(
         self, 
         subcon: Construct[SubconParsedType, SubconBuildTypes], 
         decodefunc: t.Callable[[bytes], bytes],
-        decodeamount: int,
+        decodeamount: t.Optional[int],
         encodefunc: t.Callable[[bytes], bytes],
-        encodeamount: int
+        encodeamount: t.Optional[int]
     ) -> None: ...
 
 class Restreamed(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]):
@@ -617,6 +658,7 @@ class Restreamed(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedTy
         encoderunit: int,
         sizecomputer: t.Callable[[int], int]
     ) -> None: ...
+
 
 #===============================================================================
 # adapters and validators
