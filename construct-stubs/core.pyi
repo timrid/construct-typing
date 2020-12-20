@@ -90,8 +90,8 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
         self,
         other: t.Union[str, bytes, t.Callable[[ParsedType, Context], t.NoReturn]],
     ) -> Renamed[ParsedType, BuildTypes]: ...
-    def __add__(self, other: Construct[t.Any, t.Any]) -> Struct: ...
-    def __rshift__(self, other: Construct[t.Any, t.Any]) -> Sequence[t.Any, t.Any]: ...
+    def __add__(self, other: Construct[t.Any, t.Any]) -> Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
+    def __rshift__(self, other: Construct[t.Any, t.Any]) -> Sequence[ListContainer[t.Any], t.Optional[t.List[t.Any]]]: ...
     def __getitem__(
         self, count: t.Union[int, t.Callable[[Context], int]]
     ) -> Array[ParsedType, BuildTypes]: ...
@@ -131,12 +131,11 @@ class Subconstruct(
     ) -> Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
 
 class Adapter(
-    t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
     Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
 ):
-    def __init__(
-        self, subcon: Construct[SubconParsedType, SubconBuildTypes]
-    ) -> None: ...
+    def __new__(
+        cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
     def _decode(
         self, obj: SubconParsedType, context: Context, path: PathType
     ) -> ParsedType: ...
@@ -160,8 +159,10 @@ class Validator(SymmetricAdapter[t.Any, t.Any, SubconParsedType, t.Any]):
 # ===============================================================================
 # bytes and bits
 # ===============================================================================
-class Bytes(Construct[bytes, t.Union[bytes, bytearray, int]]):
-    def __init__(self, length: ConstantOrContextLambda[int]) -> None: ...
+class Bytes(Construct[ParsedType, BuildTypes]):
+    def __new__(
+        cls, length: ConstantOrContextLambda[int]
+    ) -> Bytes[bytes, t.Union[bytes, bytearray, int]]: ...
 
 GreedyBytes: Construct[bytes, t.Union[bytes, bytearray, int]]
 
@@ -186,37 +187,33 @@ class FormatField(Construct[ParsedType, BuildTypes]):
     FORMAT_INT = t.Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
     FORMAT_FLOAT = t.Literal["f", "d", "e"]
     @t.overload
-    def __init__(
-        self: FormatField[int, int], endianity: str, format: FORMAT_INT
-    ) -> None: ...
+    def __new__(cls, endianity: str, format: FORMAT_INT) -> FormatField[int, int]: ...
     @t.overload
-    def __init__(
-        self: FormatField[float, float], endianity: str, format: FORMAT_FLOAT
-    ) -> None: ...
+    def __new__(
+        cls, endianity: str, format: FORMAT_FLOAT
+    ) -> FormatField[float, float]: ...
     @t.overload
-    def __init__(
-        self: FormatField[t.Any, t.Any], endianity: str, format: str
-    ) -> None: ...
+    def __new__(cls, endianity: str, format: str) -> FormatField[t.Any, t.Any]: ...
 
-class BytesInteger(Construct[int, int]):
-    def __init__(
-        self,
+class BytesInteger(Construct[ParsedType, BuildTypes]):
+    def __new__(
+        cls,
         length: ConstantOrContextLambda[int],
         signed: bool = ...,
         swapped: bool = ...,
-    ) -> None: ...
+    ) -> BytesInteger[int, int]: ...
 
-class BitsInteger(Construct[int, int]):
-    def __init__(
-        self,
+class BitsInteger(Construct[ParsedType, BuildTypes]):
+    def __new__(
+        cls,
         length: ConstantOrContextLambda[int],
         signed: bool = ...,
         swapped: bool = ...,
-    ) -> None: ...
+    ) -> BitsInteger[int, int]: ...
 
-Bit: BitsInteger
-Nibble: BitsInteger
-Octet: BitsInteger
+Bit: BitsInteger[int, int]
+Nibble: BitsInteger[int, int]
+Octet: BitsInteger[int, int]
 
 Int8ub: FormatField[int, int]
 Int16ub: FormatField[int, int]
@@ -262,35 +259,35 @@ Half: FormatField[float, float]
 Single: FormatField[float, float]
 Double: FormatField[float, float]
 
-Int24ub: BytesInteger
-Int24ul: BytesInteger
-Int24un: BytesInteger
-Int24sb: BytesInteger
-Int24sl: BytesInteger
-Int24sn: BytesInteger
+Int24ub: BytesInteger[int, int]
+Int24ul: BytesInteger[int, int]
+Int24un: BytesInteger[int, int]
+Int24sb: BytesInteger[int, int]
+Int24sl: BytesInteger[int, int]
+Int24sn: BytesInteger[int, int]
 
 VarInt: Construct[int, int]
 
 # ===============================================================================
 # strings
 # ===============================================================================
-class StringEncoded(Construct[str, str]):
+class StringEncoded(Construct[ParsedType, BuildTypes]):
     ENCODING_1 = t.Literal["ascii", "utf8", "utf_8", "u8"]
     ENCODING_2 = t.Literal["utf16", "utf_16", "u16", "utf_16_be", "utf_16_le"]
     ENCODING_4 = t.Literal["utf32", "utf_32", "u32", "utf_32_be", "utf_32_le"]
     ENCODING = t.Union[str, ENCODING_1, ENCODING_2, ENCODING_4]
-    def __init__(
-        self, subcon: Construct[ParsedType, BuildTypes], encoding: ENCODING
-    ) -> None: ...
+    def __new__(
+        cls, subcon: Construct[ParsedType, BuildTypes], encoding: ENCODING
+    ) -> StringEncoded[str, str]: ...
 
 def PaddedString(
     length: ConstantOrContextLambda[int], encoding: StringEncoded.ENCODING
-) -> StringEncoded: ...
+) -> StringEncoded[str, str]: ...
 def PascalString(
     lengthfield: Construct[ParsedType, BuildTypes], encoding: StringEncoded.ENCODING
-) -> StringEncoded: ...
-def CString(encoding: StringEncoded.ENCODING) -> StringEncoded: ...
-def GreedyString(encoding: StringEncoded.ENCODING) -> StringEncoded: ...
+) -> StringEncoded[str, str]: ...
+def CString(encoding: StringEncoded.ENCODING) -> StringEncoded[str, str]: ...
+def GreedyString(encoding: StringEncoded.ENCODING) -> StringEncoded[str, str]: ...
 
 # ===============================================================================
 # mappings
@@ -303,15 +300,13 @@ class EnumIntegerString(str):
     @staticmethod
     def new(intvalue: int, stringvalue: str) -> EnumIntegerString: ...
 
-class Enum(
-    Adapter[int, int, t.Union[EnumInteger, EnumIntegerString], t.Union[int, str]]
-):
-    def __init__(
-        self,
+class Enum(Adapter[int, int, ParsedType, BuildTypes]):
+    def __new__(
+        cls,
         subcon: Construct[int, int],
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
         **mapping: int
-    ) -> None: ...
+    ) -> Enum[t.Union[EnumInteger, EnumIntegerString], t.Union[int, str]]: ...
     def __getattr__(self, name: str) -> EnumIntegerString: ...
 
 class BitwisableString(str):
@@ -339,16 +334,16 @@ class Mapping(Adapter[SubconParsedType, SubconBuildTypes, t.Any, t.Any]):
 # structures and sequences
 # ===============================================================================
 # this can maybe made better when variadic generics are available
-class Struct(Construct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]):
-    def __init__(
-        self, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
-    ) -> None: ...
+class Struct(Construct[ParsedType, BuildTypes]):
+    def __new__(
+        cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
+    ) -> Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
 
 # this can maybe made better when variadic generics are available
-class Sequence(Construct[ListContainer[t.Any], t.Optional[t.List[t.Any]]]):
-    def __init__(
-        self, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
-    ) -> None: ...
+class Sequence(Construct[ParsedType, BuildTypes]):
+    def __new__(
+        cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
+    ) -> Sequence[ListContainer[t.Any], t.Optional[t.List[t.Any]]]: ...
 
 # ===============================================================================
 # arrays ranges and repeaters
@@ -431,9 +426,14 @@ class Const(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTy
     ) -> Const[None, None, SubconParsedType, SubconBuildTypes]: ...
 
 class Computed(Construct[ParsedType, BuildTypes]):
+    @t.overload
     def __new__(
         cls, func: ConstantOrContextLambda2[ParsedType]
     ) -> Computed[ParsedType, None]: ...
+    @t.overload
+    def __new__(
+        cls, func: ConstantOrContextLambda2[t.Any]
+    ) -> Computed[t.Any, None]: ...
 
 Index: Construct[int, t.Any]
 
@@ -519,8 +519,12 @@ class Hex(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
     ) -> Hex[bytes, BuildTypes, HexDisplayedBytes, BuildTypes]: ...
     @t.overload
     def __new__(
-        cls, subcon: Construct[t.Dict[K, V], BuildTypes]
-    ) -> Hex[t.Dict[K, V], BuildTypes, HexDisplayedDict[K, V], BuildTypes]: ...
+        cls, subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes]
+    ) -> Hex[RawCopyObj[SubconParsedType], BuildTypes, HexDisplayedDict[str, t.Union[int, bytes, SubconParsedType]], BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls, subcon: Construct[Container[t.Any], BuildTypes]
+    ) -> Hex[Container[t.Any], BuildTypes, HexDisplayedDict[str, t.Any], BuildTypes]: ...
     @t.overload
     def __new__(
         cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
@@ -535,8 +539,12 @@ class HexDump(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes
     ) -> HexDump[bytes, BuildTypes, HexDumpDisplayedBytes, BuildTypes]: ...
     @t.overload
     def __new__(
-        cls, subcon: Construct[t.Dict[K, V], BuildTypes]
-    ) -> HexDump[t.Dict[K, V], BuildTypes, HexDumpDisplayedDict[K, V], BuildTypes]: ...
+        cls, subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes]
+    ) -> HexDump[RawCopyObj[SubconParsedType], BuildTypes, HexDumpDisplayedDict[str, t.Union[int, bytes, SubconParsedType]], BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls, subcon: Construct[Container[t.Any], BuildTypes]
+    ) -> HexDump[Container[t.Any], BuildTypes, HexDumpDisplayedDict[str, t.Any], BuildTypes]: ...
     @t.overload
     def __new__(
         cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
@@ -603,12 +611,12 @@ class Switch(Construct[ParsedType, BuildTypes]):
     def __new__(
         cls,
         keyfunc: ConstantOrContextLambda[SwitchType],
-        cases: t.Dict[SwitchType, Construct[t.Any, t.Any]],
+        cases: t.Dict[t.Any, Construct[t.Any, t.Any]],
         default: t.Optional[Construct[t.Any, t.Any]] = ...,
     ) -> Switch[t.Any, t.Any]: ...
 
-class StopIf(Construct[None, None]):
-    def __init__(self, condfunc: ConstantOrContextLambda[bool]) -> None: ...
+class StopIf(Construct[ParsedType, BuildTypes]):
+    def __new__(cls, condfunc: ConstantOrContextLambda[bool]) -> StopIf[None, None]: ...
 
 # ===============================================================================
 # alignment and padding
@@ -641,7 +649,7 @@ def AlignedStruct(
     modulus: ConstantOrContextLambda[int],
     *subcons: Construct[t.Any, t.Any],
     **subconskw: Construct[t.Any, t.Any]
-) -> Struct: ...
+) -> Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
 def BitStruct(
     *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
 ) -> t.Union[
