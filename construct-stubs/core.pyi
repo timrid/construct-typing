@@ -106,6 +106,7 @@ class Context(Container[t.Any]):
 
 ValueType = t.TypeVar("ValueType")
 ConstantOrContextLambda = t.Union[ValueType, t.Callable[[Context], t.Any]]
+ConstantOrContextLambda2 = t.Union[ValueType, t.Callable[[Context], ValueType]]
 
 SubconParsedType = t.TypeVar("SubconParsedType")
 SubconBuildTypes = t.TypeVar("SubconBuildTypes")
@@ -361,8 +362,11 @@ class Const(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTy
         subcon: Construct[SubconParsedType, SubconBuildTypes]
     ) -> Const[None, None, SubconParsedType, SubconBuildTypes]: ...
 
-class Computed(Construct[ValueType, None]):
-    def __init__(self, func: ConstantOrContextLambda[ValueType]) -> None: ...
+class Computed(Construct[ParsedType, BuildTypes]):
+    def __new__(
+        cls,
+        func: ConstantOrContextLambda2[ParsedType]
+    ) -> Computed[ParsedType, None]: ...
 
 Index: Construct[int, t.Any]
 
