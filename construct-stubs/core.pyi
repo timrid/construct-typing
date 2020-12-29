@@ -110,11 +110,11 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     __rdiv__: t.Callable[[str], Construct[ParsedType, BuildTypes]]
     def __mul__(
         self,
-        other: t.Union[str, bytes, t.Callable[[ParsedType, Context], t.NoReturn]],
+        other: t.Union[str, bytes, t.Callable[[ParsedType, Context], None]],
     ) -> Renamed[ParsedType, BuildTypes]: ...
     def __rmul__(
         self,
-        other: t.Union[str, bytes, t.Callable[[ParsedType, Context], t.NoReturn]],
+        other: t.Union[str, bytes, t.Callable[[ParsedType, Context], None]],
     ) -> Renamed[ParsedType, BuildTypes]: ...
     def __add__(
         self, other: Construct[t.Any, t.Any]
@@ -154,6 +154,7 @@ class Subconstruct(
     t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
     Construct[ParsedType, BuildTypes],
 ):
+    subcon: Construct[SubconParsedType, SubconBuildTypes]
     @t.overload
     def __new__(
         cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
@@ -191,7 +192,11 @@ class Validator(
         self, obj: SubconParsedType, context: Context, path: PathType
     ) -> bool: ...
 
-# TODO: Tunnel
+class Tunnel(
+    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
+):
+    def _decode(self, data: bytes, context: Context, path: PathType) -> bytes: ...
+    def _encode(self, data: bytes, context: Context, path: PathType) -> bytes: ...
 
 # TODO: Compiled
 
@@ -375,12 +380,14 @@ class Struct(Construct[ParsedType, BuildTypes]):
     def __new__(
         cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
     ) -> Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
+    def __getattr__(self, name: str) -> t.Any: ...
 
 # this can maybe made better when variadic generics are available
 class Sequence(Construct[ParsedType, BuildTypes]):
     def __new__(
         cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
     ) -> Sequence[ListContainer[t.Any], t.Optional[t.List[t.Any]]]: ...
+    def __getattr__(self, name: str) -> t.Any: ...
 
 # ===============================================================================
 # arrays ranges and repeaters
@@ -515,6 +522,7 @@ class FocusedSeq(Construct[t.Any, t.Any]):
         *subcons: Construct[t.Any, t.Any],
         **subconskw: Construct[t.Any, t.Any]
     ) -> None: ...
+    def __getattr__(self, name: str) -> t.Any: ...
 
 Pickled: Construct[t.Any, t.Any]
 
@@ -629,6 +637,7 @@ class Union(Construct[Container[t.Any], t.Dict[str, t.Any]]):
         *subcons: Construct[t.Any, t.Any],
         **subconskw: Construct[t.Any, t.Any]
     ) -> None: ...
+    def __getattr__(self, name: str) -> t.Any: ...
 
 # this can maybe made better when variadic generics are available
 class Select(Construct[ParsedType, BuildTypes]):
@@ -890,9 +899,25 @@ class Checksum(Construct[ParsedType, BuildTypes]):
         self,
         checksumfield: Construct[ParsedType, BuildTypes],
         hashfunc: t.Callable[[bytes], BuildTypes],
-        bytesfunc: t.Callable[[Context], bytes]
+        bytesfunc: t.Callable[[Context], bytes],
     ) -> None: ...
 
+class Compressed(Tunnel[SubconParsedType, SubconBuildTypes]):
+    def __init__(
+        self,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        encoding: str,
+        level: t.Optional[int] = ...,
+    ) -> None: ...
+
+class Rebuffered(
+    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
+):
+    def __init__(
+        self,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        tailcutoff: t.Optional[int] = ...,
+    ) -> None: ...
 
 # ===============================================================================
 # lazy equivalents
