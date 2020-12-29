@@ -6,7 +6,7 @@ testobjs = [
     float(10.0),
 ]
 
-operators = [
+operators_bin = [
     "__add__",
     "__sub__",
     "__mul__",
@@ -35,11 +35,6 @@ operators = [
     "__rand__",
     "__ror__",
 
-    # "__neg__",
-    # "__pos__",
-    # "__invert__",
-    # "__inv__",
-
     "__contains__",
     "__gt__",
     "__ge__",
@@ -49,8 +44,15 @@ operators = [
     "__ne__",
 ]
 
+operators_uni = [
+    "__neg__",
+    "__pos__",
+    "__invert__",
+    "__inv__",
+]
 
-def create_overload(op, lhs=None, rhs=None):
+
+def create_overload_bin(op, lhs=None, rhs=None):
     if lhs is None and rhs is None:
         print("    @t.overload")
         print(f"    def {op}(self, other: t.Any) -> BinExpr[t.Any]: ...")
@@ -66,12 +68,34 @@ def create_overload(op, lhs=None, rhs=None):
         except AttributeError:
             pass
 
+def create_overload_uni(op, obj=None):
+    if obj is None:
+        print("    @t.overload")
+        print(f"    def {op}(self) -> UniExpr[t.Any]: ...")
+    else:
+        try:
+            result = getattr(obj, op)()
+            obj_type = type(obj).__name__
+            result_type = type(result).__name__
+            if result_type != "NotImplementedType":
+                print("    @t.overload")
+                print(f"    def {op}(self: ExprMixin[{obj_type}]) -> BinExpr[{result_type}]: ...")
+        except AttributeError:
+            pass
+
 
 print("class ExprMixin(t.Generic[ReturnType], object):")
-for op in operators:
+for op in operators_bin:
     print(f"    # {op} ".ljust(120, "#"))
     for lhs in testobjs:
         for rhs in testobjs:
-            create_overload(op, lhs, rhs)
-    create_overload(op)
+            create_overload_bin(op, lhs, rhs)
+    create_overload_bin(op)
+    print("")
+
+for op in operators_uni:
+    print(f"    # {op} ".ljust(120, "#"))
+    for obj in testobjs:
+        create_overload_uni(op, obj)
+    create_overload_uni(op)
     print("")
