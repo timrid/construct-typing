@@ -104,7 +104,9 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     def compile(self, filename: str = ...) -> Construct[ParsedType, BuildTypes]: ...
     def benchmark(self, sampledata: BufferType, filename: str = ...) -> str: ...
     def export_ksy(self, schemaname: str = ..., filename: str = ...) -> str: ...
-    def __rtruediv__(self, name: t.Optional[t.AnyStr]) -> Renamed[ParsedType, BuildTypes]: ...
+    def __rtruediv__(
+        self, name: t.Optional[t.AnyStr]
+    ) -> Renamed[ParsedType, BuildTypes]: ...
     __rdiv__: t.Callable[[str], Construct[ParsedType, BuildTypes]]
     def __mul__(
         self,
@@ -180,7 +182,11 @@ class SymmetricAdapter(
     Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]
 ): ...
 
-class Validator(SymmetricAdapter[t.Any, t.Any, SubconParsedType, t.Any]):
+class Validator(
+    SymmetricAdapter[
+        SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
+    ]
+):
     def _validate(
         self, obj: SubconParsedType, context: Context, path: PathType
     ) -> bool: ...
@@ -894,9 +900,74 @@ class ExprSymmetricAdapter(
         encoder: t.Callable[[BuildTypes, Context], SubconBuildTypes],
     ) -> None: ...
 
-class ExprValidator(Validator[ParsedType]):
+class ExprValidator(Validator[SubconParsedType, SubconBuildTypes]):
     def __init__(
         self,
-        subcon: Construct[ParsedType, t.Any],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
         validator: t.Callable[[ParsedType, Context], bool],
     ) -> None: ...
+
+def OneOf(
+    subcon: Construct[SubconParsedType, SubconBuildTypes],
+    valids: t.Container[SubconParsedType],
+) -> ExprValidator[SubconParsedType, SubconBuildTypes]: ...
+def NoneOf(
+    subcon: Construct[SubconParsedType, SubconBuildTypes],
+    invalids: t.Container[SubconParsedType],
+) -> ExprValidator[SubconParsedType, SubconBuildTypes]: ...
+def Filter(
+    predicate: t.Callable[[SubconParsedType, Context], bool],
+    subcon: Construct[SubconParsedType, SubconBuildTypes],
+) -> ExprSymmetricAdapter[
+    SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
+]: ...
+
+class Slicing(
+    Adapter[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
+):
+    def __new__(
+        cls,
+        subcon: t.Union[
+            Array[
+                SubconParsedType,
+                SubconBuildTypes,
+                ListContainer[SubconParsedType],
+                t.List[SubconBuildTypes],
+            ],
+            GreedyRange[
+                SubconParsedType,
+                SubconBuildTypes,
+                ListContainer[SubconParsedType],
+                t.List[SubconBuildTypes],
+            ],
+        ],
+        count: int,
+        start: t.Optional[int],
+        stop: t.Optional[int],
+        step: int = ...,
+        empty: t.Optional[SubconParsedType] = ...,
+    ) -> Slicing[ListContainer[SubconParsedType], t.List[SubconBuildTypes]]: ...
+
+class Indexing(
+    Adapter[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
+):
+    def __new__(
+        cls,
+        subcon: t.Union[
+            Array[
+                SubconParsedType,
+                SubconBuildTypes,
+                ListContainer[SubconParsedType],
+                t.List[SubconBuildTypes],
+            ],
+            GreedyRange[
+                SubconParsedType,
+                SubconBuildTypes,
+                ListContainer[SubconParsedType],
+                t.List[SubconBuildTypes],
+            ],
+        ],
+        count: int,
+        index: int,
+        empty: t.Optional[SubconParsedType] = ...,
+    ) -> Indexing[SubconParsedType, SubconBuildTypes]: ...
