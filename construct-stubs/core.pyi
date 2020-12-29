@@ -866,6 +866,34 @@ class Restreamed(
         sizecomputer: t.Callable[[int], int],
     ) -> None: ...
 
+class ProcessXor(
+    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconParsedType]
+):
+    def __new__(
+        cls,
+        padfunc: ConstantOrContextLambda2[t.Union[int, bytes]],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> ProcessXor[SubconParsedType, SubconBuildTypes]: ...
+
+class ProcessRotateLeft(
+    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconParsedType]
+):
+    def __new__(
+        cls,
+        amount: ConstantOrContextLambda2[int],
+        group: ConstantOrContextLambda2[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> ProcessRotateLeft[SubconParsedType, SubconBuildTypes]: ...
+
+class Checksum(Construct[ParsedType, BuildTypes]):
+    def __init__(
+        self,
+        checksumfield: Construct[ParsedType, BuildTypes],
+        hashfunc: t.Callable[[bytes], BuildTypes],
+        bytesfunc: t.Callable[[Context], bytes]
+    ) -> None: ...
+
+
 # ===============================================================================
 # lazy equivalents
 # ===============================================================================
