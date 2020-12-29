@@ -28,7 +28,10 @@ ContextKWType = t.Any
 # exceptions
 # ===============================================================================
 class ConstructError(Exception):
-    path: PathType
+    path: t.Optional[PathType]
+    def __init__(
+        self, message: str = ..., path: t.Optional[PathType] = ...
+    ) -> None: ...
 
 class SizeofError(ConstructError): ...
 class AdaptationError(ConstructError): ...
@@ -56,6 +59,21 @@ class RawCopyError(ConstructError): ...
 class RotationError(ConstructError): ...
 class ChecksumError(ConstructError): ...
 class CancelParsing(ConstructError): ...
+
+# ===============================================================================
+# used internally
+# ===============================================================================
+def stream_read(stream: t.BinaryIO, length: int, path: t.Optional[PathType]) -> bytes: ...
+def stream_read_entire(stream: t.BinaryIO, path: t.Optional[PathType]) -> bytes: ...
+def stream_write(
+    stream: t.BinaryIO, data: bytes, length: int, path: t.Optional[PathType]
+) -> None: ...
+def stream_seek(
+    stream: t.BinaryIO, offset: int, whence: int, path: t.Optional[PathType]
+) -> int: ...
+def stream_tell(stream: t.BinaryIO, path: t.Optional[PathType]) -> int: ...
+def stream_size(stream: t.BinaryIO) -> int: ...
+def stream_iseof(stream: t.BinaryIO) -> bool: ...
 
 # ===============================================================================
 # abstract constructs
@@ -107,15 +125,15 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
 
 @t.type_check_only
 class Context(Container[t.Any]):
-    _: t.Optional[Context]
-    _params: t.Optional[Context]
-    _root: t.Optional[Context]
+    _: Context  # optional field
+    _params: Context  # optional field
+    _root: Context  # optional field
     _parsing: bool
     _building: bool
     _sizing: bool
     _subcons: Container[Construct[t.Any, t.Any]]
-    _io: t.Optional[StreamType]
-    _index: t.Optional[int]
+    _io: StreamType  # optional field
+    _index: int  # optional field
 
 ValueType = t.TypeVar("ValueType")
 ConstantOrContextLambda = t.Union[ValueType, t.Callable[[Context], t.Any]]
@@ -837,6 +855,18 @@ class Restreamed(
         encoderunit: int,
         sizecomputer: t.Callable[[int], int],
     ) -> None: ...
+
+# ===============================================================================
+# lazy equivalents
+# ===============================================================================
+class Lazy(
+    Subconstruct[
+        SubconParsedType,
+        SubconBuildTypes,
+        t.Callable[[], SubconParsedType],
+        t.Union[t.Callable[[], SubconParsedType], SubconParsedType],
+    ]
+): ...
 
 # ===============================================================================
 # adapters and validators
