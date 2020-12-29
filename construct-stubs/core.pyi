@@ -351,15 +351,13 @@ class Enum(Adapter[int, int, ParsedType, BuildTypes]):
 class BitwisableString(str):
     def __or__(self, other: BitwisableString) -> BitwisableString: ...
 
-class FlagsEnum(
-    Adapter[int, int, Container[bool], t.Union[int, str, t.Dict[str, bool]]]
-):
-    def __init__(
-        self,
+class FlagsEnum(Adapter[int, int, ParsedType, BuildTypes]):
+    def __new__(
+        cls,
         subcon: Construct[int, int],
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
         **flags: int
-    ) -> None: ...
+    ) -> FlagsEnum[Container[bool], t.Union[int, str, t.Dict[str, bool]]]: ...
     def __getattr__(self, name: str) -> BitwisableString: ...
 
 class Mapping(Adapter[SubconParsedType, SubconBuildTypes, t.Any, t.Any]):
