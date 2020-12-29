@@ -90,11 +90,20 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
         self,
         other: t.Union[str, bytes, t.Callable[[ParsedType, Context], t.NoReturn]],
     ) -> Renamed[ParsedType, BuildTypes]: ...
-    def __add__(self, other: Construct[t.Any, t.Any]) -> Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
-    def __rshift__(self, other: Construct[t.Any, t.Any]) -> Sequence[ListContainer[t.Any], t.Optional[t.List[t.Any]]]: ...
+    def __add__(
+        self, other: Construct[t.Any, t.Any]
+    ) -> Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
+    def __rshift__(
+        self, other: Construct[t.Any, t.Any]
+    ) -> Sequence[ListContainer[t.Any], t.Optional[t.List[t.Any]]]: ...
     def __getitem__(
         self, count: t.Union[int, t.Callable[[Context], int]]
-    ) -> Array[ParsedType, BuildTypes]: ...
+    ) -> Array[
+        ParsedType,
+        BuildTypes,
+        ListContainer[ParsedType],
+        t.List[BuildTypes],
+    ]: ...
 
 @t.type_check_only
 class Context(Container[t.Any]):
@@ -352,28 +361,38 @@ class Array(
     Subconstruct[
         SubconParsedType,
         SubconBuildTypes,
-        ListContainer[SubconParsedType],
-        t.List[SubconBuildTypes],
+        ParsedType,
+        BuildTypes,
     ]
 ):
-    def __init__(
-        self,
+    def __new__(
+        cls,
         count: ConstantOrContextLambda[int],
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         discard: bool = ...,
-    ) -> None: ...
+    ) -> Array[
+        SubconParsedType,
+        SubconBuildTypes,
+        ListContainer[SubconParsedType],
+        t.List[SubconBuildTypes],
+    ]: ...
 
 class GreedyRange(
     Subconstruct[
         SubconParsedType,
         SubconBuildTypes,
-        ListContainer[SubconParsedType],
-        t.List[SubconBuildTypes],
+        ParsedType,
+        BuildTypes,
     ]
 ):
-    def __init__(
-        self, subcon: Construct[SubconParsedType, SubconBuildTypes], discard: bool = ...
-    ) -> None: ...
+    def __new__(
+        cls, subcon: Construct[SubconParsedType, SubconBuildTypes], discard: bool = ...
+    ) -> GreedyRange[
+        SubconParsedType,
+        SubconBuildTypes,
+        ListContainer[SubconParsedType],
+        t.List[SubconBuildTypes],
+    ]: ...
 
 class RepeatUntil(
     Subconstruct[
@@ -477,16 +496,21 @@ class NamedTuple(
     Adapter[
         SubconParsedType,
         SubconBuildTypes,
-        t.Tuple[t.Any, ...],
-        t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]],
+        ParsedType,
+        BuildTypes,
     ]
 ):
-    def __init__(
-        self,
+    def __new__(
+        cls,
         tuplename: str,
         tuplefields: str,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-    ) -> None: ...
+    ) -> NamedTuple[
+        SubconParsedType,
+        SubconBuildTypes,
+        t.Tuple[t.Any, ...],
+        t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]],
+    ]: ...
 
 @t.overload
 def Timestamp(
@@ -520,11 +544,18 @@ class Hex(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
     @t.overload
     def __new__(
         cls, subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes]
-    ) -> Hex[RawCopyObj[SubconParsedType], BuildTypes, HexDisplayedDict[str, t.Union[int, bytes, SubconParsedType]], BuildTypes]: ...
+    ) -> Hex[
+        RawCopyObj[SubconParsedType],
+        BuildTypes,
+        HexDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
+        BuildTypes,
+    ]: ...
     @t.overload
     def __new__(
         cls, subcon: Construct[Container[t.Any], BuildTypes]
-    ) -> Hex[Container[t.Any], BuildTypes, HexDisplayedDict[str, t.Any], BuildTypes]: ...
+    ) -> Hex[
+        Container[t.Any], BuildTypes, HexDisplayedDict[str, t.Any], BuildTypes
+    ]: ...
     @t.overload
     def __new__(
         cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
@@ -540,11 +571,18 @@ class HexDump(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes
     @t.overload
     def __new__(
         cls, subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes]
-    ) -> HexDump[RawCopyObj[SubconParsedType], BuildTypes, HexDumpDisplayedDict[str, t.Union[int, bytes, SubconParsedType]], BuildTypes]: ...
+    ) -> HexDump[
+        RawCopyObj[SubconParsedType],
+        BuildTypes,
+        HexDumpDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
+        BuildTypes,
+    ]: ...
     @t.overload
     def __new__(
         cls, subcon: Construct[Container[t.Any], BuildTypes]
-    ) -> HexDump[Container[t.Any], BuildTypes, HexDumpDisplayedDict[str, t.Any], BuildTypes]: ...
+    ) -> HexDump[
+        Container[t.Any], BuildTypes, HexDumpDisplayedDict[str, t.Any], BuildTypes
+    ]: ...
     @t.overload
     def __new__(
         cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
@@ -606,7 +644,7 @@ class Switch(Construct[ParsedType, BuildTypes]):
         keyfunc: ConstantOrContextLambda[SwitchType],
         cases: t.Dict[SwitchType, Construct[int, int]],
         default: t.Optional[Construct[int, int]] = ...,
-    ) -> Switch[int, int]: ...
+    ) -> Switch[int, t.Optional[int]]: ...
     @t.overload
     def __new__(
         cls,
@@ -729,7 +767,12 @@ class Prefixed(
 def PrefixedArray(
     countfield: Construct[int, int],
     subcon: Construct[SubconParsedType, SubconBuildTypes],
-) -> Array[SubconParsedType, SubconBuildTypes]: ...
+) -> Array[
+    SubconParsedType,
+    SubconBuildTypes,
+    ListContainer[SubconParsedType],
+    t.List[SubconBuildTypes],
+]: ...
 
 class FixedSized(
     Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
