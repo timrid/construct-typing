@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import enum
+import dataclasses
+import typing as t
 from .declarativeunittest import common, raises
 from construct import (
     Int8ub,
@@ -15,68 +17,74 @@ from construct import (
     Computed,
     this,
 )
-from construct.lib import Container
-from construct_typed import TypedContainer, TypedStruct, TypedEnum, Subcon
+from construct_typed import TStruct, TBitStruct, TSubcon, TEnum
 
 
-def test_typed_struct():
-    class Container1(TypedContainer):
-        a: Subcon(Int16ub)
-        b: Subcon(Int8ub)
+def test_typed_struct_1():
+    @dataclasses.dataclass
+    class TestDataclass:
+        a: int = TSubcon(Int16ub)
+        b: int = TSubcon(Int8ub)
 
-    common(TypedStruct(Container1), b"\x00\x01\x02", Container1(a=1, b=2), 3)
+    common(TStruct(TestDataclass), b"\x00\x01\x02", TestDataclass(a=1, b=2), 3)
     common(
-        TypedStruct(Container1, swapped=True),
+        TStruct(TestDataclass, swapped=True),
         b"\x02\x00\x01",
-        Container(a=1, b=2),
+        TestDataclass(a=1, b=2),
         3,
     )
-    normal = TypedStruct(Container1)
-    swapped = TypedStruct(Container1, swapped=True)
+    normal = TStruct(TestDataclass)
+    swapped = TStruct(TestDataclass, swapped=True)
     assert str(normal.parse(b"\x00\x01\x02")) == str(swapped.parse(b"\x02\x00\x01"))
 
-    class Container2(TypedContainer):
-        class InnerContainer(TypedContainer):
-            b: Subcon(Byte)
+def test_typed_struct_2():
+    @dataclasses.dataclass
+    class TestDataclass:
+        @dataclasses.dataclass
+        class InnerDataclass:
+            b: int = TSubcon(Byte)
 
-        a: Subcon(TypedStruct(InnerContainer))
-
-    common(TypedStruct(Container2), b"\x01", Container(a=Container(b=1)), 1)
-
-    # TODO: How to get anonymus subcons?
-    class Container3(TypedContainer):
-        anonymus1: Subcon(Const(b"\x00"))
-        anonymus2: Subcon(Padding(1))
-        anonymus3: Subcon(Pass)
-        anonymus4: Subcon(Terminated)
+        a: InnerDataclass = TSubcon(TStruct(InnerDataclass))
 
     common(
-        TypedStruct(Container3),
+        TStruct(TestDataclass),
+        b"\x01",
+        TestDataclass(a=TestDataclass.InnerDataclass(b=1)),
+        1,
+    )
+
+def test_typed_struct_3():
+    @dataclasses.dataclass
+    class TestDataclass:
+        _1: t.Optional[bytes] = TSubcon(Const(b"\x00"))
+        _2: None = TSubcon(Padding(1))
+        _3: None = TSubcon(Pass)
+        _4: None = TSubcon(Terminated)
+
+    common(
+        TStruct(TestDataclass),
         bytes(2),
-        dict(anonymus1=b"\x00", anonymus2=None, anonymus3=None, anonymus4=None),
+        TestDataclass(),
         SizeofError,
     )
 
-    class Container4(TypedContainer):
-        missingkey: Subcon(Byte)
+def test_typed_struct_4():
+    @dataclasses.dataclass
+    class TestDataclass:
+        _1: bytes = TSubcon(Bytes(this.missing))
 
-    assert raises(TypedStruct(Container4).build, {}) == KeyError
+    assert raises(TStruct(TestDataclass).sizeof) == SizeofError
 
-    # TODO: How to get anonymus subcons?
-    class Container5(TypedContainer):
-        anonymus1: Subcon(Bytes(this.missing))
+def test_typed_struct_5():
+    @dataclasses.dataclass
+    class TestDataclass:
+        _1: int = TSubcon(Computed(7))
+        _2: t.Optional[bytes] = TSubcon(Const(b"JPEG"))
+        _3: None = TSubcon(Pass)
+        _4: None = TSubcon(Terminated)
 
-    assert raises(TypedStruct(Container5).sizeof) == SizeofError
-
-    # TODO: How to get anonymus subcons?
-    class Container6(TypedContainer):
-        anonymus1: Subcon(Computed(7))
-        anonymus2: Subcon(Const(b"JPEG"))
-        anonymus3: Subcon(Pass)
-        anonymus4: Subcon(Terminated)
-
-    d = TypedStruct(Container6)
-    assert d.build({}) == d.build({})
+    d = TStruct(TestDataclass)
+    assert d.build(TestDataclass()) == d.build(TestDataclass())
 
 
 def test_typed_bit_struct():
@@ -88,25 +96,40 @@ def test_enum():
         a = 1
         b = 2
 
-    common(TypedEnum(Byte, E), b"\x01", E.a, 1)
-    common(TypedEnum(Byte, E), b"\x01", 1, 1)
-    format = TypedEnum(Byte, E)
+    a = TEnum(Byte, E)
+
+    common(TEnum(Byte, E), b"\x01", E.a, 1)
+    common(TEnum(Byte, E), b"\x01", 1, 1)
+    format = TEnum(Byte, E)
     obj = format.parse(b"\x01")
     assert obj == E.a
     data = format.build("a")
     assert data == b"\x01"
 
-    common(TypedEnum(Byte, E), b"\x02", E.b, 1)
-    common(TypedEnum(Byte, E), b"\x02", 2, 1)
-    format = TypedEnum(Byte, E)
+    common(TEnum(Byte, E), b"\x02", E.b, 1)
+    common(TEnum(Byte, E), b"\x02", 2, 1)
+    format = TEnum(Byte, E)
     obj = format.parse(b"\x02")
     assert obj == E.b
     data = format.build("b")
     assert data == b"\x02"
 
-    common(TypedEnum(Byte, E), b"\x03", 3, 1)
-    format = TypedEnum(Byte, E)
+    common(TEnum(Byte, E), b"\x03", 3, 1)
+    format = TEnum(Byte, E)
     obj = format.parse(b"\x03")
     assert int(obj) == 3
     data = format.build(3)
     assert data == b"\x03"
+
+
+def test_enum_in_struct():
+    class TestEnum(enum.IntEnum):
+        a = 1
+        b = 2
+
+    @dataclasses.dataclass
+    class TestDataclass:
+        a: TestEnum = TSubcon(TEnum(Int8ub, TestEnum))
+        b: int = TSubcon(Int8ub)
+
+    common(TStruct(TestDataclass), b"\x00\x01\x02", TestDataclass(a=TestEnum.a, b=TestEnum.b), 3)
