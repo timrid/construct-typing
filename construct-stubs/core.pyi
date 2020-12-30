@@ -466,6 +466,7 @@ class Renamed(
 # miscellaneous
 # ===============================================================================
 class Const(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    value: SubconBuildTypes
     @t.overload
     def __new__(
         cls,
@@ -498,10 +499,11 @@ class Rebuild(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
     ) -> Rebuild[SubconParsedType, SubconBuildTypes, SubconParsedType, None]: ...
 
 class Default(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    value: SubconBuildTypes
     def __new__(
         cls,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-        value: ConstantOrContextLambda[SubconBuildTypes],
+        value: SubconBuildTypes,
     ) -> Default[
         SubconParsedType,
         SubconBuildTypes,
