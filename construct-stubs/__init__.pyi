@@ -2,7 +2,7 @@ from construct.core import *
 from construct.expr import *
 from construct.debug import *
 from construct.version import *
-from construct import lib
+from construct.lib import *
 
 
 #===============================================================================

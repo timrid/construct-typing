@@ -20,7 +20,6 @@ from construct.lib import (
 #   - Higher Kinded Types: https://sobolevn.me/2020/10/higher-kinded-types-in-python
 
 StreamType = t.BinaryIO
-BufferType = t.Union[bytes, memoryview, bytearray]
 PathType = str
 ContextKWType = t.Any
 
@@ -88,7 +87,7 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     docs: str
     flagbuildnone: bool
     parsed: t.Optional[t.Callable[[ParsedType, Context], None]]
-    def parse(self, data: BufferType, **contextkw: ContextKWType) -> ParsedType: ...
+    def parse(self, data: t.ByteString, **contextkw: ContextKWType) -> ParsedType: ...
     def parse_stream(
         self, stream: StreamType, **contextkw: ContextKWType
     ) -> ParsedType: ...
@@ -102,7 +101,7 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     ) -> bytes: ...
     def sizeof(self, **contextkw: ContextKWType) -> int: ...
     def compile(self, filename: str = ...) -> Construct[ParsedType, BuildTypes]: ...
-    def benchmark(self, sampledata: BufferType, filename: str = ...) -> str: ...
+    def benchmark(self, sampledata: t.ByteString, filename: str = ...) -> str: ...
     def export_ksy(self, schemaname: str = ..., filename: str = ...) -> str: ...
     def __rtruediv__(
         self, name: t.Optional[t.AnyStr]
@@ -206,9 +205,9 @@ class Tunnel(
 class Bytes(Construct[ParsedType, BuildTypes]):
     def __new__(
         cls, length: ConstantOrContextLambda[int]
-    ) -> Bytes[bytes, t.Union[bytes, bytearray, int]]: ...
+    ) -> Bytes[bytes, t.Union[t.ByteString, int]]: ...
 
-GreedyBytes: Construct[bytes, t.Union[bytes, bytearray, int]]
+GreedyBytes: Construct[bytes, t.ByteString]
 
 def Bitwise(
     subcon: Construct[SubconParsedType, SubconBuildTypes]
@@ -471,13 +470,13 @@ class Const(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTy
     def __new__(
         cls,
         value: bytes,
-    ) -> Const[None, None, bytes, t.Union[bytes, bytearray, int]]: ...
+    ) -> Const[None, None, bytes, t.Optional[bytes]]: ...
     @t.overload
     def __new__(
         cls,
         value: SubconBuildTypes,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-    ) -> Const[None, None, SubconParsedType, SubconBuildTypes]: ...
+    ) -> Const[None, None, SubconParsedType, t.Optional[SubconBuildTypes]]: ...
 
 class Computed(Construct[ParsedType, BuildTypes]):
     @t.overload
@@ -778,7 +777,7 @@ class RawCopy(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
         SubconParsedType,
         SubconBuildTypes,
         RawCopyObj[SubconParsedType],
-        t.Optional[t.Dict[str, t.Union[SubconBuildTypes, BufferType]]],
+        t.Optional[t.Dict[str, t.Union[SubconBuildTypes, t.ByteString]]],
     ]: ...
 
 def ByteSwapped(
@@ -935,28 +934,30 @@ class Lazy(
 # adapters and validators
 # ===============================================================================
 class ExprAdapter(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
-    def __init__(
-        self,
+    def __new__(
+        cls,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         decoder: t.Callable[[SubconParsedType, Context], ParsedType],
         encoder: t.Callable[[BuildTypes, Context], SubconBuildTypes],
-    ) -> None: ...
+    ) -> ExprAdapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
 
 class ExprSymmetricAdapter(
     ExprAdapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]
 ):
-    def __init__(
-        self,
+    def __new__(
+        cls,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         encoder: t.Callable[[BuildTypes, Context], SubconBuildTypes],
-    ) -> None: ...
+    ) -> ExprSymmetricAdapter[
+        SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes
+    ]: ...
 
 class ExprValidator(Validator[SubconParsedType, SubconBuildTypes]):
-    def __init__(
-        self,
+    def __new__(
+        cls,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-        validator: t.Callable[[ParsedType, Context], bool],
-    ) -> None: ...
+        validator: t.Callable[[SubconParsedType, Context], bool],
+    ) -> ExprValidator[SubconParsedType, SubconBuildTypes]: ...
 
 def OneOf(
     subcon: Construct[SubconParsedType, SubconBuildTypes],
