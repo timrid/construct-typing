@@ -7,6 +7,7 @@ setup(
     packages=["construct-stubs", "construct_typed"],
     package_data={
         "construct-stubs": ["*.pyi", "lib/*.pyi"],
+        "construct_typed": ["py.typed"],
     },
     include_package_data=True,
     license="MIT",
