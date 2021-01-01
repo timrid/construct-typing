@@ -1,4 +1,5 @@
 import pytest
+
 xfail = pytest.mark.xfail
 skip = pytest.mark.skip
 skipif = pytest.mark.skipif
@@ -8,15 +9,17 @@ import os, math, random, collections, itertools, io, hashlib, binascii
 from construct import *
 from construct.lib import *
 
+
 class ZeroIO(io.BufferedIOBase):
-    def read(self, __size = None):
+    def read(self, __size=None):
         if __size is not None:
             return bytes(__size)
         else:
             return bytes(0)
 
-    def read1(self, __size = 0):
+    def read1(self, __size=0):
         return bytes(__size)
+
 
 ident = lambda x: x
 devzero = ZeroIO()
@@ -46,20 +49,26 @@ def common(format, datasample, objsample, sizesample=SizeofError, **kw):
         assert size == sizesample
 
 
+def setattrs(obj, **kwargs):
+    for name, value in kwargs.items():
+        setattr(obj, name, value)
+    return obj
+
+
 def commonhex(format, hexdata):
     commonbytes(format, binascii.unhexlify(hexdata))
 
 
 def commondumpdeprecated(format, filename):
     filename = "tests/deprecated_gallery/blobs/" + filename
-    with open(filename,'rb') as f:
+    with open(filename, "rb") as f:
         data = f.read()
     commonbytes(format, data)
 
 
 def commondump(format, filename):
     filename = "tests/gallery/blobs/" + filename
-    with open(filename,'rb') as f:
+    with open(filename, "rb") as f:
         data = f.read()
     commonbytes(format, data)
 

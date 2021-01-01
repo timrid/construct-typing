@@ -21,16 +21,9 @@ def TStructField(
         subcon = cs.Renamed(subcon, newdocs=doc, newparsed=parsed)
 
     if subcon.flagbuildnone is True:
-        # some subcons have a predefined default value. all other have "None"
-        default: t.Any = None
-        if isinstance(subcon, (cs.Const, cs.Default)):
-            if callable(subcon.value):  # type: ignore
-                raise ValueError("lamda as default is not supported")
-            default = subcon.value  # type: ignore
-
         # if subcon builds from "None", set default to "None"
         field = dataclasses.field(
-            default=default,
+            default=None,
             init=False,
             metadata={"subcon": cs.Renamed(subcon, newdocs=doc)},
         )

@@ -6,6 +6,7 @@ import construct_typed as cst
 Buffer = t.Union[bytes, memoryview, bytearray]
 ParsedType = t.TypeVar("ParsedType")
 BuildTypes = t.TypeVar("BuildTypes")
+T = t.TypeVar("T")
 
 IdentType = t.TypeVar("IdentType")
 
@@ -32,6 +33,7 @@ def common(
     sizesample: t.Union[int, t.Type[Exception]] = ...,
     **kw: t.Any
 ) -> None: ...
+def setattrs(obj: T, **kwargs: t.Any) -> T: ...
 def commonhex(format: Construct[ParsedType, BuildTypes], hexdata: str) -> None: ...
 def commondumpdeprecated(
     format: Construct[ParsedType, BuildTypes], filename: str

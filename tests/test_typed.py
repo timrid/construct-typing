@@ -3,11 +3,12 @@
 import enum
 import dataclasses
 import typing as t
-from .declarativeunittest import common, raises
+from .declarativeunittest import common, raises, setattrs
 import construct as cs
 import construct_typed as cst
 
-def test_tstruct_1() -> None:
+
+def test_tstruct() -> None:
     @dataclasses.dataclass
     class TestDataclass:
         a: int = cst.TStructField(cs.Int16ub)
@@ -50,6 +51,47 @@ def test_tstruct_nested() -> None:
     )
 
 
+def test_tstruct_default_field() -> None:
+    @dataclasses.dataclass
+    class Image:
+        width: int = cst.TStructField(cs.Int8ub)
+        height: int = cst.TStructField(cs.Int8ub)
+        pixels: t.Optional[bytes] = cst.TStructField(
+            cs.Default(
+                cs.Bytes(cs.this.width * cs.this.height),
+                lambda ctx: bytes(ctx.width * ctx.height),
+            )
+        )
+
+    common(
+        cst.TStruct(Image),
+        b"\x02\x03\x00\x00\x00\x00\x00\x00",
+        setattrs(Image(2, 3), pixels=bytes(6)),
+        sample_building=Image(2, 3),
+    )
+
+
+def test_tstruct_const_field() -> None:
+    @dataclasses.dataclass
+    class TestDataclass:
+        const_field: t.Optional[bytes] = cst.TStructField(cs.Const(b"\x00"))
+
+    common(
+        cst.TStruct(TestDataclass),
+        bytes(1),
+        setattrs(TestDataclass(), const_field=b"\x00"),
+        1,
+    )
+
+    assert (
+        raises(
+            cst.TStruct(TestDataclass).build,
+            setattrs(TestDataclass(), const_field=b"\x01"),
+        )
+        == cs.ConstError
+    )
+
+
 def test_tstruct_anonymus_fields_1() -> None:
     @dataclasses.dataclass
     class TestDataclass:
@@ -61,7 +103,7 @@ def test_tstruct_anonymus_fields_1() -> None:
     common(
         cst.TStruct(TestDataclass),
         bytes(2),
-        TestDataclass(),
+        setattrs(TestDataclass(), _1=b"\x00"),
         cs.SizeofError,
     )
 
@@ -97,7 +139,10 @@ def test_tstruct_wrong_dataclass() -> None:
         a: int = cst.TStructField(cs.Int16ub)
         b: int = cst.TStructField(cs.Int8ub)
 
-    assert raises(cst.TStruct(TestDataclass1).build, TestDataclass2(a=1, b=2)) == TypeError
+    assert (
+        raises(cst.TStruct(TestDataclass1).build, TestDataclass2(a=1, b=2)) == TypeError
+    )
+
 
 def test_tbitstruct() -> None:
     assert False
