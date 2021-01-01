@@ -8,10 +8,8 @@ ParsedType = t.TypeVar("ParsedType")
 BuildTypes = t.TypeVar("BuildTypes")
 SubconParsedType = t.TypeVar("SubconParsedType")
 SubconBuildTypes = t.TypeVar("SubconBuildTypes")
-DataclassType = t.TypeVar("DataclassType")
 ListType = t.TypeVar("ListType")
 ValueType = t.TypeVar("ValueType")
-EnumType = t.TypeVar("EnumType", bound=enum.IntEnum)
 
 
 if t.TYPE_CHECKING:

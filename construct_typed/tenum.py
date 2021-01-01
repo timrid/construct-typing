@@ -3,6 +3,8 @@ import typing as t
 import construct as cs
 from .generic_wrapper import *
 
+EnumType = t.TypeVar("EnumType", bound=enum.IntEnum)
+
 
 class TEnum(Adapter[int, int, EnumType, t.Union[int, str, EnumType]]):
     def __new__(

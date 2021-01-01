@@ -168,9 +168,9 @@ class Subconstruct(
 class Adapter(
     Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
 ):
-    def __new__(
-        cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
-    ) -> Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
+    def __init__(
+        self, subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> None: ...
     def _decode(
         self, obj: SubconParsedType, context: Context, path: PathType
     ) -> ParsedType: ...
@@ -503,7 +503,7 @@ class Default(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
     def __new__(
         cls,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-        value: SubconBuildTypes,
+        value: ConstantOrContextLambda2[SubconBuildTypes],
     ) -> Default[
         SubconParsedType,
         SubconBuildTypes,

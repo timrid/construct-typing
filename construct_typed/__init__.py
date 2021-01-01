@@ -1,7 +1,7 @@
-from .tarray import *
-from .tenum import *
-from .tstruct import *
-from .tunion import *
+from .tarray import TArray
+from .tenum import TEnum
+from .tstruct import TStruct, TBitStruct, StructField
+from .tunion import TUnion, UnionField
 
 __all__ = [
     "StructField",

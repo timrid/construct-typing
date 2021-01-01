@@ -3,6 +3,8 @@ import textwrap
 import dataclasses
 from .generic_wrapper import *
 
+DataclassType = t.TypeVar("DataclassType")
+
 
 def StructField(
     subcon: Construct[ParsedType, BuildTypes],
@@ -44,7 +46,7 @@ class _TStruct(Adapter[t.Any, t.Any, ParsedType, BuildTypes]):
     """
 
     def __init__(
-        self, dataclass_type: t.Type[DataclassType], swapped: bool = False
+        self, dataclass_type: t.Type[ParsedType], swapped: bool = False
     ) -> None:
         if not dataclasses.is_dataclass(dataclass_type):
             raise TypeError(
@@ -75,7 +77,7 @@ class _TStruct(Adapter[t.Any, t.Any, ParsedType, BuildTypes]):
 
     def _decode(
         self, obj: "cs.Container[t.Any]", context: "cs.Context", path: "cs.PathType"
-    ) -> DataclassType:
+    ) -> ParsedType:
         # get all fields from the dataclass
         fields = dataclasses.fields(self.dataclass_type)
 
@@ -98,7 +100,7 @@ class _TStruct(Adapter[t.Any, t.Any, ParsedType, BuildTypes]):
         return dc
 
     def _encode(
-        self, obj: DataclassType, context: "cs.Context", path: "cs.PathType"
+        self, obj: ParsedType, context: "cs.Context", path: "cs.PathType"
     ) -> t.Dict[str, t.Any]:
         # get all fields from the dataclass
         fields = dataclasses.fields(self.dataclass_type)
@@ -112,18 +114,10 @@ class _TStruct(Adapter[t.Any, t.Any, ParsedType, BuildTypes]):
         return ret_dict
 
 
-class TStruct(_TStruct[ParsedType, BuildTypes]):
+class TStruct(_TStruct[ParsedType, ParsedType]):
     """
     Typed struct, based on standard dataclasses.
     """
-
-    # this is unfortunately needed because the stubs are using __new__ instead of __init__
-    if t.TYPE_CHECKING:
-
-        def __new__(
-            cls, dataclass_type: t.Type[DataclassType], swapped: bool = False
-        ) -> "TStruct[DataclassType, DataclassType]":
-            ...
 
     def _create_subcon(
         self, subcon_fields: t.Dict[str, t.Any]
@@ -131,18 +125,10 @@ class TStruct(_TStruct[ParsedType, BuildTypes]):
         return cs.Struct(**subcon_fields)
 
 
-class TBitStruct(_TStruct[ParsedType, BuildTypes]):
+class TBitStruct(_TStruct[ParsedType, ParsedType]):
     """
     Typed bit struct, based on standard dataclasses.
     """
-
-    # this is unfortunately needed because the stubs are using __new__ instead of __init__
-    if t.TYPE_CHECKING:
-
-        def __new__(
-            cls, dataclass_type: t.Type[DataclassType], swapped: bool = False
-        ) -> "TBitStruct[DataclassType, DataclassType]":
-            ...
 
     def _create_subcon(
         self, subcon_fields: t.Dict[str, t.Any]

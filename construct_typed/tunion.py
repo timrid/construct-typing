@@ -5,6 +5,8 @@ import construct as cs
 import dataclasses
 from .generic_wrapper import *
 
+DataclassType = t.TypeVar("DataclassType")
+
 
 def UnionField(
     subcon: Construct[ParsedType, BuildTypes],
