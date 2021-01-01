@@ -1,14 +1,14 @@
 from .tarray import TArray
 from .tenum import TEnum
-from .tstruct import TStruct, TBitStruct, StructField
-from .tunion import TUnion, UnionField
+from .tstruct import TStruct, TBitStruct, TStructField
+from .tunion import TUnion, TUnionField
 
 __all__ = [
-    "StructField",
+    "TStructField",
     "TStruct",
     "TBitStruct",
     "TEnum",
-    "UnionField",
+    "TUnionField",
     "TUnion",
     "TArray"
 ]

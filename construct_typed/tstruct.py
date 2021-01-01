@@ -6,7 +6,7 @@ from .generic_wrapper import *
 DataclassType = t.TypeVar("DataclassType")
 
 
-def StructField(
+def TStructField(
     subcon: Construct[ParsedType, BuildTypes],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, "cs.Context"], None]] = None,
