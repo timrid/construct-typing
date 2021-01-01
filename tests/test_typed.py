@@ -7,12 +7,11 @@ from .declarativeunittest import common, raises
 import construct as cs
 import construct_typed as cst
 
-
 def test_tstruct_1() -> None:
     @dataclasses.dataclass
     class TestDataclass:
-        a: int = cst.StructField(cs.Int16ub)
-        b: int = cst.StructField(cs.Int8ub)
+        a: int = cst.TStructField(cs.Int16ub)
+        b: int = cst.TStructField(cs.Int8ub)
 
     common(cst.TStruct(TestDataclass), b"\x00\x01\x02", TestDataclass(a=1, b=2), 3)
 
@@ -20,8 +19,8 @@ def test_tstruct_1() -> None:
 def test_tstruct_swapped() -> None:
     @dataclasses.dataclass
     class TestDataclass:
-        a: int = cst.StructField(cs.Int16ub)
-        b: int = cst.StructField(cs.Int8ub)
+        a: int = cst.TStructField(cs.Int16ub)
+        b: int = cst.TStructField(cs.Int8ub)
 
     common(
         cst.TStruct(TestDataclass, swapped=True),
@@ -39,9 +38,9 @@ def test_tstruct_nested() -> None:
     class TestDataclass:
         @dataclasses.dataclass
         class InnerDataclass:
-            b: int = cst.StructField(cs.Byte)
+            b: int = cst.TStructField(cs.Byte)
 
-        a: InnerDataclass = cst.StructField(cst.TStruct(InnerDataclass))
+        a: InnerDataclass = cst.TStructField(cst.TStruct(InnerDataclass))
 
     common(
         cst.TStruct(TestDataclass),
@@ -54,10 +53,10 @@ def test_tstruct_nested() -> None:
 def test_tstruct_anonymus_fields_1() -> None:
     @dataclasses.dataclass
     class TestDataclass:
-        _1: t.Optional[bytes] = cst.StructField(cs.Const(b"\x00"))
-        _2: None = cst.StructField(cs.Padding(1))
-        _3: None = cst.StructField(cs.Pass)
-        _4: None = cst.StructField(cs.Terminated)
+        _1: t.Optional[bytes] = cst.TStructField(cs.Const(b"\x00"))
+        _2: None = cst.TStructField(cs.Padding(1))
+        _3: None = cst.TStructField(cs.Pass)
+        _4: None = cst.TStructField(cs.Terminated)
 
     common(
         cst.TStruct(TestDataclass),
@@ -70,10 +69,10 @@ def test_tstruct_anonymus_fields_1() -> None:
 def test_tstruct_anonymus_fields_2() -> None:
     @dataclasses.dataclass
     class TestDataclass:
-        _1: int = cst.StructField(cs.Computed(7))
-        _2: t.Optional[bytes] = cst.StructField(cs.Const(b"JPEG"))
-        _3: None = cst.StructField(cs.Pass)
-        _4: None = cst.StructField(cs.Terminated)
+        _1: int = cst.TStructField(cs.Computed(7))
+        _2: t.Optional[bytes] = cst.TStructField(cs.Const(b"JPEG"))
+        _3: None = cst.TStructField(cs.Pass)
+        _4: None = cst.TStructField(cs.Terminated)
 
     d = cst.TStruct(TestDataclass)
     assert d.build(TestDataclass()) == d.build(TestDataclass())
@@ -81,11 +80,24 @@ def test_tstruct_anonymus_fields_2() -> None:
 
 def test_tstruct_missing_dataclass() -> None:
     class TestDataclass:
-        a: int = cst.StructField(cs.Int16ub)
-        b: int = cst.StructField(cs.Int8ub)
+        a: int = cst.TStructField(cs.Int16ub)
+        b: int = cst.TStructField(cs.Int8ub)
 
-    assert raises(cst.TStruct, TestDataclass) == TypeError
+    assert raises(lambda: cst.TStruct(TestDataclass)) == TypeError
 
+
+def test_tstruct_wrong_dataclass() -> None:
+    @dataclasses.dataclass
+    class TestDataclass1:
+        a: int = cst.TStructField(cs.Int16ub)
+        b: int = cst.TStructField(cs.Int8ub)
+
+    @dataclasses.dataclass
+    class TestDataclass2:
+        a: int = cst.TStructField(cs.Int16ub)
+        b: int = cst.TStructField(cs.Int8ub)
+
+    assert raises(cst.TStruct(TestDataclass1).build, TestDataclass2(a=1, b=2)) == TypeError
 
 def test_tbitstruct() -> None:
     assert False
@@ -133,7 +145,7 @@ def test_tenum_no_int_enum() -> None:
         a = 1
         b = 2
 
-    assert raises(cst.TEnum, cs.Byte, E) == TypeError
+    assert raises(lambda: cst.TEnum(cs.Byte, E)) == TypeError
 
 
 def test_tenum_in_tstruct() -> None:
@@ -143,8 +155,8 @@ def test_tenum_in_tstruct() -> None:
 
     @dataclasses.dataclass
     class TestDataclass:
-        a: TestEnum = cst.StructField(cst.TEnum(cs.Int8ub, TestEnum))
-        b: int = cst.StructField(cs.Int8ub)
+        a: TestEnum = cst.TStructField(cst.TEnum(cs.Int8ub, TestEnum))
+        b: int = cst.TStructField(cs.Int8ub)
 
     common(
         cst.TStruct(TestDataclass),
