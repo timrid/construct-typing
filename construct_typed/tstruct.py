@@ -50,9 +50,7 @@ class _TStruct(Adapter[t.Any, t.Any, ParsedType, BuildTypes]):
     ) -> None:
         if not dataclasses.is_dataclass(dataclass_type):
             raise TypeError(
-                'The class "{}" is not a "dataclasses.dataclass"'.format(
-                    dataclass_type.__name__
-                )
+                "'{}' has to be a 'dataclasses.dataclass'".format(dataclass_type)
             )
         self.dataclass_type = dataclass_type
         self.swapped = swapped
@@ -68,7 +66,7 @@ class _TStruct(Adapter[t.Any, t.Any, ParsedType, BuildTypes]):
             subcon_fields[field.name] = field.metadata["subcon"]
 
         # init adatper
-        super(_TStruct, self).__init__(self._create_subcon(subcon_fields))  # type: ignore
+        super(_TStruct, self).__init__(self._create_subcon(subcon_fields))
 
     def _create_subcon(
         self, subcon_fields: t.Dict[str, t.Any]
@@ -100,18 +98,20 @@ class _TStruct(Adapter[t.Any, t.Any, ParsedType, BuildTypes]):
         return dc
 
     def _encode(
-        self, obj: ParsedType, context: "cs.Context", path: "cs.PathType"
+        self, obj: BuildTypes, context: "cs.Context", path: "cs.PathType"
     ) -> t.Dict[str, t.Any]:
-        # get all fields from the dataclass
-        fields = dataclasses.fields(self.dataclass_type)
+        if isinstance(obj, self.dataclass_type):
+            # get all fields from the dataclass
+            fields = dataclasses.fields(self.dataclass_type)
 
-        # extract all fields from the container, that are used for create the dataclass object
-        ret_dict = {}
-        for field in fields:
-            value = getattr(obj, field.name)
-            ret_dict[field.name] = value
+            # extract all fields from the container, that are used for create the dataclass object
+            ret_dict = {}
+            for field in fields:
+                value = getattr(obj, field.name)
+                ret_dict[field.name] = value
 
-        return ret_dict
+            return ret_dict
+        raise TypeError("'{}' has to be of type {}".format(obj, self.dataclass_type))
 
 
 class TStruct(_TStruct[ParsedType, ParsedType]):
