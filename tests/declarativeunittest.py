@@ -35,7 +35,6 @@ def raises(func, *args, **kw):
 def common(format, datasample, objsample, sizesample=SizeofError, **kw):
     obj = format.parse(datasample, **kw)
     assert obj == objsample
-    assert isinstance(obj, type(objsample))
     data = format.build(objsample, **kw)
     assert data == datasample
     # following are implied by above (re-parse and re-build)

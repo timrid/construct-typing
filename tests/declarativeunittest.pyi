@@ -27,6 +27,70 @@ def common(
 ) -> None: ...
 @t.overload
 def common(
+    format: Construct[ListContainer[ParsedType], t.Any],
+    datasample: Buffer,
+    objsample: t.List[ParsedType],
+    sizesample: t.Union[int, t.Type[Exception]] = ...,
+    **kw: t.Any
+) -> None: ...
+@t.overload
+def common(
+    format: Construct[Container[t.Any], t.Any],
+    datasample: Buffer,
+    objsample: t.Dict[str, t.Any],
+    sizesample: t.Union[int, t.Type[Exception]] = ...,
+    **kw: t.Any
+) -> None: ...
+@t.overload
+def common(
+    format: Construct[t.Union[EnumInteger, EnumIntegerString], t.Any],
+    datasample: Buffer,
+    objsample: t.Union[int, str],
+    sizesample: t.Union[int, t.Type[Exception]] = ...,
+    **kw: t.Any
+) -> None: ...
+@t.overload
+def common(
+    format: Construct[HexDisplayedInteger, t.Any],
+    datasample: Buffer,
+    objsample: t.Union[HexDisplayedInteger, int],
+    sizesample: t.Union[int, t.Type[Exception]] = ...,
+    **kw: t.Any
+) -> None: ...
+@t.overload
+def common(
+    format: Construct[HexDisplayedBytes, t.Any],
+    datasample: Buffer,
+    objsample: t.Union[HexDisplayedBytes, bytes],
+    sizesample: t.Union[int, t.Type[Exception]] = ...,
+    **kw: t.Any
+) -> None: ...
+@t.overload
+def common(
+    format: Construct[HexDisplayedDict[str, t.Any], t.Any],
+    datasample: Buffer,
+    objsample: t.Dict[str, t.Any],
+    sizesample: t.Union[int, t.Type[Exception]] = ...,
+    **kw: t.Any
+) -> None: ...
+@t.overload
+def common(
+    format: Construct[HexDumpDisplayedBytes, t.Any],
+    datasample: Buffer,
+    objsample: t.Union[HexDumpDisplayedBytes, bytes],
+    sizesample: t.Union[int, t.Type[Exception]] = ...,
+    **kw: t.Any
+) -> None: ...
+@t.overload
+def common(
+    format: Construct[HexDumpDisplayedDict[str, t.Any], t.Any],
+    datasample: Buffer,
+    objsample: t.Dict[str, t.Any],
+    sizesample: t.Union[int, t.Type[Exception]] = ...,
+    **kw: t.Any
+) -> None: ...
+@t.overload
+def common(
     format: Construct[ParsedType, BuildTypes],
     datasample: Buffer,
     objsample: ParsedType,

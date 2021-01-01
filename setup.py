@@ -18,6 +18,9 @@ setup(
     author="Tim Riddermann",
     python_requires=">=3.6",
     install_requires=["construct==2.10.56"],
+    extras_require={
+        "test": ["pytest>=6.2.0"],
+    },
     keywords=[
         "construct",
         "kaitai",
@@ -41,7 +44,7 @@ setup(
         "typing",
         "typed",
         "bitstruct",
-        "PEP 561"
+        "PEP 561",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -56,6 +59,6 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
-        "Typing :: Typed"
+        "Typing :: Typed",
     ],
 )

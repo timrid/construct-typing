@@ -7,5 +7,9 @@
     "python.formatting.provider": "black",
     "python.analysis.typeCheckingMode": "strict",
     "python.analysis.autoImportCompletions": false,
+    "python.analysis.diagnosticSeverityOverrides": { 
+        "reportPrivateUsage": "information",
+        "reportUntypedNamedTuple": "information",
+    },
     "python.pythonPath": "python"
-}
+} 
