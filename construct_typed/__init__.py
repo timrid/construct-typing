@@ -1,14 +1,14 @@
 from .generic_wrapper import (
-    Construct,
     Adapter,
-    ListContainer,
-    Context,
     ConstantOrContextLambda,
+    Construct,
+    Context,
+    ListContainer,
     PathType,
 )
 from .tarray import TArray
 from .tenum import TEnum
-from .tstruct import TStruct, TBitStruct, TStructField
+from .tstruct import TBitStruct, TStruct, TStructField
 from .tunion import TUnion, TUnionField
 
 __all__ = [

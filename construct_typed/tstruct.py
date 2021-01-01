@@ -1,6 +1,7 @@
-import typing as t
-import textwrap
 import dataclasses
+import textwrap
+import typing as t
+
 from .generic_wrapper import *
 
 DataclassType = t.TypeVar("DataclassType")

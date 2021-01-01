@@ -1,5 +1,6 @@
 import typing as t
 
+
 class HexDisplayedInteger(int): ...
 class HexDisplayedBytes(bytes): ...
 

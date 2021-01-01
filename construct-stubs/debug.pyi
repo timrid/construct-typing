@@ -1,6 +1,6 @@
 import typing as t
-from construct.core import Construct, Subconstruct
-from construct.core import Context
+
+from construct.core import Construct, Context, Subconstruct
 
 ContextLambda = t.Callable[[Context], t.Any]
 

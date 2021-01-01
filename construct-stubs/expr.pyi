@@ -1,5 +1,6 @@
 import operator
 import typing as t
+
 from construct.core import *
 
 UniOperator = t.Callable[[t.Any], t.Any]

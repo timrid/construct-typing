@@ -1,15 +1,16 @@
-import typing as t
 import enum
 import io
+import typing as t
+
 import arrow  # type: ignore
 from construct.lib import (
     Container,
-    ListContainer,
     HexDisplayedBytes,
     HexDisplayedDict,
     HexDisplayedInteger,
     HexDumpDisplayedBytes,
     HexDumpDisplayedDict,
+    ListContainer,
 )
 
 # unfortunately, there are a few duplications with "typing", e.g. Union and Optional, which is why the t. prefix must be used everywhere

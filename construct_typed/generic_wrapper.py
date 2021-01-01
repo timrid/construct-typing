@@ -1,8 +1,9 @@
-import enum
-import typing as t
-import textwrap
-import construct as cs
 import dataclasses
+import enum
+import textwrap
+import typing as t
+
+import construct as cs
 
 ParsedType = t.TypeVar("ParsedType")
 BuildTypes = t.TypeVar("BuildTypes")
@@ -14,11 +15,11 @@ ValueType = t.TypeVar("ValueType")
 
 if t.TYPE_CHECKING:
     # while type checking, the original classes are generics, because they are defined in the stubs.
-    from construct import Construct as Construct
     from construct import Adapter as Adapter
-    from construct import ListContainer as ListContainer
-    from construct import Context as Context
     from construct import ConstantOrContextLambda as ConstantOrContextLambda
+    from construct import Construct as Construct
+    from construct import Context as Context
+    from construct import ListContainer as ListContainer
     from construct import PathType as PathType
 else:
     # at runtime, the original classes are no generics, so whe have to make new classes with generics support

@@ -1,5 +1,5 @@
-import typing as t
 import re
+import typing as t
 
 ContainerType = t.TypeVar("ContainerType")
 ListType = t.TypeVar("ListType")

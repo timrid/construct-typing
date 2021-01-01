@@ -1,9 +1,8 @@
 from construct.core import *
-from construct.expr import *
 from construct.debug import *
-from construct.version import *
+from construct.expr import *
 from construct.lib import *
-
+from construct.version import *
 
 #===============================================================================
 # exposed names

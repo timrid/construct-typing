@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import enum
 import dataclasses
+import enum
 import typing as t
-from .declarativeunittest import common, raises, setattrs
+
 import construct as cs
 import construct_typed as cst
+
+from .declarativeunittest import common, raises, setattrs
 
 
 def test_tstruct() -> None:
