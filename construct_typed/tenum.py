@@ -48,7 +48,7 @@ class TEnum(Adapter[int, int, EnumType, t.Union[int, str, EnumType]]):
         self.enum_type = enum_type
 
         # init adatper
-        super(TEnum, self).__init__(subcon)  # type: ignore
+        super(TEnum, self).__init__(subcon)
 
     def _decode(self, obj: int, context: "cs.Context", path: "cs.PathType") -> EnumType:
         return self.enum_type(obj)
@@ -60,6 +60,7 @@ class TEnum(Adapter[int, int, EnumType, t.Union[int, str, EnumType]]):
         path: "cs.PathType",
     ) -> int:
         try:
+            # TODO: remove this. only strongly typed enums are allowed...
             if isinstance(obj, str):
                 return int(self.enum_type[obj])
             else:

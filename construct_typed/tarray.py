@@ -25,14 +25,14 @@ class TArray(
         super(TArray, self).__init__(cs.Array(count, subcon, discard))  # type: ignore
 
     def _decode(
-        self, obj: ListContainer[ParsedType], context: Context, path: PathType
+        self, obj: SubconParsedType, context: Context, path: PathType
     ) -> ParsedType:
         return list(obj)  # type: ignore
 
     def _encode(
         self,
-        obj: t.Any,
+        obj: t.List[SubconParsedType],
         context: Context,
         path: PathType,
-    ) -> t.List[t.Any]:
+    ) -> SubconBuildTypes:
         return obj  # type: ignore
