@@ -1,5 +1,9 @@
 import typing as t
 
+PY2: bool
+PY3: bool
+PYPY: bool
+
 def int2byte(character: int) -> bytes: ...
 def byte2int(character: bytes) -> int: ...
 def str2bytes(string: str) -> bytes: ...

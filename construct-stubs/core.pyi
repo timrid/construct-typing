@@ -533,21 +533,16 @@ class NamedTuple(
     Adapter[
         SubconParsedType,
         SubconBuildTypes,
-        ParsedType,
-        BuildTypes,
+        t.Tuple[t.Any, ...],
+        t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]],
     ]
 ):
-    def __new__(
-        cls,
+    def __init__(
+        self,
         tuplename: str,
         tuplefields: str,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-    ) -> NamedTuple[
-        SubconParsedType,
-        SubconBuildTypes,
-        t.Tuple[t.Any, ...],
-        t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]],
-    ]: ...
+    ) -> None: ...
 
 @t.overload
 def Timestamp(
