@@ -1,0 +1,5 @@
+construct==2.10.*
+pytest>=6.2.0
+numpy==1.19.3
+arrow
+ruamel.yaml
