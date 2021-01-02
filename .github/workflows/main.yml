@@ -24,7 +24,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-        
+
+      # Install this package
+      - name: Install dependencies  
+        run: |
+          python -m pip install .
+
       # Install dependencies
       - name: Install dependencies  
         run: |
