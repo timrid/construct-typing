@@ -7,7 +7,7 @@ from .generic_wrapper import (
     PathType,
 )
 from .tarray import TArray
-from .tenum import TEnum
+from .tenum import TEnum, EnumBase
 from .tstruct import TBitStruct, TStruct, TStructField
 from .tunion import TUnion, TUnionField
 
@@ -19,6 +19,7 @@ __all__ = [
     "TUnionField",
     "TUnion",
     "TArray",
+    "EnumBase",
     "Construct",
     "Adapter",
     "ListContainer",

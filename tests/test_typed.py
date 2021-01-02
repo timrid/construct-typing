@@ -122,7 +122,7 @@ def test_tstruct_anonymus_fields_2() -> None:
     assert d.build(TestDataclass()) == d.build(TestDataclass())
 
 
-def test_tstruct_missing_dataclass() -> None:
+def test_tstruct_no_dataclass() -> None:
     class TestDataclass:
         a: int = cst.TStructField(cs.Int16ub)
         b: int = cst.TStructField(cs.Int8ub)
@@ -151,43 +151,32 @@ def test_tbitstruct() -> None:
 
 
 def test_tenum() -> None:
-    class E(enum.IntEnum):
+    class E(cst.EnumBase):
         a = 1
         b = 2
 
     common(cst.TEnum(cs.Byte, E), b"\x01", E.a, 1)
-    common(cst.TEnum(cs.Byte, E), b"\x01", 1, 1)
+    common(cst.TEnum(cs.Byte, E), b"\x02", E.b, 1)
+    common(cst.TEnum(cs.Byte, E), b"\x03", E(3), 1)
+    common(cst.TEnum(cs.Byte, E), b"\xff", E(255), 1)
+
     format = cst.TEnum(cs.Byte, E)
     obj = format.parse(b"\x01")
     assert obj == E.a
     assert obj == 1
-    data = format.build("a")
-    assert data == b"\x01"
-
-    common(cst.TEnum(cs.Byte, E), b"\x02", E.b, 1)
-    common(cst.TEnum(cs.Byte, E), b"\x02", 2, 1)
-    format = cst.TEnum(cs.Byte, E)
     obj = format.parse(b"\x02")
     assert obj == E.b
     assert obj == 2
-    data = format.build("b")
-    assert data == b"\x02"
-
-
-def test_tenum_missing_value() -> None:
-    class E(enum.IntEnum):
-        a = 1
-        b = 2
-
-    common(cst.TEnum(cs.Byte, E), b"\x03", 3, 1)
-    format = cst.TEnum(cs.Byte, E)
     obj = format.parse(b"\x03")
-    assert int(obj) == 3
-    data = format.build(3)
-    assert data == b"\x03"
+    assert obj == E(3)
+    assert obj == 3
+    obj = format.parse(b"\xff")
+    assert obj == E(255)
+    assert obj == 255
 
 
-def test_tenum_no_int_enum() -> None:
+
+def test_tenum_no_enumbase() -> None:
     class E(enum.Enum):
         a = 1
         b = 2
@@ -195,8 +184,22 @@ def test_tenum_no_int_enum() -> None:
     assert raises(lambda: cst.TEnum(cs.Byte, E)) == TypeError
 
 
+def test_tstruct_wrong_enumbase() -> None:
+    class E1(cst.EnumBase):
+        a = 1
+        b = 2
+
+    class E2(cst.EnumBase):
+        a = 1
+        b = 2
+
+    assert (
+        raises(cst.TEnum(cs.Byte, E1).build, E2.a) == TypeError
+    )
+
+
 def test_tenum_in_tstruct() -> None:
-    class TestEnum(enum.IntEnum):
+    class TestEnum(cst.EnumBase):
         a = 1
         b = 2
 
@@ -207,7 +210,11 @@ def test_tenum_in_tstruct() -> None:
 
     common(
         cst.TStruct(TestDataclass),
-        b"\x00\x01\x02",
-        TestDataclass(a=TestEnum.a, b=TestEnum.b),
-        3,
+        b"\x01\x02",
+        TestDataclass(a=TestEnum.a, b=2),
+        2,
+    )
+
+    assert (
+        raises(cst.TEnum(cs.Byte, TestEnum).build, TestDataclass(a=1, b=2)) == TypeError  # type: ignore
     )

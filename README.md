@@ -1,11 +1,11 @@
 # construct-typing
-This project is an extension of the python package *construct*. This Repository consitst of two packages:
+This project is an extension of the python package [*construct*](https://pypi.org/project/construct/). This Repository consists of two packages:
 
-- **construct-stubs**: Adding .pyi for the whole *construct* package (according to  [PEP 561 stub-only packages](https://www.python.org/dev/peps/pep-0561/#stub-only-packages))
+- **construct-stubs**: Adding .pyi for the whole *construct 2.10* package (according to  [PEP 561 stub-only packages](https://www.python.org/dev/peps/pep-0561/#stub-only-packages))
 - **construct_typed**: Adding the additional classes that help with autocompletion and additional type hints.
 
 ## Installation
-This package comply to PEP 561. So most of the static code analysers will recognise the stubs automatically.
+This package comply to [PEP 561](https://www.python.org/dev/peps/pep-0561/). So most of the static code analysers will recognise the stubs automatically.
 
 You just have to type:
 ```
@@ -15,6 +15,13 @@ pip install construct-typing
 ## Usage
 I'm mostly working with VSCode and Pylance (which works really great) ??? But i have also tested the stubs with mypy. ????
 
+## Tests
+The stubs are tested against the pytests of the *construct* package in a slightly modified form. Since the tests are relatively detailed I think most cases are covered.
+The new typed constructs have new written tests.
+
+The tests do not generate errors with:
+- mypy (Version TODO)
+- pyright (Version TODO)
 
 ## Explanation
 ### Stubs
@@ -34,32 +41,67 @@ The problem is to describe the more complex constructs like:
 
 Currently only the very unspecific type `typing.Any` can be used as type hint (maybe in the future it can be optimised a little, when [variadic generics](https://mail.python.org/archives/list/typing-sig@python.org/thread/SQVTQYWIOI4TIO7NNBTFFWFMSMS2TA4J/) become available). But the biggest disadvantage is that autocompletion for the named subcons is not available.
 
+Note: The stubs are based on *construct* in Version 2.10.
+
+
 ### Typed
-To include autocompletion and further enhance the type hints for these complex constructs the **construct_typed** package is used as an extension to the original *construct* package.
+TODO:
+Es werden die Standard Python Klassen benutzt:
+- "dataclasses.dataclass" für Struct, Union, ... (anstatt construct.Container)
+- "list" für Array, ... (anstatt construct.ListContainer)
+- "enum.Enum" für Enums
+- "enum.EnumFlag" für EnumFlags
+
+TODO:
+Es handelt sich in der aktuellen Version noch um einen experimentelle Version!
+
+TODO:
+Es handelt sich um "strongly typed". D.h. es gibt keine Unterscheidung zwischen ParsedType und BuildTypes... Die korrenten Typen werden beim
+"build" erzwungen (enforced). Bei einem falschen typen, wird eine exception (TypeError) erzeugt.
+Nachteil: dass man manchmal mehr code schreiben muss um den korrekten klassennamen zu deklarieren, anstatt einfach nur "dict" zu schreiben
+Vorteil: während der statischen Codeanalyse können schon mehr fehler entdeckt werden.
+
+
+To include autocompletion and further enhance the type hints for these complex constructs the **construct_typed** package is used as an extension to the original *construct* package. It is mainly a bunch of Adapters for the original constructs with the focus on type hints.
 
 It implements the following new types:
-- TypedEnum
-- TypedStruct
-- TypedBitStruct
-- TypedUnion
+- `TStruct`: similar to `construct.Struct` but with `dataclasses.dataclass`
+- `TBitStruct`: similar to `construct.BitStruct` but with `dataclasses.dataclass`
+- `TEnum`: similar to `construct.Enum` but with `construct_typed.EnumBase`
+- `TArray`: similar to `construct.Array` but with `list` insted of `construct.ListContainer`
+- TODO: `TUnion`
 
 
-An example of the added `TypedStruct` class:
+A short example:
 
 ```python
-from construct import Const, Int8ub, Array, this, Byte
-from construct_typed import TypedContainer, Subcon, TypedStruct
+import dataclasses
+import typing as t
+import construct as cs
+import construct_typed as cst
 
-class Image(TypedContainer):
-    signature: Subcon(Const(b"BMP"))
-    width: Subcon(Int8ub())
-    height: Subcon(Int8ub())
-    pixels: Subcon(Array(cs.this.width * cs.this.height, Byte()))
 
-format = TypedStruct(Image)
-obj = Image(width=3, height=2, pixels=[7, 8, 9, 11, 12, 13])
+class Orientation(cst.EnumBase):
+    HORIZONTAL = 0
+    VERTICAL = 1
+
+@dataclasses.dataclass
+class Image:
+    signature: t.Optional[bytes] = cst.TStructField(cs.Const(b"BMP"))
+    orientation: Orientation = cst.TStructField(cst.TEnum(cs.Int8ub, Orientation))
+    width: int = cst.TStructField(cs.Int8ub)
+    height: int = cst.TStructField(cs.Int8ub)
+    pixels: t.List[int] = cst.TStructField(cst.TArray(cs.this.width * cs.this.height, cs.Byte))
+
+format = cst.TStruct(Image)
+obj = Image(orientation=Orientation.VERTICAL, width=3, height=2, pixels=[7, 8, 9, 11, 12, 13])
 print(format.build(obj))
-print(format.parse(b"BMP\x03\x02\x07\x08\t\x0b\x0c\r"))
+print(format.parse(b"BMP\x01\x03\x02\x07\x08\t\x0b\x0c\r"))
+```
+Output:
+```
+b'BMP\x01\x03\x02\x07\x08\t\x0b\x0c\r'
+Image(signature=b'BMP', orientation=<Orientation.VERTICAL: 1>, width=3, height=2, pixels=[7, 8, 9, 11, 12, 13])
 ```
 
-An example of the added `TypedEnum` class:
+
