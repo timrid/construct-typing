@@ -5,12 +5,14 @@ import typing as t
 import arrow  # type: ignore
 from construct.lib import (
     Container,
+    ContainerType,
     HexDisplayedBytes,
     HexDisplayedDict,
     HexDisplayedInteger,
     HexDumpDisplayedBytes,
     HexDumpDisplayedDict,
     ListContainer,
+    ListType,
 )
 
 # unfortunately, there are a few duplications with "typing", e.g. Union and Optional, which is why the t. prefix must be used everywhere
@@ -927,6 +929,45 @@ class Lazy(
         t.Union[t.Callable[[], SubconParsedType], SubconParsedType],
     ]
 ): ...
+
+class LazyContainer(t.Generic[ContainerType], dict[str, ContainerType]):
+    def __getattr__(self, name: str) -> ContainerType: ...
+    def __getitem__(self, index: t.Union[str, int]) -> ContainerType: ...
+    def keys(self) -> t.Iterator[str]: ...
+    def values(self) -> t.List[ContainerType]: ...
+    def items(self) -> t.List[t.Tuple[str, ContainerType]]: ...
+
+class LazyStruct(Construct[ParsedType, BuildTypes]):
+    def __new__(
+        cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
+    ) -> LazyStruct[LazyContainer[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
+    def __getattr__(self, name: str) -> t.Any: ...
+
+class LazyListContainer(t.List[ListType]): ...
+
+class LazyArray(
+    Subconstruct[
+        SubconParsedType,
+        SubconBuildTypes,
+        ParsedType,
+        BuildTypes,
+    ]
+):
+    def __new__(
+        cls,
+        count: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> LazyArray[
+        SubconParsedType,
+        SubconBuildTypes,
+        ListContainer[SubconParsedType],
+        t.List[SubconBuildTypes],
+    ]: ...
+
+class LazyBound(Construct[ParsedType, BuildTypes]):
+    def __new__(
+        cls, subconfunc: t.Callable[[], Construct[ParsedType, BuildTypes]]
+    ) -> LazyBound[ParsedType, BuildTypes]: ...
 
 # ===============================================================================
 # adapters and validators

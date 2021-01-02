@@ -13,12 +13,12 @@ from .declarativeunittest import common, raises, setattrs
 def test_tcontainer_compare_with_dataclass() -> None:
     @dataclasses.dataclass
     class TestContainer:
-        a: cst.Optional[int] = cst.TStructField(cs.Const(1, cs.Byte))
+        a: cst.Opt[int] = cst.TStructField(cs.Const(1, cs.Byte))
         b: int = cst.TStructField(cs.Int8ub)
 
     @dataclasses.dataclass
     class TestTContainer(cst.TContainerBase):
-        a: cst.Optional[int] = cst.TStructField(cs.Const(1, cs.Byte))
+        a: cst.Opt[int] = cst.TStructField(cs.Const(1, cs.Byte))
         b: int = cst.TStructField(cs.Int8ub)
 
     datacls = TestContainer(b=1)
@@ -66,7 +66,7 @@ def test_tcontainer_compare_with_dataclass() -> None:
 def test_tcontainer_order() -> None:
     @dataclasses.dataclass
     class Image(cst.TContainerBase):
-        signature: cst.Optional[bytes] = cst.TStructField(cs.Const(b"BMP"))
+        signature: cst.Opt[bytes] = cst.TStructField(cs.Const(b"BMP"))
         width: int = cst.TStructField(cs.Int8ub)
         height: int = cst.TStructField(cs.Int8ub)
 
@@ -130,7 +130,7 @@ def test_tstruct_default_field() -> None:
     class Image(cst.TContainerBase):
         width: int = cst.TStructField(cs.Int8ub)
         height: int = cst.TStructField(cs.Int8ub)
-        pixels: cst.Optional[bytes] = cst.TStructField(
+        pixels: cst.Opt[bytes] = cst.TStructField(
             cs.Default(
                 cs.Bytes(cs.this.width * cs.this.height),
                 lambda ctx: bytes(ctx.width * ctx.height),
@@ -148,7 +148,7 @@ def test_tstruct_default_field() -> None:
 def test_tstruct_const_field() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        const_field: cst.Optional[bytes] = cst.TStructField(cs.Const(b"\x00"))
+        const_field: cst.Opt[bytes] = cst.TStructField(cs.Const(b"\x00"))
 
     common(
         cst.TStruct(TestContainer),
@@ -169,7 +169,7 @@ def test_tstruct_const_field() -> None:
 def test_tstruct_anonymus_fields_1() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        _1: cst.Optional[bytes] = cst.TStructField(cs.Const(b"\x00"))
+        _1: cst.Opt[bytes] = cst.TStructField(cs.Const(b"\x00"))
         _2: None = cst.TStructField(cs.Padding(1))
         _3: None = cst.TStructField(cs.Pass)
         _4: None = cst.TStructField(cs.Terminated)
@@ -186,7 +186,7 @@ def test_tstruct_anonymus_fields_2() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
         _1: int = cst.TStructField(cs.Computed(7))
-        _2: cst.Optional[bytes] = cst.TStructField(cs.Const(b"JPEG"))
+        _2: cst.Opt[bytes] = cst.TStructField(cs.Const(b"JPEG"))
         _3: None = cst.TStructField(cs.Pass)
         _4: None = cst.TStructField(cs.Terminated)
 
