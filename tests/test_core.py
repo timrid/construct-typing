@@ -1360,22 +1360,22 @@ def test_lazyarray() -> None:
     assert raises(d.sizeof) == SizeofError
 
 def test_lazybound() -> None:
-    d = LazyBound(lambda: Byte)
-    common(d, b"\x01", 1)
+    d1 = LazyBound(lambda: Byte)
+    common(d1, b"\x01", 1)
 
-    d = Struct(
+    d2 = Struct(
         "value" / Byte,
-        "next" / If(this.value > 0, LazyBound(lambda: d)),
+        "next" / If(this.value > 0, LazyBound(lambda: d2)),
     )
-    common(d, b"\x05\x09\x00", Container(value=5)(next=Container(value=9)(next=Container(value=0)(next=None))))
+    common(d2, b"\x05\x09\x00", Container(value=5)(next=Container(value=9)(next=Container(value=0)(next=None))))
 
-    d = Struct(
+    d3 = Struct(
         "value" / Byte,
         "next" / GreedyBytes,
     )
     data = b"\x05\x09\x00"
     while data:
-        x = d.parse(data)
+        x = d3.parse(data)
         data = x.next
         print(x)
 

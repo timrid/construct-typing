@@ -1,5 +1,5 @@
 # construct-typing
-This project is an extension of the python package [*construct*](https://pypi.org/project/construct/). This Repository consists of two packages:
+This project is an extension of the python package [*construct*](https://pypi.org/project/construct/), which is a powerful **declarative** and **symmetrical** parser and builder for binary data. This Repository consists of two packages:
 
 - **construct-stubs**: Adding .pyi for the whole *construct 2.10* package (according to  [PEP 561 stub-only packages](https://www.python.org/dev/peps/pep-0561/#stub-only-packages))
 - **construct_typed**: Adding the additional classes that help with autocompletion and additional type hints.
@@ -12,16 +12,13 @@ You just have to type:
 pip install construct-typing
 ```
 
-## Usage
-I'm mostly working with VSCode and Pylance (which works really great) ??? But i have also tested the stubs with mypy. ????
-
 ## Tests
 The stubs are tested against the pytests of the *construct* package in a slightly modified form. Since the tests are relatively detailed I think most cases are covered.
 The new typed constructs have new written tests.
 
 The tests do not generate errors with:
-- mypy (Version TODO)
-- pyright (Version TODO)
+- [x] mypy
+- [ ] pyright / pylance (TODO: Some errors in pyright have to be fixed first)
 
 ## Explanation
 ### Stubs
@@ -31,11 +28,12 @@ The **construct-stubs** package is used for creating type hints for the orignial
 
 For each of the `Construct`s in the stubs it is defined which type it parses to and from which it can be build. For example:
 
-| Construct           | parses to (ParsedType)         | builds from (BuildTypes)             |
-| ------------------- | ------------------------------ | ------------------------------------ |
-| `Int16ub`           | `int`                          | `int`                                |
-| `Bytes`             | `bytes`                        | `bytes`, `bytearray` or `memoryview` |
-| `Array(5, Int16ub)` | `construct.ListContainer[int]` | `typing.List[int]`                   |
+| Construct            | parses to (ParsedType)         | builds from (BuildTypes)             |
+| -------------------- | ------------------------------ | ------------------------------------ |
+| `Int16ub`            | `int`                          | `int`                                |
+| `Bytes`              | `bytes`                        | `bytes`, `bytearray` or `memoryview` |
+| `Array(5, Int16ub)`  | `ListContainer[int]`           | `typing.List[int]`                   |
+| `Struct("i" / Byte)` | `Container[typing.Any]`        | `Dict[str, typing.Any]` or `None`    |
 
 The problem is to describe the more complex constructs like:
  - `Sequence`, `FocusedSeq` which has heterogenous subcons in comparison to an `Array` with only homogenous subcons. 
@@ -47,47 +45,24 @@ Note: The stubs are based on *construct* in Version 2.10.
 
 
 ### Typed
-TODO:
-Es werden die Standard Python Klassen benutzt:
-- "dataclasses.dataclass" für Struct, Union, ... (anstatt construct.Container)
-- "list" für Array, ... (anstatt construct.ListContainer)
-- "enum.Enum" für Enums
-- "enum.EnumFlag" für EnumFlags
-
-TODO:
-Es handelt sich in der aktuellen Version noch um einen experimentelle Version!
-
-TODO:
-Es handelt sich um "strongly typed". D.h. es gibt keine Unterscheidung zwischen ParsedType und BuildTypes... Die korrenten Typen werden beim
-"build" erzwungen (enforced). Bei einem falschen typen, wird eine exception (TypeError) erzeugt.
-Nachteil: dass man manchmal mehr code schreiben muss um den korrekten klassennamen zu deklarieren, anstatt einfach nur "dict" zu schreiben
-Vorteil: während der statischen Codeanalyse können schon mehr fehler entdeckt werden.
-
+**!!! EXPERIMENTAL VERSION !!!**
 
 To include autocompletion and further enhance the type hints for these complex constructs the **construct_typed** package is used as an extension to the original *construct* package. It is mainly a bunch of Adapters for the original constructs with the focus on type hints.
 
-It implements the following new types:
-- `TStruct`: similar to `construct.Struct` but with `dataclasses.dataclass`
-- `TBitStruct`: similar to `construct.BitStruct` but with `construct_typed.TContainer` as typing base class
-- `TEnum`: similar to `construct.Enum` but with `construct_typed.EnumBase` as typing base class
-- `TFlagsEnum`: similar to `construct.FlagsEnum` but with `construct_typed.FlagsEnumBase`
-- `TArray`: similar to `construct.Array` but with `list` insted of `construct.ListContainer`
-- TODO: `TUnion`
+It implements the following new constructs:
+- `TStruct`, `TBitStruct`: similar to `construct.Struct` but strictly tied to `TContainerBase` and `@dataclasses.dataclass`
+- `TEnum`: similar to `construct.Enum` but strictly tied to a `TEnumBase` class
+- `TFlagsEnum`: similar to `construct.FlagsEnum` but strictly tied to a `TFlagsEnumBase` class
 
-TODO: The "container" objects, are all based on standard python object, but with small modifications:
-- TContainerBase: A mix between standard "dataclasses.dataclass" a construct.Container
-- TEnumBase: An extended enum.IntEnum version
-- TFlagsEnumBase: An extended enum.IntFlags version
+These types are strongly typed, which means that there is no difference between the `ParsedType` and the `BuildTypes`. So to build one of the constructs the correct type is enforced. The disadvantage is that the code will be a little bit longer, because you can not for example use a normal `dict` to build an `TStruct`. But the big advantage is, that if you use the correct container type instead of a `dict`, the static code analyses can do its magic and find potential type errors and missing values.
 
 
 A short example:
 
 ```python
 import dataclasses
-import typing as t
 import construct as cs
 import construct_typed as cst
-
 
 class Orientation(cst.EnumBase):
     HORIZONTAL = 0
@@ -95,11 +70,11 @@ class Orientation(cst.EnumBase):
 
 @dataclasses.dataclass
 class Image(cst.TContainerBase):
-    signature: t.Optional[bytes] = cst.TStructField(cs.Const(b"BMP"))
+    signature: cst.Opt[bytes] = cst.TStructField(cs.Const(b"BMP"))
     orientation: Orientation = cst.TStructField(cst.TEnum(cs.Int8ub, Orientation))
     width: int = cst.TStructField(cs.Int8ub)
     height: int = cst.TStructField(cs.Int8ub)
-    pixels: t.List[int] = cst.TStructField(cst.TArray(cs.this.width * cs.this.height, cs.Byte))
+    pixels: cst.List[int] = cst.TStructField(cs.Array(cs.this.width * cs.this.height, cs.Byte))
 
 format = cst.TStruct(Image)
 obj = Image(orientation=Orientation.VERTICAL, width=3, height=2, pixels=[7, 8, 9, 11, 12, 13])
@@ -114,7 +89,13 @@ Container:
     orientation = Orientation.VERTICAL
     width = 3
     height = 2
-    pixels = [7, 8, 9, 11, 12, 13]
+    pixels = ListContainer:
+        7
+        8
+        9
+        11
+        12
+        13
 ```
 
 
