@@ -9,7 +9,7 @@ from .generic_wrapper import (
 from .tenum import EnumBase, FlagsEnumBase, TEnum, TFlagsEnum
 from .tstruct import TBitStruct, TStruct, TStructField, TContainerBase
 from .tunion import TUnion, TUnionField
-from .helper import List, Optional
+from .helper import List, Opt
 
 __all__ = [
     "TStructField",
@@ -28,6 +28,6 @@ __all__ = [
     "PathType",
     "TFlagsEnum",
     "FlagsEnumBase",
-    "Optional",
+    "Opt",
     "List"
 ]
