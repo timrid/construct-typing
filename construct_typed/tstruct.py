@@ -16,7 +16,7 @@ from .generic_wrapper import (
 if t.TYPE_CHECKING:
 
     class _TContainerBase(cs.Container[t.Any]):
-        pass
+        ...
 
 
 else:
