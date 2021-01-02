@@ -11,7 +11,7 @@ import pytest
 from .declarativeunittest import common, raises, setattrs
 
 
-def test_tcontainer_compare_with_dataclass():
+def test_tcontainer_compare_with_dataclass() -> None:
     @dataclasses.dataclass
     class TestContainer:
         a: t.Optional[int] = cst.TStructField(cs.Const(1, cs.Byte))
