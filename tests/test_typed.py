@@ -6,6 +6,7 @@ import typing as t
 
 import construct as cs
 import construct_typed as cst
+import pytest
 
 from .declarativeunittest import common, raises, setattrs
 
@@ -227,6 +228,7 @@ def test_tstruct_wrong_container() -> None:
     )
 
 
+@pytest.mark.xfail(reason="not implemented yet")
 def test_tbitstruct() -> None:
     assert False
 

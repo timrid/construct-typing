@@ -25,14 +25,14 @@ class EnumBase(enum.IntEnum):
 
     @classmethod
     def _create_pseudo_member_(cls, value: int) -> "EnumBase":
-        pseudo_member = cls._value2member_map_.get(value, None)
+        pseudo_member = cls._value2member_map_.get(value, None)  # type: ignore
         if pseudo_member is None:
-            new_member = int.__new__(cls, value)
+            new_member = int.__new__(cls, value)  # type: ignore
             # I expect a name attribute to hold a string, hence str(value)
             # However, new_member._name_ = value works, too
             new_member._name_ = str(value)
             new_member._value_ = value
-            pseudo_member = cls._value2member_map_.setdefault(value, new_member)
+            pseudo_member = cls._value2member_map_.setdefault(value, new_member)  # type: ignore
         return pseudo_member  # type: ignore
 
 EnumType = t.TypeVar("EnumType", bound=EnumBase)

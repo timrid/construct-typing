@@ -6,6 +6,7 @@ import construct_typed as cst
 Buffer = t.Union[bytes, memoryview, bytearray]
 ParsedType = t.TypeVar("ParsedType")
 BuildTypes = t.TypeVar("BuildTypes")
+ContainerType = t.TypeVar("ContainerType", bound=cst.TContainerBase)
 T = t.TypeVar("T")
 
 IdentType = t.TypeVar("IdentType")
@@ -19,9 +20,9 @@ def raises(
 ) -> t.Union[t.Any, Exception]: ...
 @t.overload
 def common(
-    format: cst.TStruct[ParsedType],
+    format: cst.TStruct[ContainerType],
     datasample: Buffer,
-    objsample: t.Union[ParsedType, t.Dict[str, t.Any]],
+    objsample: t.Union[ContainerType, t.Dict[str, t.Any]],
     sizesample: t.Union[int, t.Type[Exception]] = ...,
     **kw: t.Any
 ) -> None: ...
