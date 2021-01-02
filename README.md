@@ -68,6 +68,7 @@ It implements the following new types:
 - `TStruct`: similar to `construct.Struct` but with `dataclasses.dataclass`
 - `TBitStruct`: similar to `construct.BitStruct` but with `dataclasses.dataclass`
 - `TEnum`: similar to `construct.Enum` but with `construct_typed.EnumBase`
+- `TFlagsEnum`: similar to `construct.FlagsEnum` but with `construct_typed.FlagsEnumBase`
 - `TArray`: similar to `construct.Array` but with `list` insted of `construct.ListContainer`
 - TODO: `TUnion`
 
