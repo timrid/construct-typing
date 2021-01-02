@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-latest', 'windows-latest']
-        python-version: [ '3.7', '3.8' ]
+        python-version: [ '3.7', '3.8', '3.9' ]
         
     runs-on: ${{ matrix.os }}
     name: OS ${{ matrix.os }}, Python ${{ matrix.python-version }}
@@ -35,3 +35,9 @@ jobs:
       - name: Run pytests
         run: |
           pytest tests/ --showlocals --verbose
+          
+
+      # Run mypy
+      - name: Run mypy
+        run: |
+          mypy --strict tests/
