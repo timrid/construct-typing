@@ -66,11 +66,16 @@ To include autocompletion and further enhance the type hints for these complex c
 
 It implements the following new types:
 - `TStruct`: similar to `construct.Struct` but with `dataclasses.dataclass`
-- `TBitStruct`: similar to `construct.BitStruct` but with `dataclasses.dataclass`
-- `TEnum`: similar to `construct.Enum` but with `construct_typed.EnumBase`
+- `TBitStruct`: similar to `construct.BitStruct` but with `construct_typed.TContainer` as typing base class
+- `TEnum`: similar to `construct.Enum` but with `construct_typed.EnumBase` as typing base class
 - `TFlagsEnum`: similar to `construct.FlagsEnum` but with `construct_typed.FlagsEnumBase`
 - `TArray`: similar to `construct.Array` but with `list` insted of `construct.ListContainer`
 - TODO: `TUnion`
+
+TODO: The "container" objects, are all based on standard python object, but with small modifications:
+- TContainerBase: A mix between standard "dataclasses.dataclass" a construct.Container
+- TEnumBase: An extended enum.IntEnum version
+- TFlagsEnumBase: An extended enum.IntFlags version
 
 
 A short example:
@@ -87,7 +92,7 @@ class Orientation(cst.EnumBase):
     VERTICAL = 1
 
 @dataclasses.dataclass
-class Image:
+class Image(cst.TContainerBase):
     signature: t.Optional[bytes] = cst.TStructField(cs.Const(b"BMP"))
     orientation: Orientation = cst.TStructField(cst.TEnum(cs.Int8ub, Orientation))
     width: int = cst.TStructField(cs.Int8ub)
@@ -102,7 +107,12 @@ print(format.parse(b"BMP\x01\x03\x02\x07\x08\t\x0b\x0c\r"))
 Output:
 ```
 b'BMP\x01\x03\x02\x07\x08\t\x0b\x0c\r'
-Image(signature=b'BMP', orientation=<Orientation.VERTICAL: 1>, width=3, height=2, pixels=[7, 8, 9, 11, 12, 13])
+Container: 
+    signature = b'BMP' (total 3)
+    orientation = Orientation.VERTICAL
+    width = 3
+    height = 2
+    pixels = [7, 8, 9, 11, 12, 13]
 ```
 
 
