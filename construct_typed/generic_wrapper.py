@@ -21,6 +21,8 @@ if t.TYPE_CHECKING:
     from construct import Context as Context
     from construct import ListContainer as ListContainer
     from construct import PathType as PathType
+
+
 else:
     # at runtime, the original classes are no generics, so whe have to make new classes with generics support
     class Construct(t.Generic[ParsedType, BuildTypes], cs.Construct):

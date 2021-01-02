@@ -7,8 +7,8 @@ from .generic_wrapper import (
     PathType,
 )
 from .tarray import TArray
-from .tenum import TEnum, EnumBase, TFlagsEnum, FlagsEnumBase
-from .tstruct import TBitStruct, TStruct, TStructField
+from .tenum import EnumBase, FlagsEnumBase, TEnum, TFlagsEnum
+from .tstruct import TBitStruct, TStruct, TStructField, TContainerBase
 from .tunion import TUnion, TUnionField
 
 __all__ = [
@@ -23,9 +23,10 @@ __all__ = [
     "Construct",
     "Adapter",
     "ListContainer",
+    "TContainerBase",
     "Context",
     "ConstantOrContextLambda",
     "PathType",
     "TFlagsEnum",
-    "FlagsEnumBase"
+    "FlagsEnumBase",
 ]
