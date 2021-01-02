@@ -3,8 +3,6 @@ import enum
 import textwrap
 import typing as t
 
-import construct as cs
-
 ParsedType = t.TypeVar("ParsedType")
 BuildTypes = t.TypeVar("BuildTypes")
 SubconParsedType = t.TypeVar("SubconParsedType")
@@ -14,7 +12,7 @@ ValueType = t.TypeVar("ValueType")
 
 
 if t.TYPE_CHECKING:
-    # while type checking, the original classes are generics, because they are defined in the stubs.
+    # while type checking, the original classes are already generics, because they are defined like this in the stubs.
     from construct import Adapter as Adapter
     from construct import ConstantOrContextLambda as ConstantOrContextLambda
     from construct import Construct as Construct
@@ -24,6 +22,8 @@ if t.TYPE_CHECKING:
 
 
 else:
+    import construct as cs
+
     # at runtime, the original classes are no generics, so whe have to make new classes with generics support
     class Construct(t.Generic[ParsedType, BuildTypes], cs.Construct):
         pass

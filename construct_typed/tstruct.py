@@ -2,41 +2,53 @@ import dataclasses
 import textwrap
 import typing as t
 
-from .generic_wrapper import *
+import construct as cs
 
+from .generic_wrapper import (
+    Adapter,
+    BuildTypes,
+    Construct,
+    Context,
+    ParsedType,
+    PathType,
+)
 
 if t.TYPE_CHECKING:
 
-    class TContainerBase(cs.Container[t.Any]):
-        def __init__(self, *args: t.Any, **kwargs: t.Any):
-            ...
+    class _TContainerBase(cs.Container[t.Any]):
+        pass
 
 
 else:
 
-    class TContainerBase(cs.Container):
-        def __init__(self, *args, **kwargs):
-            raise RuntimeError(
-                "this should never be called, because it shoult be overwritten by 'dataclasses.dataclass'"
-            )
+    class _TContainerBase(cs.Container):
+        pass
 
+
+class TContainerBase(_TContainerBase):
+    """
+    Base class for a Container of a TStruct and a TBitStruct.
+
+    Note: this always has to be mixed with "dataclasses.dataclass".
+    """
+
+    def __getattribute__(self, name: str):
         # if accessing via an field via dot access, return the object from the dict
-        def __getattribute__(self, name):
-            if name in self:
-                return self[name]
-            else:
-                return super().__getattribute__(name)
+        if name in self:
+            return self[name]
+        else:
+            return super().__getattribute__(name)
 
-        def __post_init__(self):
-            # 1. fix the __keys_order__ of the cs.Container
-            # 2. append fields with init=False to the dict of the cs.Container
-            self.__keys_order__ = []
-            for field in dataclasses.fields(self):
-                value = getattr(self, field.name)
-                if field.init is True:
-                    self.__keys_order__.append(field.name)                        
-                else:
-                    self[field.name] = value
+    def __post_init__(self):
+        # 1. fix the __keys_order__ of the cs.Container
+        # 2. append fields with init=False to the dict of the cs.Container
+        self.__keys_order__ = []
+        for field in dataclasses.fields(self):
+            value = getattr(self, field.name)
+            if field.init is True:
+                self.__keys_order__.append(field.name)
+            else:
+                self[field.name] = value
 
 
 def TStructField(
