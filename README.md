@@ -26,14 +26,16 @@ The tests do not generate errors with:
 ## Explanation
 ### Stubs
 The **construct-stubs** package is used for creating type hints for the orignial *construct* package. In particular the `build` and `parse` methods get type hints. So the core of the stubs  are the `TypeVar`'s `ParsedType` and `BuildTypes`:
-- The `build` method of a `Construct` converts an object of one of the types defined by `BuildTypes` to a `bytes` object.
-- The `parse` method of a `Construct` converts a `bytes` object to an object of type `ParsedType`.
+- `Construct.build`: converts an object of one of the types defined by `BuildTypes` to a `bytes` object.
+- `Construct.parse`: converts a `bytes` object to an object of type `ParsedType`.
 
-For each of the `Construct`s it is defined which type it is parsed to and from which it can be build. 
-For example:
- - an `Int16ub` construct parses to an `int` and can be build from an `int`.
- - an `Bytes` construct parsed to a `bytes` and can be build from an `bytes`, `bytearray` or `memoryview`.
- - an `Array(5, Int16ub)` construct parses to a `ListContainer[int]` and can be build from an `List[int]`. 
+For each of the `Construct`s in the stubs it is defined which type it parses to and from which it can be build. For example:
+
+| Construct           | parses to (ParsedType)         | builds from (BuildTypes)             |
+| ------------------- | ------------------------------ | ------------------------------------ |
+| `Int16ub`           | `int`                          | `int`                                |
+| `Bytes`             | `bytes`                        | `bytes`, `bytearray` or `memoryview` |
+| `Array(5, Int16ub)` | `construct.ListContainer[int]` | `typing.List[int]`                   |
 
 The problem is to describe the more complex constructs like:
  - `Sequence`, `FocusedSeq` which has heterogenous subcons in comparison to an `Array` with only homogenous subcons. 
