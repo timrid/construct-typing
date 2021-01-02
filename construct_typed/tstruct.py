@@ -32,14 +32,14 @@ class TContainerBase(_TContainerBase):
     Note: this always has to be mixed with "dataclasses.dataclass".
     """
 
-    def __getattribute__(self, name: str):
+    def __getattribute__(self, name: str) -> t.Any:
         # if accessing via an field via dot access, return the object from the dict
         if name in self:
             return self[name]
         else:
             return super().__getattribute__(name)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # 1. fix the __keys_order__ of the cs.Container
         # 2. append fields with init=False to the dict of the cs.Container
         self.__keys_order__ = []
