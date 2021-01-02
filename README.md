@@ -12,16 +12,13 @@ You just have to type:
 pip install construct-typing
 ```
 
-## Usage
-I'm mostly working with VSCode and Pylance (which works really great) ??? But i have also tested the stubs with mypy. ????
-
 ## Tests
 The stubs are tested against the pytests of the *construct* package in a slightly modified form. Since the tests are relatively detailed I think most cases are covered.
 The new typed constructs have new written tests.
 
 The tests do not generate errors with:
 - [x] mypy
-- [ ] pyright (TODO: Some errors in pyright have to be fixed first)
+- [ ] pyright / pylance (TODO: Some errors in pyright have to be fixed first)
 
 ## Explanation
 ### Stubs
@@ -57,7 +54,7 @@ It implements the following new constructs:
 - `TEnum`: similar to `construct.Enum` but strictly tied to a `TEnumBase` class
 - `TFlagsEnum`: similar to `construct.FlagsEnum` but strictly tied to a `TFlagsEnumBase` class
 
-These types are strongly typed, which means that there is no difference between the `ParsedType` and the `BuildTypes`. So to build one of the constructs the correct type is enforced. The disadvantage is that the code gets a little bit longer, because you can not for example use a normal `dict` to build an object. But the big advantage is, that if you use the correct container type instead of a `dict`, the static code analyses can do its magic and find potential errors.
+These types are strongly typed, which means that there is no difference between the `ParsedType` and the `BuildTypes`. So to build one of the constructs the correct type is enforced. The disadvantage is that the code will be a little bit longer, because you can not for example use a normal `dict` to build an `TStruct`. But the big advantage is, that if you use the correct container type instead of a `dict`, the static code analyses can do its magic and find potential type errors and missing values.
 
 
 A short example:
