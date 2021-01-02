@@ -4,6 +4,7 @@ import typing as t
 from .generic_wrapper import *
 
 
+# ## TEnum ############################################################################################################
 class EnumBase(enum.IntEnum):
     """
     Base class for an Enum used in `construct_typed.TEnum`.
@@ -58,8 +59,46 @@ class TEnum(Adapter[int, int, EnumType, EnumType]):
     def _encode(
         self,
         obj: EnumType,
-        context: "cs.Context",
-        path: "cs.PathType",
+        context: Context,
+        path: PathType,
+    ) -> int:
+        if isinstance(obj, self.enum_type):
+            return int(obj)
+        raise TypeError("'{}' has to be of type {}".format(repr(obj), repr(self.enum_type)))
+
+
+
+# ## TFlagsEnum #######################################################################################################
+class FlagsEnumBase(enum.IntFlag):
+    pass
+
+
+FlagsEnumType = t.TypeVar("FlagsEnumType", bound=FlagsEnumBase)
+
+class TFlagsEnum(Adapter[int, int, FlagsEnumType, FlagsEnumType]):
+    """
+    Typed enum.
+    """
+    def __init__(self, subcon: Construct[int, int], enum_type: t.Type[FlagsEnumType]):
+        if not issubclass(enum_type, FlagsEnumBase):
+            raise TypeError(
+                "'{}' has to be a '{}'".format(repr(enum_type), repr(FlagsEnumBase))
+            )
+
+        # save enum type
+        self.enum_type = enum_type
+
+        # init adatper
+        super(TFlagsEnum, self).__init__(subcon)
+
+    def _decode(self, obj: int, context: Context, path: PathType) -> FlagsEnumType:
+        return self.enum_type(obj)  # type: ignore
+
+    def _encode(
+        self,
+        obj: FlagsEnumType,
+        context: Context,
+        path: PathType,
     ) -> int:
         if isinstance(obj, self.enum_type):
             return int(obj)

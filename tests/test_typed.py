@@ -151,29 +151,23 @@ def test_tbitstruct() -> None:
 
 
 def test_tenum() -> None:
-    class E(cst.EnumBase):
-        a = 1
-        b = 2
+    class TestEnum(cst.EnumBase):
+        one = 1
+        two = 2
+        four = 4
+        eight = 8
 
-    common(cst.TEnum(cs.Byte, E), b"\x01", E.a, 1)
-    common(cst.TEnum(cs.Byte, E), b"\x02", E.b, 1)
-    common(cst.TEnum(cs.Byte, E), b"\x03", E(3), 1)
-    common(cst.TEnum(cs.Byte, E), b"\xff", E(255), 1)
+    d = cst.TEnum(cs.Byte, TestEnum)
 
-    format = cst.TEnum(cs.Byte, E)
-    obj = format.parse(b"\x01")
-    assert obj == E.a
-    assert obj == 1
-    obj = format.parse(b"\x02")
-    assert obj == E.b
-    assert obj == 2
-    obj = format.parse(b"\x03")
-    assert obj == E(3)
-    assert obj == 3
-    obj = format.parse(b"\xff")
-    assert obj == E(255)
-    assert obj == 255
-
+    common(d, b"\x01", TestEnum.one, 1)
+    common(d, b"\xff", TestEnum(255), 1)
+    assert d.parse(b"\x01") == TestEnum.one
+    assert d.parse(b"\x01") == 1
+    assert int(d.parse(b"\x01")) == 1
+    assert d.parse(b"\xff") == TestEnum(255)
+    assert d.parse(b"\xff") == 255
+    assert int(d.parse(b"\xff")) == 255
+    assert raises(d.build, 8) == TypeError
 
 
 def test_tenum_no_enumbase() -> None:
@@ -193,9 +187,7 @@ def test_tstruct_wrong_enumbase() -> None:
         a = 1
         b = 2
 
-    assert (
-        raises(cst.TEnum(cs.Byte, E1).build, E2.a) == TypeError
-    )
+    assert raises(cst.TEnum(cs.Byte, E1).build, E2.a) == TypeError
 
 
 def test_tenum_in_tstruct() -> None:
@@ -218,3 +210,21 @@ def test_tenum_in_tstruct() -> None:
     assert (
         raises(cst.TEnum(cs.Byte, TestEnum).build, TestDataclass(a=1, b=2)) == TypeError  # type: ignore
     )
+
+
+def test_tenum_flags() -> None:
+    class TestEnum(cst.FlagsEnumBase):
+        one = 1
+        two = 2
+        four = 4
+        eight = 8
+
+    d = cst.TFlagsEnum(cs.Byte, TestEnum)
+    common(d, b"\x03", TestEnum.one | TestEnum.two, 1)
+    assert d.build(TestEnum(0)) == b"\x00"
+    assert d.build(TestEnum.one | TestEnum.two) == b"\x03"
+    assert d.build(TestEnum(8)) == b"\x08"
+    assert d.build(TestEnum(1 | 2)) == b"\x03"
+    assert d.build(TestEnum(255)) == b"\xff"
+    assert d.build(TestEnum.eight) == b"\x08"
+    assert raises(d.build, 2) == TypeError

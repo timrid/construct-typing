@@ -7,7 +7,7 @@ from .generic_wrapper import (
     PathType,
 )
 from .tarray import TArray
-from .tenum import TEnum, EnumBase
+from .tenum import TEnum, EnumBase, TFlagsEnum, FlagsEnumBase
 from .tstruct import TBitStruct, TStruct, TStructField
 from .tunion import TUnion, TUnionField
 
@@ -26,4 +26,6 @@ __all__ = [
     "Context",
     "ConstantOrContextLambda",
     "PathType",
+    "TFlagsEnum",
+    "FlagsEnumBase"
 ]
