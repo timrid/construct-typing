@@ -2,23 +2,22 @@
 This project is an extension of the python package [*construct*](https://pypi.org/project/construct/), which is a powerful **declarative** and **symmetrical** parser and builder for binary data. This Repository consists of two packages:
 
 - **construct-stubs**: Adding .pyi for the whole *construct 2.10* package (according to  [PEP 561 stub-only packages](https://www.python.org/dev/peps/pep-0561/#stub-only-packages))
-- **construct_typed**: Adding the additional classes that help with autocompletion and additional type hints.
+- **construct_typed**: Adding additional classes that help with autocompletion and additional type hints.
 
 ## Installation
-This package comply to [PEP 561](https://www.python.org/dev/peps/pep-0561/). So most of the static code analysers will recognise the stubs automatically.
-
-You just have to type:
+This package comply to [PEP 561](https://www.python.org/dev/peps/pep-0561/). So most of the static code analysers will recognise the stubs automatically. The installation only requires:
 ```
 pip install construct-typing
 ```
 
 ## Tests
 The stubs are tested against the pytests of the *construct* package in a slightly modified form. Since the tests are relatively detailed I think most cases are covered.
-The new typed constructs have new written tests.
 
-The tests do not generate errors with:
-- [x] mypy
-- [ ] pyright / pylance (TODO: Some errors in pyright have to be fixed first)
+The new typed constructs have new written pytests, which also passes all pytests and the static type checkers.
+
+The following static type checkers are fully supported:
+- [x] mypy ( `mypy --strict tests`  )
+- [ ] pyright ( `pyright tests` ) (TODO: Some errors in pyright have to be fixed first)
 
 ## Explanation
 ### Stubs
