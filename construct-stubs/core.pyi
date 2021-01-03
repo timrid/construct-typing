@@ -1,5 +1,6 @@
 import enum
 import io
+import sys
 import typing as t
 
 import arrow  # type: ignore
@@ -229,17 +230,22 @@ def Bytewise(
 # integers and floats
 # ===============================================================================
 class FormatField(Construct[ParsedType, BuildTypes]):
-    ENDIANITY = t.Union[t.Literal["=", "<", ">"], str]
-    FORMAT_INT = t.Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
-    FORMAT_FLOAT = t.Literal["f", "d", "e"]
-    @t.overload
-    def __new__(cls, endianity: str, format: FORMAT_INT) -> FormatField[int, int]: ...
-    @t.overload
-    def __new__(
-        cls, endianity: str, format: FORMAT_FLOAT
-    ) -> FormatField[float, float]: ...
-    @t.overload
-    def __new__(cls, endianity: str, format: str) -> FormatField[t.Any, t.Any]: ...
+    if sys.version_info >= (3, 8):
+        ENDIANITY = t.Union[t.Literal["=", "<", ">"], str]
+        FORMAT_INT = t.Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
+        FORMAT_FLOAT = t.Literal["f", "d", "e"]
+        @t.overload
+        def __new__(
+            cls, endianity: str, format: FORMAT_INT
+        ) -> FormatField[int, int]: ...
+        @t.overload
+        def __new__(
+            cls, endianity: str, format: FORMAT_FLOAT
+        ) -> FormatField[float, float]: ...
+        @t.overload
+        def __new__(cls, endianity: str, format: str) -> FormatField[t.Any, t.Any]: ...
+    else:
+        def __new__(cls, endianity: str, format: str) -> FormatField[t.Any, t.Any]: ...
 
 class BytesInteger(Construct[ParsedType, BuildTypes]):
     def __new__(
@@ -318,10 +324,13 @@ VarInt: Construct[int, int]
 # strings
 # ===============================================================================
 class StringEncoded(Construct[ParsedType, BuildTypes]):
-    ENCODING_1 = t.Literal["ascii", "utf8", "utf_8", "u8"]
-    ENCODING_2 = t.Literal["utf16", "utf_16", "u16", "utf_16_be", "utf_16_le"]
-    ENCODING_4 = t.Literal["utf32", "utf_32", "u32", "utf_32_be", "utf_32_le"]
-    ENCODING = t.Union[str, ENCODING_1, ENCODING_2, ENCODING_4]
+    if sys.version_info >= (3, 8):
+        ENCODING_1 = t.Literal["ascii", "utf8", "utf_8", "u8"]
+        ENCODING_2 = t.Literal["utf16", "utf_16", "u16", "utf_16_be", "utf_16_le"]
+        ENCODING_4 = t.Literal["utf32", "utf_32", "u32", "utf_32_be", "utf_32_le"]
+        ENCODING = t.Union[str, ENCODING_1, ENCODING_2, ENCODING_4]
+    else:
+        ENCODING = str
     def __new__(
         cls, subcon: Construct[ParsedType, BuildTypes], encoding: ENCODING
     ) -> StringEncoded[str, str]: ...
@@ -547,9 +556,14 @@ class NamedTuple(
         subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> None: ...
 
+if sys.version_info >= (3, 8):
+    MSDOS = t.Literal["msdos"]
+else:
+    MSDOS = str
+
 @t.overload
 def Timestamp(
-    subcon: Construct[int, int], unit: t.Literal["msdos"], epoch: t.Literal["msdos"]
+    subcon: Construct[int, int], unit: MSDOS, epoch: MSDOS
 ) -> Adapter[int, int, arrow.Arrow, arrow.Arrow]: ...
 @t.overload
 def Timestamp(
@@ -749,10 +763,14 @@ class Peek(
 ): ...
 
 class Seek(Construct[int, None]):
+    if sys.version_info >= (3, 8):
+        WHENCE = t.Literal[0, 1, 2]
+    else:
+        WHENCE = int
     def __init__(
         self,
         at: ConstantOrContextLambda[int],
-        whence: ConstantOrContextLambda[t.Literal[0, 1, 2]] = ...,
+        whence: ConstantOrContextLambda[WHENCE] = ...,
     ) -> None: ...
 
 Tell: Construct[int, None]

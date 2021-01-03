@@ -1,6 +1,8 @@
 construct==2.10.*
 pytest>=6.2.0
-numpy==1.19.3
+numpy>=1.20.*
 arrow
 ruamel.yaml
+black
+isort
 mypy

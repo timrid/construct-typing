@@ -131,7 +131,7 @@ def test_formatfield_floats_randomized() -> None:
     # and analog although that was misplaced
     # http://stackoverflow.com/questions/39676482/struct-packstruct-unpackfloat-is-inconsistent-on-py3
     for endianess,dtype in itertools.product("<>=","fd"):
-        d: FormatField[float, float] = FormatField(endianess, dtype)
+        d = FormatField(endianess, dtype)
         for _ in range(100):
             x = random.random()*12345
             if dtype == "d":
