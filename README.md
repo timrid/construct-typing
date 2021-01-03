@@ -1,4 +1,9 @@
 # construct-typing
+![PyPI](https://img.shields.io/pypi/v/construct-typing)
+![PyPI - Implementation](https://img.shields.io/pypi/implementation/construct-typing)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/construct-typing)
+![GitHub](https://img.shields.io/github/license/timrid/construct-typing)
+
 This project is an extension of the python package [*construct*](https://pypi.org/project/construct/), which is a powerful **declarative** and **symmetrical** parser and builder for binary data. This Repository consists of two packages:
 
 - **construct-stubs**: Adding .pyi for the whole *construct 2.10* package (according to  [PEP 561 stub-only packages](https://www.python.org/dev/peps/pep-0561/#stub-only-packages))
