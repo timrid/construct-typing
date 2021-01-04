@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="construct-typing",
-    version="0.1.0",
+    version="0.1.1",
     packages=["construct-stubs", "construct_typed"],
     package_data={
         "construct-stubs": ["*.pyi", "lib/*.pyi"],
