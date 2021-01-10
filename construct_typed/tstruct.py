@@ -62,7 +62,7 @@ def TStructField(
     # Rename subcon, if doc or parsed are available
     if (doc is not None) or (parsed is not None):
         if doc is not None:
-            doc = textwrap.dedent(doc)
+            doc = textwrap.dedent(doc).strip("\n")
         subcon = cs.Renamed(subcon, newdocs=doc, newparsed=parsed)
 
     if subcon.flagbuildnone is True:
