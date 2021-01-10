@@ -1687,9 +1687,9 @@ def test_from_issue_362() -> None:
         "my_tell" / Tell,
         "my_bits" / Bit[8],
     )
-    for i in range(5):
+    for _ in range(5):
         assert FORMAT.parse(b'\x00').my_tell == 0
-    for i in range(5):
+    for _ in range(5):
         assert BIT_FORMAT.parse(b'\x00').my_tell == 0
 
 @pytest.mark.xfail(raises=AttributeError, reason="can't access Enums inside BitStruct")
@@ -2075,7 +2075,7 @@ def test_from_issue_692() -> None:
         "length" / Int8ul,  # The size in bytes of each handle/value pair
         "datalist" / Array(2, FixedSized(this.length, AttributeHandleValuePair)),
     )
-    assert AttReadByTypeResponse.parse(b"\x04\x01\x02\x03\x04\x01\x02\x03\x04") == Container(length=4,datalist=[dict(handle=0x0201,value=b'\x03\x04'),dict(handle=0x0201,value=b'\x03\x04')])
+    assert AttReadByTypeResponse.parse(b"\x04\x01\x02\x03\x04\x01\x02\x03\x04") == Container(length=4,datalist=[{"handle":0x0201,"value":b'\x03\x04'},{"handle": 0x0201,"value": b'\x03\x04'}])
     assert AttReadByTypeResponse.sizeof(length=4) == 1+2*4
 
     AttributeHandleValuePair = Struct(
@@ -2086,7 +2086,7 @@ def test_from_issue_692() -> None:
         "length" / Int8ul,  # The size in bytes of each handle/value pair
         "datalist" / AttributeHandleValuePair[2],
     )
-    assert AttReadByTypeResponse.parse(b"\x04\x01\x02\x03\x04\x01\x02\x03\x04") == Container(length=4,datalist=[dict(handle=0x0201,value=b'\x03\x04'),dict(handle=0x0201,value=b'\x03\x04')])
+    assert AttReadByTypeResponse.parse(b"\x04\x01\x02\x03\x04\x01\x02\x03\x04") == Container(length=4,datalist=[{"handle": 0x0201,"value": b'\x03\x04'},{"handle": 0x0201,"value": b'\x03\x04'}])
     assert AttReadByTypeResponse.sizeof(length=4) == 1+2*(2+4-2)
 
 def test_greedyrange_issue_697() -> None:

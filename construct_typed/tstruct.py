@@ -113,7 +113,7 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
             subcon_fields[field.name] = field.metadata["subcon"]
 
         # init adatper
-        super(_TStruct, self).__init__(self._create_subcon(subcon_fields))
+        super(_TStruct, self).__init__(self._create_subcon(subcon_fields))  # type: ignore
 
     def _create_subcon(
         self, subcon_fields: t.Dict[str, t.Any]
@@ -168,6 +168,14 @@ class TStruct(_TStruct[ContainerType, ContainerType]):
     Typed struct, based on standard dataclasses.
     """
 
+    subcon: "cs.Struct[t.Any, t.Any]"
+    if t.TYPE_CHECKING:
+
+        def __new__(
+            cls, container_type: t.Type[ContainerType], swapped: bool = False
+        ) -> "TStruct[ContainerType]":
+            ...
+
     def _create_subcon(
         self, subcon_fields: t.Dict[str, t.Any]
     ) -> Construct[t.Any, t.Any]:
@@ -178,6 +186,13 @@ class TBitStruct(_TStruct[ContainerType, ContainerType]):
     """
     Typed bit struct, based on standard dataclasses.
     """
+
+    if t.TYPE_CHECKING:
+
+        def __new__(
+            cls, container_type: t.Type[ContainerType], swapped: bool = False
+        ) -> "TBitStruct[ContainerType]":
+            ...
 
     def _create_subcon(
         self, subcon_fields: t.Dict[str, t.Any]

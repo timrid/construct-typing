@@ -174,9 +174,9 @@ class Subconstruct(
 class Adapter(
     Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
 ):
-    def __init__(
-        self, subcon: Construct[SubconParsedType, SubconBuildTypes]
-    ) -> None: ...
+    def __new__(
+        cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
     def _decode(
         self, obj: SubconParsedType, context: Context, path: PathType
     ) -> ParsedType: ...
@@ -397,11 +397,11 @@ class FlagsEnum(Adapter[int, int, ParsedType, BuildTypes]):
 class Mapping(Adapter[SubconParsedType, SubconBuildTypes, t.Any, t.Any]):
     decmapping: t.Dict[int, str]
     encmapping: t.Dict[str, int]
-    def __init__(
-        self,
+    def __new__(
+        cls,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         mapping: t.Dict[t.Any, t.Any],
-    ) -> None: ...
+    ) -> Mapping[t.Any, t.Any]: ...
 
 # ===============================================================================
 # structures and sequences
@@ -513,7 +513,7 @@ class Const(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTy
     def __new__(
         cls,
         value: bytes,
-    ) -> Const[None, None, bytes, t.Optional[bytes]]: ...
+    ) -> Const[None, None, bytes, Bytes[t.ByteString, int]]: ...
     @t.overload
     def __new__(
         cls,
@@ -555,9 +555,9 @@ class Default(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
         t.Optional[SubconBuildTypes],
     ]: ...
 
-class Check(Construct[None, None]):
+class Check(Construct[ParsedType, BuildTypes]):
     func: ConstantOrContextLambda[bool]
-    def __init__(self, func: ConstantOrContextLambda[bool]) -> None: ...
+    def __new__(cls, func: ConstantOrContextLambda[bool]) -> Check[None, None]: ...
 
 Error: Construct[None, None]
 
@@ -579,19 +579,24 @@ class NamedTuple(
     Adapter[
         SubconParsedType,
         SubconBuildTypes,
-        t.Tuple[t.Any, ...],
-        t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]],
+        ParsedType,
+        BuildTypes,
     ]
 ):
     tuplename: str
     tuplefields: str
     factory: Construct[SubconParsedType, SubconBuildTypes]
-    def __init__(
-        self,
+    def __new__(
+        cls,
         tuplename: str,
         tuplefields: str,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-    ) -> None: ...
+    ) -> NamedTuple[
+        SubconParsedType,
+        SubconBuildTypes,
+        t.Tuple[t.Any, ...],
+        t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]],
+    ]: ...
 
 if sys.version_info >= (3, 8):
     MSDOS = t.Literal["msdos"]

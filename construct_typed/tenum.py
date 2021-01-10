@@ -51,7 +51,7 @@ class TEnum(Adapter[int, int, EnumType, EnumType]):
         self.enum_type = t.cast(t.Type[EnumType], enum_type) # type: ignore
 
         # init adatper
-        super(TEnum, self).__init__(subcon)
+        super(TEnum, self).__init__(subcon)  # type: ignore
 
     def _decode(self, obj: int, context: Context, path: PathType) -> EnumType:
         return self.enum_type(obj)
@@ -89,7 +89,7 @@ class TFlagsEnum(Adapter[int, int, FlagsEnumType, FlagsEnumType]):
         self.enum_type = t.cast(t.Type[FlagsEnumType], enum_type) # type: ignore
 
         # init adatper
-        super(TFlagsEnum, self).__init__(subcon)
+        super(TFlagsEnum, self).__init__(subcon)  # type: ignore
 
     def _decode(self, obj: int, context: Context, path: PathType) -> FlagsEnumType:
         return self.enum_type(obj)
