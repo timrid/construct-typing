@@ -27,7 +27,7 @@ class EnumBase(enum.IntEnum):
     def _create_pseudo_member_(cls, value: int) -> "EnumBase":
         pseudo_member = cls._value2member_map_.get(value, None)  # type: ignore
         if pseudo_member is None:
-            new_member = int.__new__(cls, value)  # type: ignore
+            new_member = int.__new__(cls, value) 
             # I expect a name attribute to hold a string, hence str(value)
             # However, new_member._name_ = value works, too
             new_member._name_ = str(value)
