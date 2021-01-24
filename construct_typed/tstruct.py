@@ -142,6 +142,9 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
                 value = getattr(obj, field.name)
                 setattr(dc, field.name, value)
 
+        # also transfer values that are not part of the dataclass
+        dc.update(obj)
+
         return dc
 
     def _encode(
