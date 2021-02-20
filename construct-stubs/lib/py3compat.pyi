@@ -4,6 +4,11 @@ PY2: bool
 PY3: bool
 PYPY: bool
 
+stringtypes: t.Tuple[t.Type[bytes], t.Type[str]]
+integertypes: t.Tuple[t.Type[int]]
+unicodestringtype: t.Type[str]
+bytestringtype: t.Type[bytes]
+
 def int2byte(character: int) -> bytes: ...
 def byte2int(character: bytes) -> int: ...
 def str2bytes(string: str) -> bytes: ...

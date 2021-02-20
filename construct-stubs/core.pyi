@@ -235,11 +235,11 @@ def Bytewise(
 class FormatField(Construct[ParsedType, BuildTypes]):
     fmtstr: str
     length: int
-    packer: struct.Struct
     if sys.version_info >= (3, 8):
         ENDIANITY = t.Union[t.Literal["=", "<", ">"], str]
         FORMAT_INT = t.Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
         FORMAT_FLOAT = t.Literal["f", "d", "e"]
+        FORMAT_BOOL = t.Literal["?"]
         @t.overload
         def __new__(
             cls, endianity: str, format: FORMAT_INT
@@ -249,30 +249,34 @@ class FormatField(Construct[ParsedType, BuildTypes]):
             cls, endianity: str, format: FORMAT_FLOAT
         ) -> FormatField[float, float]: ...
         @t.overload
+        def __new__(
+            cls, endianity: str, format: FORMAT_BOOL
+        ) -> FormatField[bool, bool]: ...
+        @t.overload
         def __new__(cls, endianity: str, format: str) -> FormatField[t.Any, t.Any]: ...
     else:
         def __new__(cls, endianity: str, format: str) -> FormatField[t.Any, t.Any]: ...
 
 class BytesInteger(Construct[ParsedType, BuildTypes]):
-    length: int
+    length: ConstantOrContextLambda[int]
     signed: bool
-    swapped: bool
+    swapped: ConstantOrContextLambda[bool]
     def __new__(
         cls,
         length: ConstantOrContextLambda[int],
         signed: bool = ...,
-        swapped: bool = ...,
+        swapped: ConstantOrContextLambda[bool] = ...,
     ) -> BytesInteger[int, int]: ...
 
 class BitsInteger(Construct[ParsedType, BuildTypes]):
-    length: int
+    length: ConstantOrContextLambda[int]
     signed: bool
-    swapped: bool
+    swapped: ConstantOrContextLambda[bool]
     def __new__(
         cls,
         length: ConstantOrContextLambda[int],
         signed: bool = ...,
-        swapped: bool = ...,
+        swapped: ConstantOrContextLambda[bool] = ...,
     ) -> BitsInteger[int, int]: ...
 
 Bit: BitsInteger[int, int]
@@ -331,6 +335,7 @@ Int24sl: BytesInteger[int, int]
 Int24sn: BytesInteger[int, int]
 
 VarInt: Construct[int, int]
+ZigZag: Construct[int, int]
 
 # ===============================================================================
 # strings
@@ -1014,6 +1019,13 @@ class Compressed(Tunnel[SubconParsedType, SubconBuildTypes]):
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         encoding: str,
         level: t.Optional[int] = ...,
+    ) -> None: ...
+
+class CompressedLZ4(Tunnel[SubconParsedType, SubconBuildTypes]):
+    lib: t.Any
+    def __init__(
+        self,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> None: ...
 
 class Rebuffered(
