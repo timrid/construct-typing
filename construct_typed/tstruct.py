@@ -87,7 +87,10 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
     """
 
     def __init__(
-        self, container_type: t.Type[ContainerType], swapped: bool = False, add_offsets: bool = False
+        self,
+        container_type: t.Type[ContainerType],
+        swapped: bool = False,
+        add_offsets: bool = False,
     ) -> None:
         if not issubclass(container_type, TContainerBase):
             raise TypeError(
@@ -122,6 +125,9 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
         self, subcon_fields: t.Dict[str, t.Any]
     ) -> Construct[t.Any, t.Any]:
         raise NotImplementedError
+
+    def __getattr__(self, name: str):
+        return getattr(self.subcon, name)
 
     def _decode(
         self, obj: "cs.Container[t.Any]", context: Context, path: PathType
@@ -178,7 +184,10 @@ class TStruct(_TStruct[ContainerType, ContainerType]):
     if t.TYPE_CHECKING:
 
         def __new__(
-            cls, container_type: t.Type[ContainerType], swapped: bool = False, add_offsets: bool = False
+            cls,
+            container_type: t.Type[ContainerType],
+            swapped: bool = False,
+            add_offsets: bool = False,
         ) -> "TStruct[ContainerType]":
             ...
 
@@ -196,7 +205,10 @@ class TBitStruct(_TStruct[ContainerType, ContainerType]):
     if t.TYPE_CHECKING:
 
         def __new__(
-            cls, container_type: t.Type[ContainerType], swapped: bool = False, add_offsets: bool = False
+            cls,
+            container_type: t.Type[ContainerType],
+            swapped: bool = False,
+            add_offsets: bool = False,
         ) -> "TBitStruct[ContainerType]":
             ...
 

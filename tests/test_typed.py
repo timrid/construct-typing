@@ -90,6 +90,13 @@ def test_tstruct() -> None:
 
     common(cst.TStruct(TestContainer), b"\x00\x01\x02", TestContainer(a=1, b=2), 3)
 
+    # check __getattr__
+    c = cst.TStruct(TestContainer)
+    assert c.a.name == "a"
+    assert c.b.name == "b"
+    assert c.a.subcon is cs.Int16ub
+    assert c.b.subcon is cs.Int8ub
+
 
 def test_tstruct_swapped() -> None:
     @dataclasses.dataclass
