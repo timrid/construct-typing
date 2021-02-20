@@ -87,7 +87,7 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
     """
 
     def __init__(
-        self, container_type: t.Type[ContainerType], swapped: bool = False
+        self, container_type: t.Type[ContainerType], swapped: bool = False, add_offsets: bool = False
     ) -> None:
         if not issubclass(container_type, TContainerBase):
             raise TypeError(
@@ -101,6 +101,7 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
             )
         self.container_type = container_type
         self.swapped = swapped
+        self.add_offsets = add_offsets
 
         # get all fields from the dataclass
         fields = dataclasses.fields(self.container_type)
@@ -110,6 +111,8 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
         # extract the construct formats from the struct_type
         subcon_fields = {}
         for field in fields:
+            if add_offsets:
+                subcon_fields[f"@{field.name}"] = cs.Tell
             subcon_fields[field.name] = field.metadata["subcon"]
 
         # init adatper
@@ -175,7 +178,7 @@ class TStruct(_TStruct[ContainerType, ContainerType]):
     if t.TYPE_CHECKING:
 
         def __new__(
-            cls, container_type: t.Type[ContainerType], swapped: bool = False
+            cls, container_type: t.Type[ContainerType], swapped: bool = False, add_offsets: bool = False
         ) -> "TStruct[ContainerType]":
             ...
 
@@ -193,7 +196,7 @@ class TBitStruct(_TStruct[ContainerType, ContainerType]):
     if t.TYPE_CHECKING:
 
         def __new__(
-            cls, container_type: t.Type[ContainerType], swapped: bool = False
+            cls, container_type: t.Type[ContainerType], swapped: bool = False, add_offsets: bool = False
         ) -> "TBitStruct[ContainerType]":
             ...
 

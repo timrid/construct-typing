@@ -108,6 +108,24 @@ def test_tstruct_swapped() -> None:
     assert str(normal.parse(b"\x00\x01\x02")) == str(swapped.parse(b"\x02\x00\x01"))
 
 
+def test_tstruct_add_offsets() -> None:
+    @dataclasses.dataclass
+    class TestContainer(cst.TContainerBase):
+        a: int = cst.TStructField(cs.Int16ub)
+        b: int = cst.TStructField(cs.Int8ub)
+
+    common(
+        cst.TStruct(TestContainer, add_offsets=True),
+        b"\x00\x01\x02",
+        TestContainer(a=1, b=2),
+        3,
+    )
+    c = cst.TStruct(TestContainer, add_offsets=True)
+    obj = c.parse(b"\x00\x01\x02")
+    assert obj["@a"] == 0
+    assert obj["@b"] == 2
+
+
 def test_tstruct_nested() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
@@ -247,8 +265,10 @@ def test_tstruct_doc() -> None:
 
     assert format.subcon.a.docs == "This is the documentation of a"
     assert format.subcon.b.docs == "This is the documentation of b\nwhich is multiline"
-    assert format.subcon.c.docs == "This is the documentation of c\nwhich is also multiline"
-    
+    assert (
+        format.subcon.c.docs
+        == "This is the documentation of c\nwhich is also multiline"
+    )
 
 
 @pytest.mark.xfail(reason="not implemented yet")
