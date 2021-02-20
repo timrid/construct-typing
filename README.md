@@ -1,5 +1,5 @@
 # construct-typing
-![PyPI](https://img.shields.io/pypi/v/construct-typing)
+[![PyPI](https://img.shields.io/pypi/v/construct-typing)](https://pypi.org/project/construct-typing/)
 ![PyPI - Implementation](https://img.shields.io/pypi/implementation/construct-typing)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/construct-typing)
 ![GitHub](https://img.shields.io/github/license/timrid/construct-typing)
