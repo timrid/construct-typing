@@ -3,6 +3,8 @@ pytest>=6.2.0
 numpy>=1.20.*
 arrow
 ruamel.yaml
+cloudpickle
+lz4
 black
 isort
 mypy
