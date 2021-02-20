@@ -40,15 +40,14 @@ class TContainerBase(_TContainerBase):
             return super().__getattribute__(name)
 
     def __post_init__(self) -> None:
-        # 1. fix the __keys_order__ of the cs.Container
-        # 2. append fields with init=False to the dict of the cs.Container
-        self.__keys_order__ = []
+        # 1. append fields with init=False to the dict of the cs.Container
+        # 2. fix the order of the OrderedDict
         for field in dataclasses.fields(self):
             value = getattr(self, field.name)
-            if field.init is True:
-                self.__keys_order__.append(field.name)
-            else:
+            if field.init is False:
                 self[field.name] = value
+            else:
+                self.move_to_end(field.name)
 
 
 def TStructField(
