@@ -129,8 +129,10 @@ def test_tstruct_add_offsets() -> None:
     )
     c = cst.TStruct(TestContainer, add_offsets=True)
     obj = c.parse(b"\x00\x01\x02")
-    assert obj["@a"] == 0
-    assert obj["@b"] == 2
+    assert obj["@<a"] == 0
+    assert obj["@>a"] == 2
+    assert obj["@<b"] == 2
+    assert obj["@>b"] == 3
 
 
 def test_tstruct_nested() -> None:

@@ -115,8 +115,10 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
         subcon_fields = {}
         for field in fields:
             if add_offsets:
-                subcon_fields[f"@{field.name}"] = cs.Tell
+                subcon_fields[f"@<{field.name}"] = cs.Tell
             subcon_fields[field.name] = field.metadata["subcon"]
+            if add_offsets:
+                subcon_fields[f"@>{field.name}"] = cs.Tell
 
         # init adatper
         super(_TStruct, self).__init__(self._create_subcon(subcon_fields))  # type: ignore
@@ -126,7 +128,7 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
     ) -> Construct[t.Any, t.Any]:
         raise NotImplementedError
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> t.Any:
         return getattr(self.subcon, name)
 
     def _decode(
