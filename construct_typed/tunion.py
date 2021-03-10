@@ -28,9 +28,9 @@ def TUnionField(
         # some subcons have a predefined default value. all other have "None"
         default: t.Any = None
         if isinstance(subcon, (cs.Const, cs.Default)):
-            if callable(subcon.value):  # type: ignore
+            if callable(subcon.value):
                 raise ValueError("lamda as default is not supported")
-            default = subcon.value  # type: ignore
+            default = subcon.value
 
         # if subcon builds from "None", set default to "None"
         field = dataclasses.field(

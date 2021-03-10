@@ -651,7 +651,7 @@ def test_namedtuple() -> None:
     assert raises(lambda: NamedTuple("coord", "x y z", BitStruct("x"/Byte, "y"/Byte, "z"/Byte))) == NamedTupleError
 
 def test_timestamp() -> None:
-    import arrow  # type: ignore
+    import arrow
     d1 = Timestamp(Int64ub, 1, 1970)
     common(d1, b'\x00\x00\x00\x00ZIz\x00', arrow.Arrow(2018,1,1), 8)
     d2 = Timestamp(Int64ub, 1, 1904)
@@ -2227,3 +2227,36 @@ def test_struct_issue_771() -> None:
     assert spec.sizeof(**info) == 10
 
 
+def test_buildtypes_contravariance() -> None:
+    if t.TYPE_CHECKING:
+        class HexString(Adapter[bytes, bytes, str, str]): ...
+    else:
+        class HexString(Adapter):
+            def _decode(self, obj, context, path):
+                return obj.hex()
+
+            def _encode(self, obj, context, path):
+                return bytes.fromhex(obj)
+
+    HexStringBytes = HexString(Bytes(2))
+    assert HexStringBytes.build('1234') == b'\x12\x34'
+    assert HexStringBytes.parse(b'\x56\x78') == '5678'
+
+    # this fails if BuildTypes is not contravariant,
+    # as GreedyBytes has a BuildType of Union[bytes, int]
+    HexStringGreedyBytes = HexString(GreedyBytes)
+    assert HexStringGreedyBytes.build('9abc') == b'\x9a\xbc'
+    assert HexStringGreedyBytes.parse(b'\xcd\xef') == 'cdef'
+
+
+def test_parsetype_covariance() -> None:
+    T = t.TypeVar('T')
+    if t.TYPE_CHECKING:
+        class ReversedList(SymmetricAdapter[t.List[T], t.List[T], t.List[T], t.List[T]]): ...
+    else:
+        class ReversedList(SymmetricAdapter):
+            def _decode(self, obj, context, path):
+                return list(reversed(obj))
+
+    assert ReversedList(Array(4, Byte)).build([1, 2, 3, 4]) == b'\x04\x03\x02\x01'
+    assert ReversedList(Array(4, Byte)).parse(b'\x01\x02\x03\x04') == [4, 3, 2, 1]

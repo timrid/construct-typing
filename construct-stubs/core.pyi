@@ -85,8 +85,8 @@ def stream_iseof(stream: t.BinaryIO) -> bool: ...
 # ===============================================================================
 # abstract constructs
 # ===============================================================================
-ParsedType = t.TypeVar("ParsedType")
-BuildTypes = t.TypeVar("BuildTypes")
+ParsedType = t.TypeVar("ParsedType", covariant=True)
+BuildTypes = t.TypeVar("BuildTypes", contravariant=True)
 
 class Construct(t.Generic[ParsedType, BuildTypes]):
     name: t.Optional[str]
