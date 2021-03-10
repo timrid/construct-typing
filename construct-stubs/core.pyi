@@ -547,7 +547,7 @@ class Rebuild(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
         func: ConstantOrContextLambda[SubconBuildTypes],
     ) -> Rebuild[SubconParsedType, SubconBuildTypes, SubconParsedType, None]: ...
 
-class Default(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+class Default(Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, t.Optional[SubconBuildTypes]]):
     value: ConstantOrContextLambda2[SubconBuildTypes]
     def __new__(
         cls,
