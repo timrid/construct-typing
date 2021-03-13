@@ -84,8 +84,8 @@ def stream_iseof(stream: t.BinaryIO) -> bool: ...
 # ===============================================================================
 # abstract constructs
 # ===============================================================================
-ParsedType = t.TypeVar("ParsedType")
-BuildTypes = t.TypeVar("BuildTypes")
+ParsedType = t.TypeVar("ParsedType", covariant=True)
+BuildTypes = t.TypeVar("BuildTypes", contravariant=True)
 
 class Construct(t.Generic[ParsedType, BuildTypes]):
     name: t.Optional[str]
@@ -151,8 +151,8 @@ ValueType = t.TypeVar("ValueType")
 ConstantOrContextLambda = t.Union[ValueType, t.Callable[[Context], t.Any]]
 ConstantOrContextLambda2 = t.Union[ValueType, t.Callable[[Context], ValueType]]
 
-SubconParsedType = t.TypeVar("SubconParsedType")
-SubconBuildTypes = t.TypeVar("SubconBuildTypes")
+SubconParsedType = t.TypeVar("SubconParsedType", covariant=True)
+SubconBuildTypes = t.TypeVar("SubconBuildTypes", contravariant=True)
 
 class Subconstruct(
     t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
@@ -547,11 +547,11 @@ class Rebuild(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
     ) -> Rebuild[SubconParsedType, SubconBuildTypes, SubconParsedType, None]: ...
 
 class Default(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
-    value: ConstantOrContextLambda2[SubconBuildTypes]
+    value: ConstantOrContextLambda[SubconBuildTypes]
     def __new__(
         cls,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-        value: ConstantOrContextLambda2[SubconBuildTypes],
+        value: ConstantOrContextLambda[SubconBuildTypes],
     ) -> Default[
         SubconParsedType,
         SubconBuildTypes,

@@ -3,10 +3,10 @@ import enum
 import textwrap
 import typing as t
 
-ParsedType = t.TypeVar("ParsedType")
-BuildTypes = t.TypeVar("BuildTypes")
-SubconParsedType = t.TypeVar("SubconParsedType")
-SubconBuildTypes = t.TypeVar("SubconBuildTypes")
+ParsedType = t.TypeVar("ParsedType", covariant=True)
+BuildTypes = t.TypeVar("BuildTypes", contravariant=True)
+SubconParsedType = t.TypeVar("SubconParsedType", covariant=True)
+SubconBuildTypes = t.TypeVar("SubconBuildTypes", contravariant=True)
 ListType = t.TypeVar("ListType")
 ValueType = t.TypeVar("ValueType")
 

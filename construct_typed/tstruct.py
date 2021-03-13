@@ -51,7 +51,7 @@ class TContainerBase(_TContainerBase):
 
 
 def TStructField(
-    subcon: Construct[ParsedType, BuildTypes],
+    subcon: Construct[ParsedType, t.Any],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
 ) -> ParsedType:
