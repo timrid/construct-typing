@@ -92,7 +92,7 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     docs: str
     flagbuildnone: bool
     parsed: t.Optional[t.Callable[[ParsedType, Context], None]]
-    def parse(self, data: t.ByteString, **contextkw: ContextKWType) -> ParsedType: ...
+    def parse(self, data: bytes, **contextkw: ContextKWType) -> ParsedType: ...
     def parse_stream(
         self, stream: StreamType, **contextkw: ContextKWType
     ) -> ParsedType: ...
@@ -106,7 +106,7 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     ) -> bytes: ...
     def sizeof(self, **contextkw: ContextKWType) -> int: ...
     def compile(self, filename: str = ...) -> Construct[ParsedType, BuildTypes]: ...
-    def benchmark(self, sampledata: t.ByteString, filename: str = ...) -> str: ...
+    def benchmark(self, sampledata: bytes, filename: str = ...) -> str: ...
     def export_ksy(self, schemaname: str = ..., filename: str = ...) -> str: ...
     def __rtruediv__(
         self, name: t.Optional[t.AnyStr]
@@ -211,9 +211,9 @@ class Bytes(Construct[ParsedType, BuildTypes]):
     length: ConstantOrContextLambda[int]
     def __new__(
         cls, length: ConstantOrContextLambda[int]
-    ) -> Bytes[bytes, t.Union[t.ByteString, int]]: ...
+    ) -> Bytes[bytes, t.Union[bytes, int]]: ...
 
-GreedyBytes: Construct[bytes, t.ByteString]
+GreedyBytes: Construct[bytes, bytes]
 
 def Bitwise(
     subcon: Construct[SubconParsedType, SubconBuildTypes]
@@ -517,7 +517,7 @@ class Const(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTy
     def __new__(
         cls,
         value: bytes,
-    ) -> Const[None, None, bytes, Bytes[t.ByteString, int]]: ...
+    ) -> Const[None, None, bytes, Bytes[bytes, int]]: ...
     @t.overload
     def __new__(
         cls,
@@ -859,7 +859,7 @@ class RawCopy(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
         SubconParsedType,
         SubconBuildTypes,
         RawCopyObj[SubconParsedType],
-        t.Optional[t.Dict[str, t.Union[SubconBuildTypes, t.ByteString]]],
+        t.Optional[t.Dict[str, t.Union[SubconBuildTypes, bytes]]],
     ]: ...
 
 def ByteSwapped(
