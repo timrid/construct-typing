@@ -651,7 +651,7 @@ def test_namedtuple() -> None:
     assert raises(lambda: NamedTuple("coord", "x y z", BitStruct("x"/Byte, "y"/Byte, "z"/Byte))) == NamedTupleError
 
 def test_timestamp() -> None:
-    import arrow  # type: ignore
+    import arrow
     d1 = Timestamp(Int64ub, 1, 1970)
     common(d1, b'\x00\x00\x00\x00ZIz\x00', arrow.Arrow(2018,1,1), 8)
     d2 = Timestamp(Int64ub, 1, 1904)

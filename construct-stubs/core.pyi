@@ -1,10 +1,9 @@
 import enum
 import io
-import struct
 import sys
 import typing as t
 
-import arrow  # type: ignore
+import arrow
 from construct.lib import (
     Container,
     ContainerType,
