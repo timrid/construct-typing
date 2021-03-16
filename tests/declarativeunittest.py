@@ -49,6 +49,7 @@ def common(format, datasample, objsample, sizesample=SizeofError, **kw):
 
 
 def setattrs(obj, **kwargs):
+    """ Set multiple named values of an object """
     for name, value in kwargs.items():
         setattr(obj, name, value)
     return obj

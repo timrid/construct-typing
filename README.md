@@ -74,11 +74,11 @@ class Orientation(cst.EnumBase):
 
 @dataclasses.dataclass
 class Image(cst.TContainerBase):
-    signature: cst.Opt[bytes] = cst.TStructField(cs.Const(b"BMP"))
-    orientation: Orientation = cst.TStructField(cst.TEnum(cs.Int8ub, Orientation))
-    width: int = cst.TStructField(cs.Int8ub)
-    height: int = cst.TStructField(cs.Int8ub)
-    pixels: cst.List[int] = cst.TStructField(cs.Array(cs.this.width * cs.this.height, cs.Byte))
+    signature: cst.Opt[bytes] = cst.sfield(cs.Const(b"BMP"))
+    orientation: Orientation = cst.sfield(cst.TEnum(cs.Int8ub, Orientation))
+    width: int = cst.sfield(cs.Int8ub)
+    height: int = cst.sfield(cs.Int8ub)
+    pixels: cst.List[int] = cst.sfield(cs.Array(cs.this.width * cs.this.height, cs.Byte))
 
 format = cst.TStruct(Image)
 obj = Image(orientation=Orientation.VERTICAL, width=3, height=2, pixels=[7, 8, 9, 11, 12, 13])

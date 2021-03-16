@@ -6,6 +6,7 @@ import enum
 import construct as cs
 import construct_typed as cst
 import pytest
+import typing as t
 
 from .declarativeunittest import common, raises, setattrs
 
@@ -13,13 +14,13 @@ from .declarativeunittest import common, raises, setattrs
 def test_tcontainer_compare_with_dataclass() -> None:
     @dataclasses.dataclass
     class TestContainer:
-        a: cst.Opt[int] = cst.TStructField(cs.Const(1, cs.Byte))
-        b: int = cst.TStructField(cs.Int8ub)
+        a: t.Optional[int] = cst.sfield(cs.Const(1, cs.Byte))
+        b: int = cst.sfield(cs.Int8ub)
 
     @dataclasses.dataclass
     class TestTContainer(cst.TContainerBase):
-        a: cst.Opt[int] = cst.TStructField(cs.Const(1, cs.Byte))
-        b: int = cst.TStructField(cs.Int8ub)
+        a: t.Optional[int] = cst.sfield(cs.Const(1, cs.Byte))
+        b: int = cst.sfield(cs.Int8ub)
 
     datacls = TestContainer(b=1)
     tcontainer = TestTContainer(b=1)
@@ -66,9 +67,9 @@ def test_tcontainer_compare_with_dataclass() -> None:
 def test_tcontainer_order() -> None:
     @dataclasses.dataclass
     class Image(cst.TContainerBase):
-        signature: cst.Opt[bytes] = cst.TStructField(cs.Const(b"BMP"))
-        width: int = cst.TStructField(cs.Int8ub)
-        height: int = cst.TStructField(cs.Int8ub)
+        signature: t.Optional[bytes] = cst.sfield(cs.Const(b"BMP"))
+        width: int = cst.sfield(cs.Int8ub)
+        height: int = cst.sfield(cs.Int8ub)
 
     format = cst.TStruct(Image)
     obj = Image(width=3, height=2)
@@ -85,8 +86,8 @@ def test_tcontainer_order() -> None:
 def test_tstruct() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        a: int = cst.TStructField(cs.Int16ub)
-        b: int = cst.TStructField(cs.Int8ub)
+        a: int = cst.sfield(cs.Int16ub)
+        b: int = cst.sfield(cs.Int8ub)
 
     common(cst.TStruct(TestContainer), b"\x00\x01\x02", TestContainer(a=1, b=2), 3)
 
@@ -101,8 +102,8 @@ def test_tstruct() -> None:
 def test_tstruct_swapped() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        a: int = cst.TStructField(cs.Int16ub)
-        b: int = cst.TStructField(cs.Int8ub)
+        a: int = cst.sfield(cs.Int16ub)
+        b: int = cst.sfield(cs.Int8ub)
 
     common(
         cst.TStruct(TestContainer, swapped=True),
@@ -118,8 +119,8 @@ def test_tstruct_swapped() -> None:
 def test_tstruct_add_offsets() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        a: int = cst.TStructField(cs.Int16ub)
-        b: int = cst.TStructField(cs.Int8ub)
+        a: int = cst.sfield(cs.Int16ub)
+        b: int = cst.sfield(cs.Int8ub)
 
     common(
         cst.TStruct(TestContainer, add_offsets=True),
@@ -140,9 +141,9 @@ def test_tstruct_nested() -> None:
     class TestContainer(cst.TContainerBase):
         @dataclasses.dataclass
         class InnerDataclass(cst.TContainerBase):
-            b: int = cst.TStructField(cs.Byte)
+            b: int = cst.sfield(cs.Byte)
 
-        a: InnerDataclass = cst.TStructField(cst.TStruct(InnerDataclass))
+        a: InnerDataclass = cst.sfield(cst.TStruct(InnerDataclass))
 
     common(
         cst.TStruct(TestContainer),
@@ -155,9 +156,9 @@ def test_tstruct_nested() -> None:
 def test_tstruct_default_field() -> None:
     @dataclasses.dataclass
     class Image(cst.TContainerBase):
-        width: int = cst.TStructField(cs.Int8ub)
-        height: int = cst.TStructField(cs.Int8ub)
-        pixels: cst.Opt[bytes] = cst.TStructField(
+        width: int = cst.sfield(cs.Int8ub)
+        height: int = cst.sfield(cs.Int8ub)
+        pixels: t.Optional[bytes] = cst.sfield(
             cs.Default(
                 cs.Bytes(cs.this.width * cs.this.height),
                 lambda ctx: bytes(ctx.width * ctx.height),
@@ -175,7 +176,7 @@ def test_tstruct_default_field() -> None:
 def test_tstruct_const_field() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        const_field: cst.Opt[bytes] = cst.TStructField(cs.Const(b"\x00"))
+        const_field: t.Optional[bytes] = cst.sfield(cs.Const(b"\x00"))
 
     common(
         cst.TStruct(TestContainer),
@@ -192,14 +193,26 @@ def test_tstruct_const_field() -> None:
         == cs.ConstError
     )
 
+def test_tstruct_array_field() -> None:
+    @dataclasses.dataclass
+    class TestContainer(cst.TContainerBase):
+        array_field: t.List[int] = cst.sfield(cs.Array(5, cs.Int8ub))
+
+    common(
+        cst.TStruct(TestContainer),
+        bytes(5),
+        TestContainer(array_field=[0,0,0,0,0]),
+        5,
+    )
+
 
 def test_tstruct_anonymus_fields_1() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        _1: cst.Opt[bytes] = cst.TStructField(cs.Const(b"\x00"))
-        _2: None = cst.TStructField(cs.Padding(1))
-        _3: None = cst.TStructField(cs.Pass)
-        _4: None = cst.TStructField(cs.Terminated)
+        _1: t.Optional[bytes] = cst.sfield(cs.Const(b"\x00"))
+        _2: None = cst.sfield(cs.Padding(1))
+        _3: None = cst.sfield(cs.Pass)
+        _4: None = cst.sfield(cs.Terminated)
 
     common(
         cst.TStruct(TestContainer),
@@ -212,10 +225,10 @@ def test_tstruct_anonymus_fields_1() -> None:
 def test_tstruct_anonymus_fields_2() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        _1: int = cst.TStructField(cs.Computed(7))
-        _2: cst.Opt[bytes] = cst.TStructField(cs.Const(b"JPEG"))
-        _3: None = cst.TStructField(cs.Pass)
-        _4: None = cst.TStructField(cs.Terminated)
+        _1: int = cst.sfield(cs.Computed(7))
+        _2: t.Optional[bytes] = cst.sfield(cs.Const(b"JPEG"))
+        _3: None = cst.sfield(cs.Pass)
+        _4: None = cst.sfield(cs.Terminated)
 
     d = cst.TStruct(TestContainer)
     assert d.build(TestContainer()) == d.build(TestContainer())
@@ -223,8 +236,8 @@ def test_tstruct_anonymus_fields_2() -> None:
 
 def test_tstruct_no_dataclass() -> None:
     class TestContainer(cst.TContainerBase):
-        a: int = cst.TStructField(cs.Int16ub)
-        b: int = cst.TStructField(cs.Int8ub)
+        a: int = cst.sfield(cs.Int16ub)
+        b: int = cst.sfield(cs.Int8ub)
 
     assert raises(lambda: cst.TStruct(TestContainer)) == TypeError
 
@@ -232,8 +245,8 @@ def test_tstruct_no_dataclass() -> None:
 def test_tstruct_no_tcontainerbase() -> None:
     @dataclasses.dataclass
     class TestContainer:
-        a: int = cst.TStructField(cs.Int16ub)
-        b: int = cst.TStructField(cs.Int8ub)
+        a: int = cst.sfield(cs.Int16ub)
+        b: int = cst.sfield(cs.Int8ub)
 
     assert raises(lambda: cst.TStruct(TestContainer)) == TypeError
 
@@ -241,13 +254,13 @@ def test_tstruct_no_tcontainerbase() -> None:
 def test_tstruct_wrong_container() -> None:
     @dataclasses.dataclass
     class TestContainer1(cst.TContainerBase):
-        a: int = cst.TStructField(cs.Int16ub)
-        b: int = cst.TStructField(cs.Int8ub)
+        a: int = cst.sfield(cs.Int16ub)
+        b: int = cst.sfield(cs.Int8ub)
 
     @dataclasses.dataclass
     class TestContainer2(cst.TContainerBase):
-        a: int = cst.TStructField(cs.Int16ub)
-        b: int = cst.TStructField(cs.Int8ub)
+        a: int = cst.sfield(cs.Int16ub)
+        b: int = cst.sfield(cs.Int8ub)
 
     assert (
         raises(cst.TStruct(TestContainer1).build, TestContainer2(a=1, b=2)) == TypeError
@@ -257,11 +270,11 @@ def test_tstruct_wrong_container() -> None:
 def test_tstruct_doc() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        a: int = cst.TStructField(cs.Int16ub, "This is the documentation of a")
-        b: int = cst.TStructField(
+        a: int = cst.sfield(cs.Int16ub, "This is the documentation of a")
+        b: int = cst.sfield(
             cs.Int8ub, doc="This is the documentation of b\nwhich is multiline"
         )
-        c: int = cst.TStructField(
+        c: int = cst.sfield(
             cs.Int8ub,
             """
             This is the documentation of c
@@ -332,8 +345,8 @@ def test_tenum_in_tstruct() -> None:
 
     @dataclasses.dataclass
     class TestContainer(cst.TContainerBase):
-        a: TestEnum = cst.TStructField(cst.TEnum(cs.Int8ub, TestEnum))
-        b: int = cst.TStructField(cs.Int8ub)
+        a: TestEnum = cst.sfield(cst.TEnum(cs.Int8ub, TestEnum))
+        b: int = cst.sfield(cs.Int8ub)
 
     common(
         cst.TStruct(TestContainer),

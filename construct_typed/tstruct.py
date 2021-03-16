@@ -50,7 +50,7 @@ class TContainerBase(_TContainerBase):
                 self.move_to_end(field.name)
 
 
-def TStructField(
+def sfield(
     subcon: Construct[ParsedType, t.Any],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
@@ -76,6 +76,7 @@ def TStructField(
 
     return field  # type: ignore
 
+TStructField = sfield  # also support legacy name
 
 ContainerType = t.TypeVar("ContainerType", bound=TContainerBase)
 

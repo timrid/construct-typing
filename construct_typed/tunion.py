@@ -1,5 +1,4 @@
 import dataclasses
-import enum
 import textwrap
 import typing as t
 
@@ -10,7 +9,7 @@ from .generic_wrapper import *
 DataclassType = t.TypeVar("DataclassType")
 
 
-def TUnionField(
+def ufield(
     subcon: Construct[ParsedType, t.Any],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, "cs.Context"], None]] = None,
@@ -43,6 +42,7 @@ def TUnionField(
 
     return field  # type: ignore
 
+TUnionField = ufield  # also support legacy name
 
 class TUnion(Adapter[t.Any, t.Any, DataclassType, DataclassType]):
     pass  # TODO
