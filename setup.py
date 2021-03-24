@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 from setuptools import setup
 
+exec(open("./construct_typed/version.py").read())
+
 setup(
     name="construct-typing",
-    version="0.2.0",
+    version=version_string,
     packages=["construct-stubs", "construct_typed"],
     package_data={
         "construct-stubs": ["*.pyi", "lib/*.pyi"],
