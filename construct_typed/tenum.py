@@ -46,7 +46,7 @@ class TEnum(Adapter[int, int, EnumType, EnumType]):
 
         def __new__(
             cls, subcon: Construct[int, int], enum_type: t.Type[EnumType]
-        ) -> Adapter[int, int, EnumType, EnumType]:
+        ) -> "TEnum[EnumType]":
             ...
 
     def __init__(self, subcon: Construct[int, int], enum_type: t.Type[EnumType]):
@@ -94,7 +94,7 @@ class TFlagsEnum(Adapter[int, int, FlagsEnumType, FlagsEnumType]):
 
         def __new__(
             cls, subcon: Construct[int, int], enum_type: t.Type[FlagsEnumType]
-        ) -> Adapter[int, int, FlagsEnumType, FlagsEnumType]:
+        ) -> "TFlagsEnum[FlagsEnumType]":
             ...
 
     def __init__(self, subcon: Construct[int, int], enum_type: t.Type[FlagsEnumType]):
