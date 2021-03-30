@@ -1,7 +1,6 @@
 import io
 import typing as t
 
-
 class RestreamedBytesIO(object):
     substream: t.Optional[io.BytesIO]
     encoder: t.Callable[[bytes], bytes]
@@ -18,15 +17,7 @@ class RestreamedBytesIO(object):
         decoderunit: int,
         encoder: t.Callable[[bytes], bytes],
         encoderunit: int,
-    ) -> None:
-        self.substream = substream
-        self.encoder = encoder
-        self.encoderunit = encoderunit
-        self.decoder = decoder
-        self.decoderunit = decoderunit
-        self.rbuffer = b""
-        self.wbuffer = b""
-        self.sincereadwritten = 0
+    ) -> None: ...
     def read(self, count: t.Optional[int] = ...) -> bytes: ...
     def write(self, data: t.Union[bytes, bytearray, memoryview]) -> int: ...
     def close(self) -> None: ...
