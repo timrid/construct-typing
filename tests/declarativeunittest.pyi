@@ -6,7 +6,7 @@ import construct_typed as cst
 Buffer = t.Union[bytes, memoryview, bytearray]
 ParsedType = t.TypeVar("ParsedType")
 BuildTypes = t.TypeVar("BuildTypes")
-ContainerType = t.TypeVar("ContainerType", bound=cst.TContainerBase)
+ContainerType = t.TypeVar("ContainerType", bound=cst.TContainerMixin)
 T = t.TypeVar("T")
 
 IdentType = t.TypeVar("IdentType")

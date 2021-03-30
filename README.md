@@ -54,7 +54,7 @@ Note: The stubs are based on *construct* in Version 2.10.
 To include autocompletion and further enhance the type hints for these complex constructs the **construct_typed** package is used as an extension to the original *construct* package. It is mainly a bunch of Adapters for the original constructs with the focus on type hints.
 
 It implements the following new constructs:
-- `TStruct`, `TBitStruct`: similar to `construct.Struct` but strictly tied to `TContainerBase` and `@dataclasses.dataclass`
+- `TStruct`, `TBitStruct`: similar to `construct.Struct` but strictly tied to `TContainerMixin` and `@dataclasses.dataclass`
 - `TEnum`: similar to `construct.Enum` but strictly tied to a `TEnumBase` class
 - `TFlagsEnum`: similar to `construct.FlagsEnum` but strictly tied to a `TFlagsEnumBase` class
 
@@ -67,18 +67,19 @@ A short example:
 import dataclasses
 import construct as cs
 import construct_typed as cst
+import typing as t
 
 class Orientation(cst.EnumBase):
     HORIZONTAL = 0
     VERTICAL = 1
 
 @dataclasses.dataclass
-class Image(cst.TContainerBase):
-    signature: cst.Opt[bytes] = cst.sfield(cs.Const(b"BMP"))
-    orientation: Orientation = cst.sfield(cst.TEnum(cs.Int8ub, Orientation))
-    width: int = cst.sfield(cs.Int8ub)
-    height: int = cst.sfield(cs.Int8ub)
-    pixels: cst.List[int] = cst.sfield(cs.Array(cs.this.width * cs.this.height, cs.Byte))
+class Image(cst.TContainerMixin):
+    signature: t.Optional[bytes] = cst.TStructField(cs.Const(b"BMP"))
+    orientation: Orientation = cst.TStructField(cst.TEnum(cs.Int8ub, Orientation))
+    width: int = cst.TStructField(cs.Int8ub)
+    height: int = cst.TStructField(cs.Int8ub)
+    pixels: t.List[int] = cst.TStructField(cs.Array(cs.this.width * cs.this.height, cs.Byte))
 
 format = cst.TStruct(Image)
 obj = Image(orientation=Orientation.VERTICAL, width=3, height=2, pixels=[7, 8, 9, 11, 12, 13])

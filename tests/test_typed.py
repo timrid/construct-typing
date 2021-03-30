@@ -18,7 +18,7 @@ def test_tcontainer_compare_with_dataclass() -> None:
         b: int = cst.sfield(cs.Int8ub)
 
     @dataclasses.dataclass
-    class TestTContainer(cst.TContainerBase):
+    class TestTContainer(cst.TContainerMixin):
         a: t.Optional[int] = cst.sfield(cs.Const(1, cs.Byte))
         b: int = cst.sfield(cs.Int8ub)
 
@@ -66,7 +66,7 @@ def test_tcontainer_compare_with_dataclass() -> None:
 
 def test_tcontainer_order() -> None:
     @dataclasses.dataclass
-    class Image(cst.TContainerBase):
+    class Image(cst.TContainerMixin):
         signature: t.Optional[bytes] = cst.sfield(cs.Const(b"BMP"))
         width: int = cst.sfield(cs.Int8ub)
         height: int = cst.sfield(cs.Int8ub)
@@ -85,7 +85,7 @@ def test_tcontainer_order() -> None:
 
 def test_tstruct() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         a: int = cst.sfield(cs.Int16ub)
         b: int = cst.sfield(cs.Int8ub)
 
@@ -101,7 +101,7 @@ def test_tstruct() -> None:
 
 def test_tstruct_swapped() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         a: int = cst.sfield(cs.Int16ub)
         b: int = cst.sfield(cs.Int8ub)
 
@@ -118,7 +118,7 @@ def test_tstruct_swapped() -> None:
 
 def test_tstruct_add_offsets() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         a: int = cst.sfield(cs.Int16ub)
         b: int = cst.sfield(cs.Int8ub)
 
@@ -138,9 +138,9 @@ def test_tstruct_add_offsets() -> None:
 
 def test_tstruct_nested() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         @dataclasses.dataclass
-        class InnerDataclass(cst.TContainerBase):
+        class InnerDataclass(cst.TContainerMixin):
             b: int = cst.sfield(cs.Byte)
 
         a: InnerDataclass = cst.sfield(cst.TStruct(InnerDataclass))
@@ -155,7 +155,7 @@ def test_tstruct_nested() -> None:
 
 def test_tstruct_default_field() -> None:
     @dataclasses.dataclass
-    class Image(cst.TContainerBase):
+    class Image(cst.TContainerMixin):
         width: int = cst.sfield(cs.Int8ub)
         height: int = cst.sfield(cs.Int8ub)
         pixels: t.Optional[bytes] = cst.sfield(
@@ -175,7 +175,7 @@ def test_tstruct_default_field() -> None:
 
 def test_tstruct_const_field() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         const_field: t.Optional[bytes] = cst.sfield(cs.Const(b"\x00"))
 
     common(
@@ -195,7 +195,7 @@ def test_tstruct_const_field() -> None:
 
 def test_tstruct_array_field() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         array_field: t.List[int] = cst.sfield(cs.Array(5, cs.Int8ub))
 
     common(
@@ -208,7 +208,7 @@ def test_tstruct_array_field() -> None:
 
 def test_tstruct_anonymus_fields_1() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         _1: t.Optional[bytes] = cst.sfield(cs.Const(b"\x00"))
         _2: None = cst.sfield(cs.Padding(1))
         _3: None = cst.sfield(cs.Pass)
@@ -224,7 +224,7 @@ def test_tstruct_anonymus_fields_1() -> None:
 
 def test_tstruct_anonymus_fields_2() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         _1: int = cst.sfield(cs.Computed(7))
         _2: t.Optional[bytes] = cst.sfield(cs.Const(b"JPEG"))
         _3: None = cst.sfield(cs.Pass)
@@ -235,14 +235,14 @@ def test_tstruct_anonymus_fields_2() -> None:
 
 
 def test_tstruct_no_dataclass() -> None:
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         a: int = cst.sfield(cs.Int16ub)
         b: int = cst.sfield(cs.Int8ub)
 
     assert raises(lambda: cst.TStruct(TestContainer)) == TypeError
 
 
-def test_tstruct_no_tcontainerbase() -> None:
+def test_tstruct_no_TContainerMixin() -> None:
     @dataclasses.dataclass
     class TestContainer:
         a: int = cst.sfield(cs.Int16ub)
@@ -253,12 +253,12 @@ def test_tstruct_no_tcontainerbase() -> None:
 
 def test_tstruct_wrong_container() -> None:
     @dataclasses.dataclass
-    class TestContainer1(cst.TContainerBase):
+    class TestContainer1(cst.TContainerMixin):
         a: int = cst.sfield(cs.Int16ub)
         b: int = cst.sfield(cs.Int8ub)
 
     @dataclasses.dataclass
-    class TestContainer2(cst.TContainerBase):
+    class TestContainer2(cst.TContainerMixin):
         a: int = cst.sfield(cs.Int16ub)
         b: int = cst.sfield(cs.Int8ub)
 
@@ -269,7 +269,7 @@ def test_tstruct_wrong_container() -> None:
 
 def test_tstruct_doc() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         a: int = cst.sfield(cs.Int16ub, "This is the documentation of a")
         b: int = cst.sfield(
             cs.Int8ub, doc="This is the documentation of b\nwhich is multiline"
@@ -344,7 +344,7 @@ def test_tenum_in_tstruct() -> None:
         b = 2
 
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerBase):
+    class TestContainer(cst.TContainerMixin):
         a: TestEnum = cst.sfield(cst.TEnum(cs.Int8ub, TestEnum))
         b: int = cst.sfield(cs.Int8ub)
 

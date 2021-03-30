@@ -15,17 +15,17 @@ from .generic_wrapper import (
 
 if t.TYPE_CHECKING:
 
-    class _TContainerBase(cs.Container[t.Any]):
+    class _TContainerMixin(cs.Container[t.Any]):
         ...
 
 
 else:
 
-    class _TContainerBase(cs.Container):
+    class _TContainerMixin(cs.Container):
         pass
 
 
-class TContainerBase(_TContainerBase):
+class TContainerMixin(_TContainerMixin):
     """
     Base class for a Container of a TStruct and a TBitStruct.
 
@@ -48,6 +48,9 @@ class TContainerBase(_TContainerBase):
                 self[field.name] = value
             else:
                 self.move_to_end(field.name)
+
+
+TContainerBase = TContainerMixin  # also support legacy name
 
 
 def sfield(
@@ -76,9 +79,10 @@ def sfield(
 
     return field  # type: ignore
 
+
 TStructField = sfield  # also support legacy name
 
-ContainerType = t.TypeVar("ContainerType", bound=TContainerBase)
+ContainerType = t.TypeVar("ContainerType", bound=TContainerMixin)
 
 
 class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
@@ -92,10 +96,10 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
         swapped: bool = False,
         add_offsets: bool = False,
     ) -> None:
-        if not issubclass(container_type, TContainerBase):
+        if not issubclass(container_type, TContainerMixin):
             raise TypeError(
                 "'{}' has to be a '{}'".format(
-                    repr(container_type), repr(TContainerBase)
+                    repr(container_type), repr(TContainerMixin)
                 )
             )
         if not dataclasses.is_dataclass(container_type):
