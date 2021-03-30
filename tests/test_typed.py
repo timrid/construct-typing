@@ -99,21 +99,21 @@ def test_tstruct() -> None:
     assert c.b.subcon is cs.Int8ub
 
 
-def test_tstruct_swapped() -> None:
+def test_tstruct_reverse() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerMixin):
         a: int = cst.sfield(cs.Int16ub)
         b: int = cst.sfield(cs.Int8ub)
 
     common(
-        cst.TStruct(TestContainer, swapped=True),
+        cst.TStruct(TestContainer, reverse=True),
         b"\x02\x00\x01",
         TestContainer(a=1, b=2),
         3,
     )
     normal = cst.TStruct(TestContainer)
-    swapped = cst.TStruct(TestContainer, swapped=True)
-    assert str(normal.parse(b"\x00\x01\x02")) == str(swapped.parse(b"\x02\x00\x01"))
+    reverse = cst.TStruct(TestContainer, reverse=True)
+    assert str(normal.parse(b"\x00\x01\x02")) == str(reverse.parse(b"\x02\x00\x01"))
 
 
 def test_tstruct_add_offsets() -> None:
