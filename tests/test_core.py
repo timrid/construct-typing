@@ -852,7 +852,6 @@ def test_stopif() -> None:
     common(d1, b"\x01\x02", Container(x=1,y=2))
 
     d2 = Sequence("x"/Byte, StopIf(this.x == 0), "y"/Byte)
-    common(d2, b"\x00", [0])
     common(d2, b"\x01\x02", [1,None,2])
 
     d3 = GreedyRange(FocusedSeq("x", "x"/Byte, StopIf(this.x == 0)))
