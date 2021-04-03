@@ -607,22 +607,26 @@ if sys.version_info >= (3, 8):
 else:
     MSDOS = str
 
+class TimestampAdapter(
+    Adapter[SubconParsedType, SubconBuildTypes, arrow.Arrow, arrow.Arrow]
+): ...
+
 @t.overload
 def Timestamp(
     subcon: Construct[int, int], unit: MSDOS, epoch: MSDOS
-) -> Adapter[int, int, arrow.Arrow, arrow.Arrow]: ...
+) -> TimestampAdapter[int, int]: ...
 @t.overload
 def Timestamp(
     subcon: Construct[int, int],
     unit: t.Union[int, float],
     epoch: t.Union[int, arrow.Arrow],
-) -> Adapter[int, int, arrow.Arrow, arrow.Arrow]: ...
+) -> TimestampAdapter[int, int]: ...
 @t.overload
 def Timestamp(
     subcon: Construct[float, float],
     unit: t.Union[int, float],
     epoch: t.Union[int, arrow.Arrow],
-) -> Adapter[float, float, arrow.Arrow, arrow.Arrow]: ...
+) -> TimestampAdapter[float, float]: ...
 
 K = t.TypeVar("K")
 V = t.TypeVar("V")

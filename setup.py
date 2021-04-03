@@ -20,7 +20,7 @@ setup(
     url="https://github.com/timrid/construct-typing",
     author="Tim Riddermann",
     python_requires=">=3.7",
-    install_requires=["construct==2.10.64"],
+    install_requires=["construct==2.10.66"],
     keywords=[
         "construct",
         "kaitai",
