@@ -61,18 +61,31 @@ def sfield(
     """
     Create a dataclass field for a "TStruct" and "TBitStruct" from a subcon.
     """
+    orig_subcon = subcon
+
     # Rename subcon, if doc or parsed are available
     if (doc is not None) or (parsed is not None):
         if doc is not None:
             doc = textwrap.dedent(doc).strip("\n")
         subcon = cs.Renamed(subcon, newdocs=doc, newparsed=parsed)
 
-    if subcon.flagbuildnone is True:
-        # if subcon builds from "None", set default to "None"
+    if isinstance(orig_subcon, (cs.Const, cs.Default)) and not callable(
+        orig_subcon.value
+    ):
+        # Set simple values if cs.Const or cs.Default.
+        # If the value is a callable (or context lambda), then we cant set it because it
+        # is only defined at parsing/building
+        field = dataclasses.field(
+            default=orig_subcon.value,
+            init=False,
+            metadata={"subcon": subcon},
+        )
+    elif orig_subcon.flagbuildnone is True:
+        # If subcon builds from "None", set default to "None"
         field = dataclasses.field(
             default=None,
             init=False,
-            metadata={"subcon": cs.Renamed(subcon, newdocs=doc)},
+            metadata={"subcon": subcon},
         )
     else:
         field = dataclasses.field(metadata={"subcon": subcon})
@@ -170,7 +183,7 @@ class _TStruct(Adapter[t.Any, t.Any, ContainerType, BuildTypes]):
             fields = dataclasses.fields(self.container_type)
 
             # extract all fields from the container, that are used for create the dataclass object
-            ret_dict = {}
+            ret_dict: t.Dict[str, t.Any] = {}
             for field in fields:
                 value = getattr(obj, field.name)
                 ret_dict[field.name] = value

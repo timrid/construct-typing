@@ -11,6 +11,19 @@ import typing as t
 from .declarativeunittest import common, raises, setattrs
 
 
+def test_tcontainer_const_default() -> None:
+    @dataclasses.dataclass
+    class ConstDefaultTest(cst.TContainerMixin):
+        const_bytes: bytes = cst.sfield(cs.Const(b"BMP"))
+        const_int: int = cst.sfield(cs.Const(5, cs.Int8ub))
+        default_int: int = cst.sfield(cs.Default(cs.Int8ub, 28))
+
+    a = ConstDefaultTest()
+    assert a.const_bytes == b"BMP"
+    assert a.const_int == 5
+    assert a.default_int == 28
+
+
 def test_tcontainer_compare_with_dataclass() -> None:
     @dataclasses.dataclass
     class TestContainer:
@@ -27,7 +40,7 @@ def test_tcontainer_compare_with_dataclass() -> None:
 
     # ##### compare dot & dict access #####
     # dataclass
-    assert datacls.a == None
+    assert datacls.a == 1
     assert raises(lambda: datacls["a"]) == TypeError  # type: ignore
     assert datacls.b == 1
     assert raises(lambda: datacls["b"]) == TypeError  # type: ignore
@@ -41,8 +54,8 @@ def test_tcontainer_compare_with_dataclass() -> None:
         assert e.__class__ == TypeError
 
     # tcontainer
-    assert tcontainer.a == None
-    assert tcontainer["a"] == None
+    assert tcontainer.a == 1
+    assert tcontainer["a"] == 1
     assert tcontainer.b == 1
     assert tcontainer["b"] == 1
 
@@ -74,7 +87,8 @@ def test_tcontainer_order() -> None:
     format = cst.TStruct(Image)
     obj = Image(width=3, height=2)
     assert (
-        str(obj) == "Container: \n    signature = None\n    width = 3\n    height = 2"
+        str(obj)
+        == "Container: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
     )
     obj = format.parse(format.build(obj))
     assert (
@@ -90,7 +104,7 @@ def test_tstruct() -> None:
         b: int = cst.sfield(cs.Int8ub)
 
     common(cst.TStruct(TestContainer), b"\x00\x01\x02", TestContainer(a=1, b=2), 3)
-
+    
     # check __getattr__
     c = cst.TStruct(TestContainer)
     assert c.a.name == "a"
@@ -193,6 +207,7 @@ def test_tstruct_const_field() -> None:
         == cs.ConstError
     )
 
+
 def test_tstruct_array_field() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerMixin):
@@ -201,7 +216,7 @@ def test_tstruct_array_field() -> None:
     common(
         cst.TStruct(TestContainer),
         bytes(5),
-        TestContainer(array_field=[0,0,0,0,0]),
+        TestContainer(array_field=[0, 0, 0, 0, 0]),
         5,
     )
 
