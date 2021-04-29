@@ -373,7 +373,7 @@ class EnumIntegerString(str):
     def new(intvalue: int, stringvalue: str) -> EnumIntegerString: ...
 
 class Enum(Adapter[int, int, ParsedType, BuildTypes]):
-    encmapping: t.Dict[EnumIntegerString, int]
+    encmapping: t.Dict[str, int]
     decmapping: t.Dict[int, EnumIntegerString]
     ksymapping: t.Dict[int, str]
     def __new__(
