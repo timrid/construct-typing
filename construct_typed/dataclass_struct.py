@@ -13,10 +13,9 @@ from construct.lib.py3compat import bytestringtype, reprstring, unicodestringtyp
 from .generic_wrapper import Adapter, Construct, Context, ParsedType, PathType
 
 
-class TContainerMixin:
+class DataclassMixin:
     """
-    Base class for a Container of a TStruct and a TBitStruct. This class has always to be mixed
-    with "dataclasses.dataclass".
+    Mixin for the dataclasses which are passed to "DataclassStruct" and "DataclassBitStruct".
 
     Note: This implementation is different to the 'cs.Container' of the original 'construct'
     library. In the original 'cs.Container' some names like "update", "keys", "items", ... can
@@ -72,13 +71,15 @@ class TContainerMixin:
         return "".join(text)
 
 
-def sfield(
+def csfield(
     subcon: Construct[ParsedType, t.Any],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
 ) -> ParsedType:
     """
-    Create a dataclass field for a "TStruct" and "TBitStruct" from a subcon.
+    Helper method for "DataclassStruct" and "DataclassBitStruct" to create the dataclass fields.
+
+    This method also processes Const and Default, to pass these values als default values to the dataclass.
     """
     orig_subcon = subcon
 
@@ -116,12 +117,35 @@ def sfield(
     )
 
 
-ContainerType = t.TypeVar("ContainerType", bound=TContainerMixin)
+DataclassType = t.TypeVar("DataclassType", bound=DataclassMixin)
 
 
-class TStruct(Adapter[t.Any, t.Any, ContainerType, ContainerType]):
+class DataclassStruct(Adapter[t.Any, t.Any, DataclassType, DataclassType]):
     """
-    Typed struct, based on standard dataclasses.
+    Adapter for a dataclasses for optimised type hints / static autocompletion in comparision to the original Struct.
+
+    Before this construct can be created a dataclasses.dataclass type must be created, which must also derive from DataclassMixin. In this dataclass all fields must be assigned to a construct type using csfield.
+
+    Internally, all fields are converted to a Struct, which does the actual parsing/building.
+
+    Parses to a dataclasses.dataclass instance, and builds from such instance (although it also builds from dicts). Size is the sum of all subcon sizes, unless any subcon raises SizeofError.
+
+    :param dc_type: Type of the dataclass, which also inherits from DataclassMixin
+    :param reverse: Flag if the fields of the dataclass should be reversed
+
+    Example::
+
+        >>> import dataclasses
+        >>> from construct import Bytes, Int8ub, this
+        >>> from construct_typed import DataclassMixin, DataclassStruct, csfield
+        >>> @dataclasses.dataclass
+        ... class Image(DataclassMixin):
+        ...     width: int = csfield(Int8ub)
+        ...     height: int = csfield(Int8ub)
+        ...     pixels: bytes = csfield(Bytes(this.height * this.width))
+        >>> d = DataclassStruct(Image)
+        >>> d.parse(b"\x01\x0212")
+        Image(width=1, height=2, pixels=b'12')
     """
 
     subcon: "cs.Struct[t.Any, t.Any]"
@@ -129,29 +153,25 @@ class TStruct(Adapter[t.Any, t.Any, ContainerType, ContainerType]):
 
         def __new__(
             cls,
-            container_type: t.Type[ContainerType],
+            dc_type: t.Type[DataclassType],
             reverse: bool = False,
-        ) -> "TStruct[ContainerType]":
+        ) -> "DataclassStruct[DataclassType]":
             ...
 
     def __init__(
         self,
-        container_type: t.Type[ContainerType],
+        dc_type: t.Type[DataclassType],
         reverse: bool = False,
     ) -> None:
-        if not issubclass(container_type, TContainerMixin):
-            raise TypeError(
-                f"'{repr(container_type)}' has to be a '{repr(TContainerMixin)}'"
-            )
-        if not dataclasses.is_dataclass(container_type):
-            raise TypeError(
-                f"'{repr(container_type)}' has to be a 'dataclasses.dataclass'"
-            )
-        self.container_type = container_type
+        if not issubclass(dc_type, DataclassMixin):
+            raise TypeError(f"'{repr(dc_type)}' has to be a '{repr(DataclassMixin)}'")
+        if not dataclasses.is_dataclass(dc_type):
+            raise TypeError(f"'{repr(dc_type)}' has to be a 'dataclasses.dataclass'")
+        self.dc_type = dc_type
         self.reverse = reverse
 
         # get all fields from the dataclass
-        fields = dataclasses.fields(self.container_type)
+        fields = dataclasses.fields(self.dc_type)
         if self.reverse:
             fields = tuple(reversed(fields))
 
@@ -168,9 +188,9 @@ class TStruct(Adapter[t.Any, t.Any, ContainerType, ContainerType]):
 
     def _decode(
         self, obj: "cs.Container[t.Any]", context: Context, path: PathType
-    ) -> ContainerType:
+    ) -> DataclassType:
         # get all fields from the dataclass
-        fields = dataclasses.fields(self.container_type)
+        fields = dataclasses.fields(self.dc_type)
 
         # extract all fields from the container, that are used for create the dataclass object
         dc_init = {}
@@ -180,7 +200,7 @@ class TStruct(Adapter[t.Any, t.Any, ContainerType, ContainerType]):
                 dc_init[field.name] = value
 
         # create object of dataclass
-        dc = self.container_type(**dc_init)  # type: ignore
+        dc = self.dc_type(**dc_init)  # type: ignore
 
         # extract all other values from the container, an pass it to the dataclass
         for field in fields:
@@ -191,11 +211,11 @@ class TStruct(Adapter[t.Any, t.Any, ContainerType, ContainerType]):
         return dc
 
     def _encode(
-        self, obj: ContainerType, context: Context, path: PathType
+        self, obj: DataclassType, context: Context, path: PathType
     ) -> t.Dict[str, t.Any]:
-        if isinstance(obj, self.container_type):
+        if isinstance(obj, self.dc_type):
             # get all fields from the dataclass
-            fields = dataclasses.fields(self.container_type)
+            fields = dataclasses.fields(self.dc_type)
 
             # extract all fields from the container, that are used for create the dataclass object
             ret_dict: t.Dict[str, t.Any] = {}
@@ -205,18 +225,47 @@ class TStruct(Adapter[t.Any, t.Any, ContainerType, ContainerType]):
 
             return ret_dict
         raise TypeError(
-            "'{}' has to be of type {}".format(repr(obj), repr(self.container_type))
+            "'{}' has to be of type {}".format(repr(obj), repr(self.dc_type))
         )
 
 
-def TBitStruct(
-    container_type: t.Type[ContainerType], reverse: bool = False
+def DataclassBitStruct(
+    dc_type: t.Type[DataclassType], reverse: bool = False
 ) -> t.Union[
-    "cs.Transformed[ContainerType, ContainerType]",
-    "cs.Restreamed[ContainerType, ContainerType]",
+    "cs.Transformed[DataclassType, DataclassType]",
+    "cs.Restreamed[DataclassType, DataclassType]",
 ]:
-    return cs.Bitwise(TStruct(container_type, reverse))
+    r"""
+    Makes a DataclassStruct inside a Bitwise.
+
+    See :class:`~construct.core.Bitwise` and :class:`~construct_typed.dataclass_struct.DatclassStruct` for semantics and raisable exceptions.
+
+    :param dc_type: Type of the dataclass, which also inherits from DataclassMixin
+    :param reverse: Flag if the fields of the dataclass should be reversed
+
+    Example::
+
+        DataclassBitStruct  <-->  Bitwise(DataclassStruct(...))
+        >>> import dataclasses
+        >>> from construct import BitsInteger, Flag, Nibble, Padding
+        >>> from construct_typed import DataclassBitStruct, DataclassMixin, csfield
+        >>> @dataclasses.dataclass
+        ... class TestDataclass(DataclassMixin):
+        ...     a: int = csfield(Flag)
+        ...     b: int = csfield(Nibble)
+        ...     c: int = csfield(BitsInteger(10))
+        ...     d: None = csfield(Padding(1))
+        >>> d = DataclassBitStruct(TestDataclass)
+        >>> d.parse(b"\x01\x02")
+        TestDataclass(a=False, b=0, c=129, d=None)
+    """
+    return cs.Bitwise(DataclassStruct(dc_type, reverse))
 
 
-TContainerBase = TContainerMixin  # also support legacy name
-TStructField = sfield  # also support legacy name
+# support legacy names
+TStruct = DataclassStruct
+TBitStruct = DataclassBitStruct
+TContainerMixin = DataclassMixin
+TContainerBase = DataclassMixin
+TStructField = csfield
+sfield = csfield

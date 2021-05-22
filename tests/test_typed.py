@@ -4,20 +4,20 @@ import dataclasses
 import enum
 
 import construct as cs
+from construct_typed import csfield, DataclassMixin, DataclassStruct, DataclassBitStruct
 import construct_typed as cst
-import pytest
 import typing as t
 
 from .declarativeunittest import common, raises, setattrs
 
 
-def test_tcontainer_const_default() -> None:
+def test_dataclass_const_default() -> None:
     @dataclasses.dataclass
-    class ConstDefaultTest(cst.TContainerMixin):
-        const_bytes: bytes = cst.sfield(cs.Const(b"BMP"))
-        const_int: int = cst.sfield(cs.Const(5, cs.Int8ub))
-        default_int: int = cst.sfield(cs.Default(cs.Int8ub, 28))
-        default_lambda: bytes = cst.sfield(
+    class ConstDefaultTest(DataclassMixin):
+        const_bytes: bytes = csfield(cs.Const(b"BMP"))
+        const_int: int = csfield(cs.Const(5, cs.Int8ub))
+        default_int: int = csfield(cs.Default(cs.Int8ub, 28))
+        default_lambda: bytes = csfield(
             cs.Default(cs.Bytes(cs.this.const_int), lambda ctx: bytes(ctx.const_int))
         )
 
@@ -28,11 +28,11 @@ def test_tcontainer_const_default() -> None:
     assert a.default_lambda == None
 
 
-def test_tcontainer_access() -> None:
+def test_dataclass_access() -> None:
     @dataclasses.dataclass
-    class TestTContainer(cst.TContainerMixin):
-        a: t.Optional[int] = cst.sfield(cs.Const(1, cs.Byte))
-        b: int = cst.sfield(cs.Int8ub)
+    class TestTContainer(DataclassMixin):
+        a: t.Optional[int] = csfield(cs.Const(1, cs.Byte))
+        b: int = csfield(cs.Int8ub)
 
     tcontainer = TestTContainer(b=2)
 
@@ -53,14 +53,14 @@ def test_tcontainer_access() -> None:
     assert raises(lambda: TestTContainer(a=0, b=1)) == TypeError
 
 
-def test_tcontainer_str_repr() -> None:
+def test_dataclass_str_repr() -> None:
     @dataclasses.dataclass
-    class Image(cst.TContainerMixin):
-        signature: t.Optional[bytes] = cst.sfield(cs.Const(b"BMP"))
-        width: int = cst.sfield(cs.Int8ub)
-        height: int = cst.sfield(cs.Int8ub)
+    class Image(DataclassMixin):
+        signature: t.Optional[bytes] = csfield(cs.Const(b"BMP"))
+        width: int = csfield(cs.Int8ub)
+        height: int = csfield(cs.Int8ub)
 
-    format = cst.TStruct(Image)
+    format = DataclassStruct(Image)
     obj = Image(width=3, height=2)
     assert (
         str(obj)
@@ -73,63 +73,68 @@ def test_tcontainer_str_repr() -> None:
     )
 
 
-def test_tstruct() -> None:
+def test_dataclass_struct() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        a: int = cst.sfield(cs.Int16ub)
-        b: int = cst.sfield(cs.Int8ub)
-
-    common(cst.TStruct(TestContainer), b"\x00\x01\x02", TestContainer(a=1, b=2), 3)
-
-    # check __getattr__
-    c = cst.TStruct(TestContainer)
-    assert c.a.name == "a"
-    assert c.b.name == "b"
-    assert c.a.subcon is cs.Int16ub
-    assert c.b.subcon is cs.Int8ub
-
-
-def test_tstruct_reverse() -> None:
-    @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        a: int = cst.sfield(cs.Int16ub)
-        b: int = cst.sfield(cs.Int8ub)
+    class Image(DataclassMixin):
+        width: int = csfield(cs.Int8ub)
+        height: int = csfield(cs.Int8ub)
+        pixels: bytes = csfield(cs.Bytes(cs.this.height * cs.this.width))
 
     common(
-        cst.TStruct(TestContainer, reverse=True),
+        cst.DataclassStruct(Image),
+        b"\x01\x0212",
+        Image(width=1, height=2, pixels=b"12"),
+    )
+
+    # check __getattr__
+    c = cst.DataclassStruct(Image)
+    assert c.width.name == "width"
+    assert c.height.name == "height"
+    assert c.width.subcon is cs.Int8ub
+    assert c.height.subcon is cs.Int8ub
+
+
+def test_dataclass_struct_reverse() -> None:
+    @dataclasses.dataclass
+    class TestContainer(DataclassMixin):
+        a: int = csfield(cs.Int16ub)
+        b: int = csfield(cs.Int8ub)
+
+    common(
+        DataclassStruct(TestContainer, reverse=True),
         b"\x02\x00\x01",
         TestContainer(a=1, b=2),
         3,
     )
-    normal = cst.TStruct(TestContainer)
-    reverse = cst.TStruct(TestContainer, reverse=True)
+    normal = DataclassStruct(TestContainer)
+    reverse = DataclassStruct(TestContainer, reverse=True)
     assert str(normal.parse(b"\x00\x01\x02")) == str(reverse.parse(b"\x02\x00\x01"))
 
 
-def test_tstruct_nested() -> None:
+def test_dataclass_struct_nested() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
+    class TestContainer(DataclassMixin):
         @dataclasses.dataclass
-        class InnerDataclass(cst.TContainerMixin):
-            b: int = cst.sfield(cs.Byte)
-            c: bytes = cst.sfield(cs.Bytes(cs.this._.length))
+        class InnerDataclass(DataclassMixin):
+            b: int = csfield(cs.Byte)
+            c: bytes = csfield(cs.Bytes(cs.this._.length))
 
-        length: int = cst.sfield(cs.Byte)
-        a: InnerDataclass = cst.sfield(cst.TStruct(InnerDataclass))
+        length: int = csfield(cs.Byte)
+        a: InnerDataclass = csfield(DataclassStruct(InnerDataclass))
 
     common(
-        cst.TStruct(TestContainer),
+        DataclassStruct(TestContainer),
         b"\x02\x01\xF1\xF2",
         TestContainer(length=2, a=TestContainer.InnerDataclass(b=1, c=b"\xF1\xF2")),
     )
 
 
-def test_tstruct_default_field() -> None:
+def test_dataclass_struct_default_field() -> None:
     @dataclasses.dataclass
-    class Image(cst.TContainerMixin):
-        width: int = cst.sfield(cs.Int8ub)
-        height: int = cst.sfield(cs.Int8ub)
-        pixels: t.Optional[bytes] = cst.sfield(
+    class Image(DataclassMixin):
+        width: int = csfield(cs.Int8ub)
+        height: int = csfield(cs.Int8ub)
+        pixels: t.Optional[bytes] = csfield(
             cs.Default(
                 cs.Bytes(cs.this.width * cs.this.height),
                 lambda ctx: bytes(ctx.width * ctx.height),
@@ -137,20 +142,20 @@ def test_tstruct_default_field() -> None:
         )
 
     common(
-        cst.TStruct(Image),
+        DataclassStruct(Image),
         b"\x02\x03\x00\x00\x00\x00\x00\x00",
         setattrs(Image(2, 3), pixels=bytes(6)),
         sample_building=Image(2, 3),
     )
 
 
-def test_tstruct_const_field() -> None:
+def test_dataclass_struct_const_field() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        const_field: t.Optional[bytes] = cst.sfield(cs.Const(b"\x00"))
+    class TestContainer(DataclassMixin):
+        const_field: t.Optional[bytes] = csfield(cs.Const(b"\x00"))
 
     common(
-        cst.TStruct(TestContainer),
+        DataclassStruct(TestContainer),
         bytes(1),
         setattrs(TestContainer(), const_field=b"\x00"),
         1,
@@ -158,75 +163,75 @@ def test_tstruct_const_field() -> None:
 
     assert (
         raises(
-            cst.TStruct(TestContainer).build,
+            DataclassStruct(TestContainer).build,
             setattrs(TestContainer(), const_field=b"\x01"),
         )
         == cs.ConstError
     )
 
 
-def test_tstruct_array_field() -> None:
+def test_dataclass_struct_array_field() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        array_field: t.List[int] = cst.sfield(cs.Array(5, cs.Int8ub))
+    class TestContainer(DataclassMixin):
+        array_field: t.List[int] = csfield(cs.Array(5, cs.Int8ub))
 
     common(
-        cst.TStruct(TestContainer),
+        DataclassStruct(TestContainer),
         bytes(5),
         TestContainer(array_field=[0, 0, 0, 0, 0]),
         5,
     )
 
 
-def test_tstruct_anonymus_fields_1() -> None:
+def test_dataclass_struct_anonymus_fields_1() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        _1: t.Optional[bytes] = cst.sfield(cs.Const(b"\x00"))
-        _2: None = cst.sfield(cs.Padding(1))
-        _3: None = cst.sfield(cs.Pass)
-        _4: None = cst.sfield(cs.Terminated)
+    class TestContainer(DataclassMixin):
+        _1: t.Optional[bytes] = csfield(cs.Const(b"\x00"))
+        _2: None = csfield(cs.Padding(1))
+        _3: None = csfield(cs.Pass)
+        _4: None = csfield(cs.Terminated)
 
     common(
-        cst.TStruct(TestContainer),
+        DataclassStruct(TestContainer),
         bytes(2),
         setattrs(TestContainer(), _1=b"\x00"),
         cs.SizeofError,
     )
 
 
-def test_tstruct_anonymus_fields_2() -> None:
+def test_dataclass_struct_anonymus_fields_2() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        _1: int = cst.sfield(cs.Computed(7))
-        _2: t.Optional[bytes] = cst.sfield(cs.Const(b"JPEG"))
-        _3: None = cst.sfield(cs.Pass)
-        _4: None = cst.sfield(cs.Terminated)
+    class TestContainer(DataclassMixin):
+        _1: int = csfield(cs.Computed(7))
+        _2: t.Optional[bytes] = csfield(cs.Const(b"JPEG"))
+        _3: None = csfield(cs.Pass)
+        _4: None = csfield(cs.Terminated)
 
-    d = cst.TStruct(TestContainer)
+    d = DataclassStruct(TestContainer)
     assert d.build(TestContainer()) == d.build(TestContainer())
 
 
-def test_tstruct_overloaded_method() -> None:
+def test_dataclass_struct_overloaded_method() -> None:
     # Test dot access to some names that are not accessable via dot
     # in the original 'cs.Container'.
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        clear: int = cst.sfield(cs.Int8ul)
-        copy: int = cst.sfield(cs.Int8ul)
-        fromkeys: int = cst.sfield(cs.Int8ul)
-        get: int = cst.sfield(cs.Int8ul)
-        items: int = cst.sfield(cs.Int8ul)
-        keys: int = cst.sfield(cs.Int8ul)
-        move_to_end: int = cst.sfield(cs.Int8ul)
-        pop: int = cst.sfield(cs.Int8ul)
-        popitem: int = cst.sfield(cs.Int8ul)
-        search: int = cst.sfield(cs.Int8ul)
-        search_all: int = cst.sfield(cs.Int8ul)
-        setdefault: int = cst.sfield(cs.Int8ul)
-        update: int = cst.sfield(cs.Int8ul)
-        values: int = cst.sfield(cs.Int8ul)
+    class TestContainer(DataclassMixin):
+        clear: int = csfield(cs.Int8ul)
+        copy: int = csfield(cs.Int8ul)
+        fromkeys: int = csfield(cs.Int8ul)
+        get: int = csfield(cs.Int8ul)
+        items: int = csfield(cs.Int8ul)
+        keys: int = csfield(cs.Int8ul)
+        move_to_end: int = csfield(cs.Int8ul)
+        pop: int = csfield(cs.Int8ul)
+        popitem: int = csfield(cs.Int8ul)
+        search: int = csfield(cs.Int8ul)
+        search_all: int = csfield(cs.Int8ul)
+        setdefault: int = csfield(cs.Int8ul)
+        update: int = csfield(cs.Int8ul)
+        values: int = csfield(cs.Int8ul)
 
-    d = cst.TStruct(TestContainer)
+    d = DataclassStruct(TestContainer)
     obj = d.parse(
         d.build(
             TestContainer(
@@ -263,47 +268,48 @@ def test_tstruct_overloaded_method() -> None:
     assert obj.values == 14
 
 
-def test_tstruct_no_dataclass() -> None:
-    class TestContainer(cst.TContainerMixin):
-        a: int = cst.sfield(cs.Int16ub)
-        b: int = cst.sfield(cs.Int8ub)
+def test_dataclass_struct_no_dataclass() -> None:
+    class TestContainer(DataclassMixin):
+        a: int = csfield(cs.Int16ub)
+        b: int = csfield(cs.Int8ub)
 
-    assert raises(lambda: cst.TStruct(TestContainer)) == TypeError
+    assert raises(lambda: DataclassStruct(TestContainer)) == TypeError
 
 
-def test_tstruct_no_TContainerMixin() -> None:
+def test_dataclass_struct_no_DataclassMixin() -> None:
     @dataclasses.dataclass
     class TestContainer:
-        a: int = cst.sfield(cs.Int16ub)
-        b: int = cst.sfield(cs.Int8ub)
+        a: int = csfield(cs.Int16ub)
+        b: int = csfield(cs.Int8ub)
 
-    assert raises(lambda: cst.TStruct(TestContainer)) == TypeError
+    assert raises(lambda: DataclassStruct(TestContainer)) == TypeError
 
 
-def test_tstruct_wrong_container() -> None:
+def test_dataclass_struct_wrong_container() -> None:
     @dataclasses.dataclass
-    class TestContainer1(cst.TContainerMixin):
-        a: int = cst.sfield(cs.Int16ub)
-        b: int = cst.sfield(cs.Int8ub)
+    class TestContainer1(DataclassMixin):
+        a: int = csfield(cs.Int16ub)
+        b: int = csfield(cs.Int8ub)
 
     @dataclasses.dataclass
-    class TestContainer2(cst.TContainerMixin):
-        a: int = cst.sfield(cs.Int16ub)
-        b: int = cst.sfield(cs.Int8ub)
+    class TestContainer2(DataclassMixin):
+        a: int = csfield(cs.Int16ub)
+        b: int = csfield(cs.Int8ub)
 
     assert (
-        raises(cst.TStruct(TestContainer1).build, TestContainer2(a=1, b=2)) == TypeError
+        raises(DataclassStruct(TestContainer1).build, TestContainer2(a=1, b=2))
+        == TypeError
     )
 
 
-def test_tstruct_doc() -> None:
+def test_dataclass_struct_doc() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        a: int = cst.sfield(cs.Int16ub, "This is the documentation of a")
-        b: int = cst.sfield(
+    class TestContainer(DataclassMixin):
+        a: int = csfield(cs.Int16ub, "This is the documentation of a")
+        b: int = csfield(
             cs.Int8ub, doc="This is the documentation of b\nwhich is multiline"
         )
-        c: int = cst.sfield(
+        c: int = csfield(
             cs.Int8ub,
             """
             This is the documentation of c
@@ -311,7 +317,7 @@ def test_tstruct_doc() -> None:
             """,
         )
 
-    format = cst.TStruct(TestContainer)
+    format = DataclassStruct(TestContainer)
     common(format, b"\x00\x01\x02\x03", TestContainer(a=1, b=2, c=3), 4)
 
     assert format.subcon.a.docs == "This is the documentation of a"
@@ -322,23 +328,24 @@ def test_tstruct_doc() -> None:
     )
 
 
-# @pytest.mark.xfail(reason="not implemented yet")
-def test_tbitstruct() -> None:
+def test_dataclass_bitstruct() -> None:
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        a: int = cst.sfield(cs.BitsInteger(7))
-        b: int = cst.sfield(cs.Bit)
-        c: int = cst.sfield(cs.BitsInteger(8))
+    class TestContainer(DataclassMixin):
+        a: int = csfield(cs.BitsInteger(7))
+        b: int = csfield(cs.Bit)
+        c: int = csfield(cs.BitsInteger(8))
+
+    print("")
 
     common(
-        cst.TBitStruct(TestContainer),
+        DataclassBitStruct(TestContainer),
         b"\xFD\x12",
         TestContainer(a=0x7E, b=1, c=0x12),
         2,
     )
 
     # check __getattr__
-    c = cst.TStruct(TestContainer)
+    c = DataclassStruct(TestContainer)
     assert c.a.name == "a"
     assert c.b.name == "b"
     assert c.c.name == "c"
@@ -375,7 +382,7 @@ def test_tenum_no_enumbase() -> None:
     assert raises(lambda: cst.TEnum(cs.Byte, E)) == TypeError
 
 
-def test_tstruct_wrong_enumbase() -> None:
+def test_dataclass_struct_wrong_enumbase() -> None:
     class E1(cst.EnumBase):
         a = 1
         b = 2
@@ -393,12 +400,12 @@ def test_tenum_in_tstruct() -> None:
         b = 2
 
     @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        a: TestEnum = cst.sfield(cst.TEnum(cs.Int8ub, TestEnum))
-        b: int = cst.sfield(cs.Int8ub)
+    class TestContainer(DataclassMixin):
+        a: TestEnum = csfield(cst.TEnum(cs.Int8ub, TestEnum))
+        b: int = csfield(cs.Int8ub)
 
     common(
-        cst.TStruct(TestContainer),
+        DataclassStruct(TestContainer),
         b"\x01\x02",
         TestContainer(a=TestEnum.a, b=2),
         2,

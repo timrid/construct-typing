@@ -7,10 +7,14 @@ from .generic_wrapper import (
     PathType,
 )
 from .tenum import EnumBase, FlagsEnumBase, TEnum, TFlagsEnum
-from .tstruct import TBitStruct, TStruct, sfield, TStructField, TContainerMixin, TContainerBase
+from .dataclass_struct import DataclassStruct, csfield, TBitStruct, TStruct, sfield, TStructField, TContainerMixin, TContainerBase, DataclassBitStruct, DataclassMixin
 from .tunion import TUnion, ufield, TUnionField
 
 __all__ = [
+    "DataclassStruct",
+    "DataclassBitStruct",
+    "csfield",
+    "DataclassMixin",
     "sfield",
     "TStructField",
     "TStruct",
