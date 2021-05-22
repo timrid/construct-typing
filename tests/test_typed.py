@@ -322,9 +322,29 @@ def test_tstruct_doc() -> None:
     )
 
 
-@pytest.mark.xfail(reason="not implemented yet")
+# @pytest.mark.xfail(reason="not implemented yet")
 def test_tbitstruct() -> None:
-    assert False
+    @dataclasses.dataclass
+    class TestContainer(cst.TContainerMixin):
+        a: int = cst.sfield(cs.BitsInteger(7))
+        b: int = cst.sfield(cs.Bit)
+        c: int = cst.sfield(cs.BitsInteger(8))
+
+    common(
+        cst.TBitStruct(TestContainer),
+        b"\xFD\x12",
+        TestContainer(a=0x7E, b=1, c=0x12),
+        2,
+    )
+
+    # check __getattr__
+    c = cst.TStruct(TestContainer)
+    assert c.a.name == "a"
+    assert c.b.name == "b"
+    assert c.c.name == "c"
+    assert isinstance(c.a.subcon, cs.BitsInteger)
+    assert c.b.subcon is cs.Bit
+    assert isinstance(c.c.subcon, cs.BitsInteger)
 
 
 def test_tenum() -> None:
