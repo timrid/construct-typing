@@ -230,35 +230,37 @@ def test_tstruct_overloaded_method() -> None:
     obj = d.parse(
         d.build(
             TestContainer(
-                update=1,
+                clear=1,
                 copy=2,
-                search=3,
-                search_all=4,
-                clear=5,
-                popitem=6,
+                fromkeys=3,
+                get=4,
+                items=5,
+                keys=6,
                 move_to_end=7,
-                keys=8,
-                items=9,
-                values=10,
-                pop=11,
+                pop=8,
+                popitem=9,
+                search=10,
+                search_all=11,
                 setdefault=12,
-                fromkeys=13,
+                update=13,
+                values=14,
             )
         )
     )
-    assert obj.update == 1
+    assert obj.clear == 1
     assert obj.copy == 2
-    assert obj.search == 3
-    assert obj.search_all == 4
-    assert obj.clear == 5
-    assert obj.popitem == 6
+    assert obj.fromkeys == 3
+    assert obj.get == 4
+    assert obj.items == 5
+    assert obj.keys == 6
     assert obj.move_to_end == 7
-    assert obj.keys == 8
-    assert obj.items == 9
-    assert obj.values == 10
-    assert obj.pop == 11
+    assert obj.pop == 8
+    assert obj.popitem == 9
+    assert obj.search == 10
+    assert obj.search_all == 11
     assert obj.setdefault == 12
-    assert obj.fromkeys == 13
+    assert obj.update == 13
+    assert obj.values == 14
 
 
 def test_tstruct_no_dataclass() -> None:
