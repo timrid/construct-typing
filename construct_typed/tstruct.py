@@ -106,11 +106,14 @@ def sfield(
         else:
             default = default_subcon.value
 
-    return dataclasses.field(
-        default=default,
-        init=init,
-        metadata={"subcon": subcon},
-    )  # type: ignore
+    return t.cast(
+        ParsedType,
+        dataclasses.field(
+            default=default,
+            init=init,
+            metadata={"subcon": subcon},
+        ),
+    )
 
 
 ContainerType = t.TypeVar("ContainerType", bound=TContainerMixin)
