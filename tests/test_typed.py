@@ -17,67 +17,43 @@ def test_tcontainer_const_default() -> None:
         const_bytes: bytes = cst.sfield(cs.Const(b"BMP"))
         const_int: int = cst.sfield(cs.Const(5, cs.Int8ub))
         default_int: int = cst.sfield(cs.Default(cs.Int8ub, 28))
+        default_lambda: bytes = cst.sfield(
+            cs.Default(cs.Bytes(cs.this.const_int), lambda ctx: bytes(ctx.const_int))
+        )
 
     a = ConstDefaultTest()
     assert a.const_bytes == b"BMP"
     assert a.const_int == 5
     assert a.default_int == 28
+    assert a.default_lambda == None
 
 
-def test_tcontainer_compare_with_dataclass() -> None:
-    @dataclasses.dataclass
-    class TestContainer:
-        a: t.Optional[int] = cst.sfield(cs.Const(1, cs.Byte))
-        b: int = cst.sfield(cs.Int8ub)
-
+def test_tcontainer_access() -> None:
     @dataclasses.dataclass
     class TestTContainer(cst.TContainerMixin):
         a: t.Optional[int] = cst.sfield(cs.Const(1, cs.Byte))
         b: int = cst.sfield(cs.Int8ub)
 
-    datacls = TestContainer(b=1)
-    tcontainer = TestTContainer(b=1)
-
-    # ##### compare dot & dict access #####
-    # dataclass
-    assert datacls.a == 1
-    assert raises(lambda: datacls["a"]) == TypeError  # type: ignore
-    assert datacls.b == 1
-    assert raises(lambda: datacls["b"]) == TypeError  # type: ignore
-
-    datacls.a = 5
-    assert datacls.a == 5
-    assert raises(lambda: datacls["a"]) == TypeError  # type: ignore
-    try:
-        datacls["a"] = 5  # type: ignore
-    except Exception as e:
-        assert e.__class__ == TypeError
+    tcontainer = TestTContainer(b=2)
 
     # tcontainer
     assert tcontainer.a == 1
     assert tcontainer["a"] == 1
-    assert tcontainer.b == 1
-    assert tcontainer["b"] == 1
+    assert tcontainer.b == 2
+    assert tcontainer["b"] == 2
 
     tcontainer.a = 5
     assert tcontainer.a == 5
     assert tcontainer["a"] == 5
-    tcontainer["a"] = 5
-    assert tcontainer.a == 5
-    assert tcontainer["a"] == 5
+    tcontainer["a"] = 6
+    assert tcontainer.a == 6
+    assert tcontainer["a"] == 6
 
-    # ##### compare fields #####
-    for datacls_field, tcontainer_field in zip(
-        dataclasses.fields(TestContainer), dataclasses.fields(TestTContainer)
-    ):
-        assert repr(datacls_field) == repr(tcontainer_field)
-
-    # ##### compare wrong creation #####
-    assert raises(lambda: TestContainer(a=0, b=1)) == TypeError
+    # wrong creation
     assert raises(lambda: TestTContainer(a=0, b=1)) == TypeError
 
 
-def test_tcontainer_order() -> None:
+def test_tcontainer_str_repr() -> None:
     @dataclasses.dataclass
     class Image(cst.TContainerMixin):
         signature: t.Optional[bytes] = cst.sfield(cs.Const(b"BMP"))
@@ -88,12 +64,12 @@ def test_tcontainer_order() -> None:
     obj = Image(width=3, height=2)
     assert (
         str(obj)
-        == "Container: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
+        == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
     )
     obj = format.parse(format.build(obj))
     assert (
         str(obj)
-        == "Container: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
+        == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
     )
 
 
@@ -104,7 +80,7 @@ def test_tstruct() -> None:
         b: int = cst.sfield(cs.Int8ub)
 
     common(cst.TStruct(TestContainer), b"\x00\x01\x02", TestContainer(a=1, b=2), 3)
-    
+
     # check __getattr__
     c = cst.TStruct(TestContainer)
     assert c.a.name == "a"
@@ -130,40 +106,21 @@ def test_tstruct_reverse() -> None:
     assert str(normal.parse(b"\x00\x01\x02")) == str(reverse.parse(b"\x02\x00\x01"))
 
 
-def test_tstruct_add_offsets() -> None:
-    @dataclasses.dataclass
-    class TestContainer(cst.TContainerMixin):
-        a: int = cst.sfield(cs.Int16ub)
-        b: int = cst.sfield(cs.Int8ub)
-
-    common(
-        cst.TStruct(TestContainer, add_offsets=True),
-        b"\x00\x01\x02",
-        TestContainer(a=1, b=2),
-        3,
-    )
-    c = cst.TStruct(TestContainer, add_offsets=True)
-    obj = c.parse(b"\x00\x01\x02")
-    assert obj["@<a"] == 0
-    assert obj["@>a"] == 2
-    assert obj["@<b"] == 2
-    assert obj["@>b"] == 3
-
-
 def test_tstruct_nested() -> None:
     @dataclasses.dataclass
     class TestContainer(cst.TContainerMixin):
         @dataclasses.dataclass
         class InnerDataclass(cst.TContainerMixin):
             b: int = cst.sfield(cs.Byte)
+            c: bytes = cst.sfield(cs.Bytes(cs.this._.length))
 
+        length: int = cst.sfield(cs.Byte)
         a: InnerDataclass = cst.sfield(cst.TStruct(InnerDataclass))
 
     common(
         cst.TStruct(TestContainer),
-        b"\x01",
-        TestContainer(a=TestContainer.InnerDataclass(b=1)),
-        1,
+        b"\x02\x01\xF1\xF2",
+        TestContainer(length=2, a=TestContainer.InnerDataclass(b=1, c=b"\xF1\xF2")),
     )
 
 
@@ -247,6 +204,61 @@ def test_tstruct_anonymus_fields_2() -> None:
 
     d = cst.TStruct(TestContainer)
     assert d.build(TestContainer()) == d.build(TestContainer())
+
+
+def test_tstruct_overloaded_method() -> None:
+    # Test dot access to some names that are not accessable via dot
+    # in the original 'cs.Container'.
+    @dataclasses.dataclass
+    class TestContainer(cst.TContainerMixin):
+        clear: int = cst.sfield(cs.Int8ul)
+        copy: int = cst.sfield(cs.Int8ul)
+        fromkeys: int = cst.sfield(cs.Int8ul)
+        get: int = cst.sfield(cs.Int8ul)
+        items: int = cst.sfield(cs.Int8ul)
+        keys: int = cst.sfield(cs.Int8ul)
+        move_to_end: int = cst.sfield(cs.Int8ul)
+        pop: int = cst.sfield(cs.Int8ul)
+        popitem: int = cst.sfield(cs.Int8ul)
+        search: int = cst.sfield(cs.Int8ul)
+        search_all: int = cst.sfield(cs.Int8ul)
+        setdefault: int = cst.sfield(cs.Int8ul)
+        update: int = cst.sfield(cs.Int8ul)
+        values: int = cst.sfield(cs.Int8ul)
+
+    d = cst.TStruct(TestContainer)
+    obj = d.parse(
+        d.build(
+            TestContainer(
+                update=1,
+                copy=2,
+                search=3,
+                search_all=4,
+                clear=5,
+                popitem=6,
+                move_to_end=7,
+                keys=8,
+                items=9,
+                values=10,
+                pop=11,
+                setdefault=12,
+                fromkeys=13,
+            )
+        )
+    )
+    assert obj.update == 1
+    assert obj.copy == 2
+    assert obj.search == 3
+    assert obj.search_all == 4
+    assert obj.clear == 5
+    assert obj.popitem == 6
+    assert obj.move_to_end == 7
+    assert obj.keys == 8
+    assert obj.items == 9
+    assert obj.values == 10
+    assert obj.pop == 11
+    assert obj.setdefault == 12
+    assert obj.fromkeys == 13
 
 
 def test_tstruct_no_dataclass() -> None:
