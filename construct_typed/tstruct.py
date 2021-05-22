@@ -209,8 +209,8 @@ class TStruct(Adapter[t.Any, t.Any, ContainerType, ContainerType]):
 def TBitStruct(
     container_type: t.Type[ContainerType], reverse: bool = False
 ) -> t.Union[
-    cs.Transformed[ContainerType, ContainerType],
-    cs.Restreamed[ContainerType, ContainerType],
+    "cs.Transformed[ContainerType, ContainerType]",
+    "cs.Restreamed[ContainerType, ContainerType]",
 ]:
     return cs.Bitwise(TStruct(container_type, reverse))
 
