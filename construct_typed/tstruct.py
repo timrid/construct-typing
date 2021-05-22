@@ -33,7 +33,7 @@ class TContainerMixin:
         setattr(self, key, value)
 
     @recursion_lock()
-    def __str__(self):
+    def __str__(self) -> str:
         indentation = "\n    "
         text = [f"{self.__class__.__name__}: "]
 
@@ -206,7 +206,12 @@ class TStruct(Adapter[t.Any, t.Any, ContainerType, ContainerType]):
         )
 
 
-def TBitStruct(container_type: t.Type[ContainerType], reverse: bool = False):
+def TBitStruct(
+    container_type: t.Type[ContainerType], reverse: bool = False
+) -> t.Union[
+    cs.Transformed[ContainerType, ContainerType],
+    cs.Restreamed[ContainerType, ContainerType],
+]:
     return cs.Bitwise(TStruct(container_type, reverse))
 
 
