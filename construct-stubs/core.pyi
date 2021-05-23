@@ -177,7 +177,7 @@ class Adapter(
         cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
     ) -> Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
     def _decode(
-        self, obj: SubconParsedType, context: Context, path: PathType
+        self, obj: SubconBuildTypes, context: Context, path: PathType
     ) -> ParsedType: ...
     def _encode(
         self, obj: BuildTypes, context: Context, path: PathType
@@ -193,7 +193,7 @@ class Validator(
     ]
 ):
     def _validate(
-        self, obj: SubconParsedType, context: Context, path: PathType
+        self, obj: SubconBuildTypes, context: Context, path: PathType
     ) -> bool: ...
 
 class Tunnel(
@@ -356,7 +356,7 @@ def PaddedString(
     length: ConstantOrContextLambda[int], encoding: StringEncoded.ENCODING
 ) -> StringEncoded[str, str]: ...
 def PascalString(
-    lengthfield: Construct[ParsedType, BuildTypes], encoding: StringEncoded.ENCODING
+    lengthfield: Construct[int, int], encoding: StringEncoded.ENCODING
 ) -> StringEncoded[str, str]: ...
 def CString(encoding: StringEncoded.ENCODING) -> StringEncoded[str, str]: ...
 def GreedyString(encoding: StringEncoded.ENCODING) -> StringEncoded[str, str]: ...
@@ -824,9 +824,16 @@ class Pointer(
         stream: t.Optional[t.Callable[[Context], StreamType]] = ...,
     ) -> None: ...
 
-class Peek(
-    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, t.Any]
-): ...
+class Peek(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> Peek[
+        SubconParsedType,
+        SubconBuildTypes,
+        SubconParsedType,
+        t.Union[SubconBuildTypes, None],
+    ]: ...
 
 class Seek(Construct[int, None]):
     at: ConstantOrContextLambda[int]
@@ -1044,14 +1051,16 @@ class Rebuffered(
 # ===============================================================================
 # lazy equivalents
 # ===============================================================================
-class Lazy(
-    Subconstruct[
+class Lazy(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> Lazy[
         SubconParsedType,
         SubconBuildTypes,
         t.Callable[[], SubconParsedType],
         t.Union[t.Callable[[], SubconParsedType], SubconParsedType],
-    ]
-): ...
+    ]: ...
 
 class LazyContainer(t.Generic[ContainerType], t.Dict[str, ContainerType]):
     def __getattr__(self, name: str) -> ContainerType: ...

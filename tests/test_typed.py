@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-
+# pyright: strict
 import dataclasses
 import enum
+import typing as t
 
 import construct as cs
-from construct_typed import csfield, DataclassMixin, DataclassStruct, DataclassBitStruct
 import construct_typed as cst
-import typing as t
+from construct_typed import DataclassBitStruct, DataclassMixin, DataclassStruct, csfield
 
 from .declarativeunittest import common, raises, setattrs
 
@@ -282,7 +282,8 @@ def test_dataclass_struct_no_DataclassMixin() -> None:
         a: int = csfield(cs.Int16ub)
         b: int = csfield(cs.Int8ub)
 
-    assert raises(lambda: DataclassStruct(TestContainer)) == TypeError
+    cls = t.cast(t.Type[DataclassMixin], TestContainer)
+    assert raises(lambda: DataclassStruct(cls)) == TypeError
 
 
 def test_dataclass_struct_wrong_container() -> None:
@@ -379,7 +380,8 @@ def test_tenum_no_enumbase() -> None:
         a = 1
         b = 2
 
-    assert raises(lambda: cst.TEnum(cs.Byte, E)) == TypeError
+    cls = t.cast(t.Type[cst.EnumBase], E)
+    assert raises(lambda: cst.TEnum(cs.Byte, cls)) == TypeError
 
 
 def test_dataclass_struct_wrong_enumbase() -> None:

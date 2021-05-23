@@ -622,7 +622,7 @@ def test_focusedseq() -> None:
 
 def test_pickled() -> None:
     import pickle
-    obj = [(), 1, 2.3, {}, [], bytes(1), ""]
+    obj: t.List[t.Any] = [(), 1, 2.3, {}, [], bytes(1), ""]
     data = pickle.dumps(obj)
     common(Pickled, data, obj)
 

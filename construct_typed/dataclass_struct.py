@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# pyright: strict
 import dataclasses
 import textwrap
 import typing as t
