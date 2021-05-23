@@ -25,6 +25,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
+      # Setup node.js (for pyright)
+      - name: Setup node.js (for pyright)
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+        
+      # Install pyright
+      - name: Install pyright
+        run: |
+          npm install -g pyright
+
       # Install this package
       - name: Install this package  
         run: |
@@ -41,8 +52,12 @@ jobs:
         run: |
           pytest tests/ --showlocals --verbose
           
-
       # Run mypy
       - name: Run mypy
         run: |
           mypy --strict tests/
+
+      # Run pyright
+      - name: Run pyright
+        run: |
+          pyright
