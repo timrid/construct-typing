@@ -128,7 +128,7 @@ class DataclassStruct(Adapter[t.Any, t.Any, DataclassType, DataclassType]):
 
     Internally, all fields are converted to a Struct, which does the actual parsing/building.
 
-    Parses to a dataclasses.dataclass instance, and builds from such instance (although it also builds from dicts). Size is the sum of all subcon sizes, unless any subcon raises SizeofError.
+    Parses to a dataclasses.dataclass instance, and builds from such instance. Size is the sum of all subcon sizes, unless any subcon raises SizeofError.
 
     :param dc_type: Type of the dataclass, which also inherits from DataclassMixin
     :param reverse: Flag if the fields of the dataclass should be reversed
@@ -213,20 +213,19 @@ class DataclassStruct(Adapter[t.Any, t.Any, DataclassType, DataclassType]):
     def _encode(
         self, obj: DataclassType, context: Context, path: PathType
     ) -> t.Dict[str, t.Any]:
-        if isinstance(obj, self.dc_type):
-            # get all fields from the dataclass
-            fields = dataclasses.fields(self.dc_type)
+        if not isinstance(obj, self.dc_type):
+            raise TypeError(f"'{repr(obj)}' has to be of type {repr(self.dc_type)}")
 
-            # extract all fields from the container, that are used for create the dataclass object
-            ret_dict: t.Dict[str, t.Any] = {}
-            for field in fields:
-                value = getattr(obj, field.name)
-                ret_dict[field.name] = value
+        # get all fields from the dataclass
+        fields = dataclasses.fields(self.dc_type)
 
-            return ret_dict
-        raise TypeError(
-            "'{}' has to be of type {}".format(repr(obj), repr(self.dc_type))
-        )
+        # extract all fields from the container, that are used for create the dataclass object
+        ret_dict: t.Dict[str, t.Any] = {}
+        for field in fields:
+            value = getattr(obj, field.name)
+            ret_dict[field.name] = value
+
+        return ret_dict
 
 
 def DataclassBitStruct(
