@@ -21,8 +21,8 @@ The stubs are tested against the pytests of the *construct* package in a slightl
 The new typed constructs have new written pytests, which also passes all pytests and the static type checkers.
 
 The following static type checkers are fully supported:
-- [x] mypy
-- [x] pyright
+- mypy
+- pyright
 
 ## Explanation
 ### Stubs
