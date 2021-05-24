@@ -54,7 +54,8 @@ Note: The stubs are based on *construct* in Version 2.10.
 To include autocompletion and further enhance the type hints for these complex constructs the **construct_typed** package is used as an extension to the original *construct* package. It is mainly a few Adapters with the focus on type hints.
 
 It implements the following new constructs:
-- `DataclassStruct`, `DataclassBitStruct`: similar to `construct.Struct` but strictly tied to `DataclassMixin` and `@dataclasses.dataclass`
+- `DataclassStruct`: similar to `construct.Struct` but strictly tied to `DataclassMixin` and `@dataclasses.dataclass`
+- `DataclassBitStruct`: similar to `construct.BitStruct` but strictly tied to `DataclassMixin` and `@dataclasses.dataclass`
 - `TEnum`: similar to `construct.Enum` but strictly tied to a `TEnumBase` class
 - `TFlagsEnum`: similar to `construct.FlagsEnum` but strictly tied to a `TFlagsEnumBase` class
 
