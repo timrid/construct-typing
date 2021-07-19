@@ -1009,15 +1009,17 @@ class ProcessRotateLeft(
         subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> ProcessRotateLeft[SubconParsedType, SubconBuildTypes]: ...
 
-class Checksum(Construct[ParsedType, BuildTypes]):
+T = t.TypeVar("T")
+
+class Checksum(t.Generic[T, ParsedType, BuildTypes], Construct[ParsedType, BuildTypes]):
     checksumfield: Construct[ParsedType, BuildTypes]
-    hashfunc: t.Callable[[bytes], BuildTypes]
-    bytesfunc: t.Callable[[Context], bytes]
+    hashfunc: t.Callable[[T], BuildTypes]
+    bytesfunc: t.Callable[[Context], T]
     def __init__(
         self,
         checksumfield: Construct[ParsedType, BuildTypes],
-        hashfunc: t.Callable[[bytes], BuildTypes],
-        bytesfunc: t.Callable[[Context], bytes],
+        hashfunc: t.Callable[[T], BuildTypes],
+        bytesfunc: t.Callable[[Context], T],
     ) -> None: ...
 
 class Compressed(Tunnel[SubconParsedType, SubconBuildTypes]):
