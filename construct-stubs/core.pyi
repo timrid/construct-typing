@@ -746,7 +746,7 @@ SwitchType = t.TypeVar("SwitchType")
 class Switch(Construct[ParsedType, BuildTypes]):
     keyfunc: ConstantOrContextLambda[t.Any]
     cases: t.Dict[t.Any, Construct[t.Any, t.Any]]
-    default: t.Optional[Construct[t.Any, t.Any]]
+    default: Construct[t.Any, t.Any]
     @t.overload
     def __new__(
         cls,
