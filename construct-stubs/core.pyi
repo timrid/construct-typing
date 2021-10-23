@@ -721,26 +721,23 @@ ThenBuildTypes = t.TypeVar("ThenBuildTypes")
 ElseParsedType = t.TypeVar("ElseParsedType")
 ElseBuildTypes = t.TypeVar("ElseBuildTypes")
 
-class IfThenElse(
-    t.Generic[ThenParsedType, ThenBuildTypes, ElseParsedType, ElseBuildTypes],
-    Construct[
-        t.Union[ThenParsedType, ElseParsedType], t.Union[ThenBuildTypes, ElseBuildTypes]
-    ],
-):
+# This does not represent the original code, but it is the only solution that works good with pyright
+class _IfThenElse(Construct[ParsedType, BuildTypes]):
     condfunc: ConstantOrContextLambda[bool]
-    thensubcon: Construct[ThenParsedType, ThenBuildTypes]
-    elsesubcon: Construct[ElseParsedType, ElseBuildTypes]
-    def __init__(
-        self,
-        condfunc: ConstantOrContextLambda[bool],
-        thensubcon: Construct[ThenParsedType, ThenBuildTypes],
-        elsesubcon: Construct[ElseParsedType, ElseBuildTypes],
-    ) -> None: ...
+    thensubcon: Construct[ParsedType, BuildTypes]
+    elsesubcon: Construct[ParsedType, BuildTypes]
 
+def IfThenElse(
+    condfunc: ConstantOrContextLambda[bool],
+    thensubcon: Construct[ThenParsedType, ThenBuildTypes],
+    elsesubcon: Construct[ElseParsedType, ElseBuildTypes],
+) -> _IfThenElse[
+    t.Union[ThenParsedType, ElseParsedType], t.Union[ThenBuildTypes, ElseBuildTypes]
+]: ...
 def If(
     condfunc: ConstantOrContextLambda[bool],
     subcon: Construct[ThenParsedType, ThenBuildTypes],
-) -> IfThenElse[ThenParsedType, ThenBuildTypes, None, None]: ...
+) -> _IfThenElse[t.Union[ThenParsedType, None], t.Union[ThenBuildTypes, None]]: ...
 
 SwitchType = t.TypeVar("SwitchType")
 
