@@ -3,7 +3,7 @@
 import dataclasses
 import enum
 import typing as t
-
+import pytest
 import construct as cs
 import construct_typed as cst
 from construct_typed import DataclassBitStruct, DataclassMixin, DataclassStruct, csfield
@@ -93,6 +93,135 @@ def test_dataclass_struct() -> None:
     assert c.width.subcon is cs.Int8ub
     assert c.height.subcon is cs.Int8ub
 
+
+def test_attrs() -> None:
+    import attr
+
+    @attr.s(kw_only=True)
+    class TestAttrs:
+        a: int = attr.ib()
+        b: int = attr.ib(default=5)
+        c: int = attr.ib()
+
+    testattrs1 = TestAttrs(a=5, c=10)
+    print(testattrs1)
+
+
+import construct_typed.attrs_struct as cst5
+
+
+def test_attrs_struct_example() -> None:
+    from construct import Bytes, Int8ub, this
+    from construct_typed import AttrsStruct, attrs_field, construct
+
+    class Image(AttrsStruct):
+        width: int = attrs_field(Int8ub)
+        height: int = attrs_field(Int8ub)
+        pixels: bytes = attrs_field(Bytes(this.height * this.width))
+
+    d = construct(Image)
+    d.parse(b"\x01\x0212")
+
+
+def test_attrs_struct() -> None:
+    class Test(cst5.AttrsStruct):
+        a: int = cst5.attrs_field(cs.Byte)
+        b: int = cst5.attrs_field(cs.Byte)
+        c: int = cst5.attrs_field(cs.Byte)
+        d: int = cst5.attrs_field(cs.Byte)
+
+    common(
+        cst.construct(Test),
+        b"\x00\x01\x02\x03",
+        Test(a=0, b=1, c=2, d=3),
+        4,
+    )
+
+
+def test_attrs_struct_to_str() -> None:
+    class Test(cst5.AttrsStruct):
+        a: int = cst5.attrs_field(cs.Byte)
+        b: int = cst5.attrs_field(cs.Byte)
+        c: int = cst5.attrs_field(cs.Byte)
+        d: int = cst5.attrs_field(cs.Byte)
+
+    obj = Test(a=0, b=1, c=2, d=3)
+    assert str(obj) == "Test(a=0, b=1, c=2, d=3)"
+
+
+def test_attrs_struct_simple_constr() -> None:
+    class Test(cst5.AttrsStruct, constr=cst5.this_struct):
+        a: int = cst5.attrs_field(cs.Byte)
+        b: int = cst5.attrs_field(cs.Byte)
+        c: int = cst5.attrs_field(cs.Byte)
+        d: int = cst5.attrs_field(cs.Byte)
+
+    common(
+        cst.construct(Test),
+        b"\x00\x01\x02\x03",
+        Test(a=0, b=1, c=2, d=3),
+        4,
+    )
+
+
+def test_attrs_struct_complex_constr() -> None:
+    class Test(cst5.AttrsStruct, constr=cs.Bitwise(cst5.this_struct)):
+        a: int = cst5.attrs_field(cs.BitsInteger(2))
+        b: int = cst5.attrs_field(cs.BitsInteger(2))
+        c: int = cst5.attrs_field(cs.BitsInteger(2))
+        d: int = cst5.attrs_field(cs.BitsInteger(2))
+
+    common(
+        cst.construct(Test),
+        b"\x1b",
+        Test(a=0, b=1, c=2, d=3),
+        1,
+    )
+
+
+def test_attrs_struct_overloaded_attributes() -> None:
+    class Test(cst5.AttrsStruct):
+        a: int = cst5.attrs_field(cs.Byte)
+        b: int = cst5.attrs_field(cs.Byte)
+        subcon: int = cst5.attrs_field(
+            cs.Byte
+        )  # this is also an attribute from Construct
+        docs: int = cst5.attrs_field(
+            cs.Byte
+        )  # this is also an attribute from Construct
+
+    common(
+        cst.construct(Test),
+        b"\x00\x01\x02\x03",
+        Test(a=0, b=1, subcon=2, docs=3),
+        4,
+    )
+
+
+def test_attrs_struct_reverse_fields() -> None:
+    class Test(cst5.AttrsStruct, reverse_fields=True):
+        a: int = cst5.attrs_field(cs.Byte)
+        b: int = cst5.attrs_field(cs.Byte)
+        c: int = cst5.attrs_field(cs.Byte)
+        d: int = cst5.attrs_field(cs.Byte)
+
+    common(
+        cst.construct(Test),
+        b"\x03\x02\x01\x00",
+        Test(a=0, b=1, c=2, d=3),
+        4,
+    )
+
+
+def test_attrs_struct_unsupported_param() -> None:
+    with pytest.raises(ValueError, match=r".*strange_parameter.*"):
+
+        class Test(cst5.AttrsStruct, strange_parameter=True):  # type: ignore
+            a: int = cst5.attrs_field(cs.Byte)
+
+def test_attrs_default() -> None:
+    # TODO: Implement `default` parameter for `attrs_field`
+    raise NotImplementedError  
 
 def test_dataclass_struct_reverse() -> None:
     @dataclasses.dataclass

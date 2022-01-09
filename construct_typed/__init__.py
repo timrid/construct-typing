@@ -10,17 +10,25 @@ from .dataclass_struct import (
     csfield,
     sfield,
 )
-from .generic_wrapper import (
+from .attrs_struct import (
+    AttrsStruct,
+    attrs_field
+)
+from .generics import (
     Adapter,
     ConstantOrContextLambda,
     Construct,
     Context,
     ListContainer,
     PathType,
+    Constructable,
+    construct
 )
 from .tenum import EnumBase, FlagsEnumBase, TEnum, TFlagsEnum
 
 __all__ = [
+    "AttrsStruct",
+    "attrs_field",
     "DataclassBitStruct",
     "DataclassMixin",
     "DataclassStruct",
@@ -30,6 +38,8 @@ __all__ = [
     "TStruct",
     "TStructField",
     "csfield",
+    "Constructable",
+    "construct",
     "sfield",
     "EnumBase",
     "FlagsEnumBase",

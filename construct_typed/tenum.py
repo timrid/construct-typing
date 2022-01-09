@@ -1,7 +1,7 @@
 import enum
 import typing as t
 
-from .generic_wrapper import *
+from .generics import *
 
 
 # ## TEnum ############################################################################################################
@@ -32,6 +32,8 @@ class EnumBase(enum.IntEnum):
             new_member._value_ = value
             pseudo_member = cls._value2member_map_.setdefault(value, new_member)  # type: ignore
         return pseudo_member  # type: ignore
+
+    # TODO: Add `__construct__` method to support `Constructable` protocol
 
 
 EnumType = t.TypeVar("EnumType", bound=EnumBase)

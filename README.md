@@ -68,29 +68,28 @@ A short example:
 import dataclasses
 import typing as t
 from construct import Array, Byte, Const, Int8ub, this
-from construct_typed import DataclassMixin, DataclassStruct, EnumBase, TEnum, csfield
+from construct_typed import AttrsStruct, Enum, construct, attrs_field
 
-class Orientation(EnumBase):
+class Orientation(Enum, constr=Int8ub):  # TODO: Implement this
     HORIZONTAL = 0
     VERTICAL = 1
 
-@dataclasses.dataclass
-class Image(DataclassMixin):
-    signature: bytes = csfield(Const(b"BMP"))
-    orientation: Orientation = csfield(TEnum(Int8ub, Orientation))
-    width: int = csfield(Int8ub)
-    height: int = csfield(Int8ub)
-    pixels: t.List[int] = csfield(Array(this.width * this.height, Byte))
+class Image(AttrsStruct):
+    signature: bytes = attrs_field(Const(b"BMP"))
+    orientation: Orientation = attrs_field(construct(Orientation))  # TODO: Implement this
+    width: int = attrs_field(Int8ub)
+    height: int = attrs_field(Int8ub)
+    pixels: t.List[int] = attrs_field(Array(this.width * this.height, Byte))
 
-format = DataclassStruct(Image)
+fmt = construct(Image)
 obj = Image(
     orientation=Orientation.VERTICAL,
     width=3,
     height=2,
     pixels=[7, 8, 9, 11, 12, 13],
 )
-print(format.build(obj))
-print(format.parse(b"BMP\x01\x03\x02\x07\x08\t\x0b\x0c\r"))
+print(fmt.build(obj))
+print(fmt.parse(b"BMP\x01\x03\x02\x07\x08\t\x0b\x0c\r"))
 ```
 Output:
 ```

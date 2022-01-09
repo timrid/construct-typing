@@ -39,3 +39,20 @@ else:
 
     ConstantOrContextLambda = t.Union[ValueType, t.Callable[[Context], t.Any]]
     PathType = str
+
+
+@t.runtime_checkable
+class Constructable(t.Protocol[ParsedType, BuildTypes]):
+    def __construct__(self) -> "Construct[ParsedType, BuildTypes]":
+        raise NotImplementedError
+
+
+def construct(
+    constr: t.Union[
+        Constructable[ParsedType, BuildTypes], "Construct[ParsedType, BuildTypes]"
+    ],
+) -> Construct[ParsedType, BuildTypes]:
+    """Get construct instance of `Constructable` or `Construct`"""
+    if isinstance(constr, Constructable):
+        constr = constr.__construct__()
+    return constr
