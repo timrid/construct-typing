@@ -189,7 +189,7 @@ class AttrsStructMeta(abc.ABCMeta):
         reverse_fields = kwargs.pop("reverse_fields", False)
         if not isinstance(reverse_fields, bool):
             raise ValueError("`reverse_fields` parameter has to be an `bool` object")
-        if len(kwargs) > 0:
+        if len(kwargs) > 0:  # check remaining parameters
             unsupp_parm = ", ".join([f"'{k}'" for k in kwargs.keys()])
             raise ValueError(f"unsupported parameter(s) detected: {unsupp_parm}")
 
@@ -209,12 +209,12 @@ class AttrsStructMeta(abc.ABCMeta):
         # save construct format and make the class compatible to `Constructable` protocol
         setattr(cls, "__construct__", lambda: constr)
 
+        # the `construct` library is using the [] access internally, so struct objects
+        # should also make this possible and not only via the dot access.
+        setattr(cls, "__getitem__", lambda self, key: getattr(self, key))  # type: ignore
+        setattr(cls, "__setitem__", lambda self, key, value: setattr(self, key, value))  # type: ignore
+
         return cls
-
-    if t.TYPE_CHECKING:
-
-        def __construct__(self: t.Type[T]) -> "AttrsConstruct[T]":
-            ...
 
 
 class AttrsStruct(metaclass=AttrsStructMeta):
@@ -245,4 +245,14 @@ class AttrsStruct(metaclass=AttrsStructMeta):
         Image(width=1, height=2, pixels=b'12')
     """
 
-    pass
+    if t.TYPE_CHECKING:
+
+        @classmethod
+        def __construct__(cls: t.Type[T]) -> "AttrsConstruct[T]":
+            ...
+
+        def __getitem__(self, key: str) -> t.Any:
+            ...
+
+        def __setitem__(self, key: str, value: t.Any) -> None:
+            ...

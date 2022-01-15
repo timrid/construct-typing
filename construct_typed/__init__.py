@@ -12,7 +12,8 @@ from .dataclass_struct import (
 )
 from .attrs_struct import (
     AttrsStruct,
-    attrs_field
+    attrs_field,
+    this_struct
 )
 from .generics import (
     Adapter,
@@ -35,6 +36,7 @@ __all__ = [
     "TBitStruct",
     "TContainerBase",
     "TContainerMixin",
+    "this_struct",
     "TStruct",
     "TStructField",
     "csfield",
