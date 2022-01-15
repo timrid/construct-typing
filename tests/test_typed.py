@@ -491,13 +491,13 @@ def test_dataclass_bitstruct() -> None:
 
 
 def test_tenum() -> None:
-    class TestEnum(cst.EnumBase):
+    class TestEnum(cst.EnumBase, subcon=cs.Byte):
         one = 1
         two = 2
         four = 4
         eight = 8
 
-    d = cst.TEnum(cs.Byte, TestEnum)
+    d = cst.construct(TestEnum)
 
     common(d, b"\x01", TestEnum.one, 1)
     common(d, b"\xff", TestEnum(255), 1)
@@ -516,7 +516,7 @@ def test_tenum_no_enumbase() -> None:
         b = 2
 
     cls = t.cast(t.Type[cst.EnumBase], E)
-    assert raises(lambda: cst.TEnum(cs.Byte, cls)) == TypeError
+    assert raises(lambda: cst.EnumConstruct(cs.Byte, cls)) == TypeError
 
 
 def test_dataclass_struct_wrong_enumbase() -> None:
@@ -528,17 +528,17 @@ def test_dataclass_struct_wrong_enumbase() -> None:
         a = 1
         b = 2
 
-    assert raises(cst.TEnum(cs.Byte, E1).build, E2.a) == TypeError
+    assert raises(cst.EnumConstruct(cs.Byte, E1).build, E2.a) == TypeError
 
 
 def test_tenum_in_tstruct() -> None:
-    class TestEnum(cst.EnumBase):
+    class TestEnum(cst.EnumBase, subcon=cs.Int8ub):
         a = 1
         b = 2
 
     @dataclasses.dataclass
     class TestContainer(DataclassMixin):
-        a: TestEnum = csfield(cst.TEnum(cs.Int8ub, TestEnum))
+        a: TestEnum = csfield(cst.construct(TestEnum))
         b: int = csfield(cs.Int8ub)
 
     common(
@@ -549,18 +549,18 @@ def test_tenum_in_tstruct() -> None:
     )
 
     assert (
-        raises(cst.TEnum(cs.Byte, TestEnum).build, TestContainer(a=1, b=2)) == TypeError  # type: ignore
+        raises(cst.construct(TestEnum).build, TestContainer(a=1, b=2)) == TypeError  # type: ignore
     )
 
 
 def test_tenum_flags() -> None:
-    class TestEnum(cst.FlagsEnumBase):
+    class TestEnum(cst.FlagsEnumBase, subcon=cs.Byte):
         one = 1
         two = 2
         four = 4
         eight = 8
 
-    d = cst.TFlagsEnum(cs.Byte, TestEnum)
+    d = cst.construct(TestEnum)
     common(d, b"\x03", TestEnum.one | TestEnum.two, 1)
     assert d.build(TestEnum(0)) == b"\x00"
     assert d.build(TestEnum.one | TestEnum.two) == b"\x03"

@@ -25,7 +25,7 @@ from .generics import (
     Constructable,
     construct
 )
-from .tenum import EnumBase, FlagsEnumBase, TEnum, TFlagsEnum
+from .tenum import EnumBase, FlagsEnumBase, EnumConstruct, FlagsEnumConstruct
 
 __all__ = [
     "AttrsStruct",
@@ -45,8 +45,8 @@ __all__ = [
     "sfield",
     "EnumBase",
     "FlagsEnumBase",
-    "TEnum",
-    "TFlagsEnum",
+    "EnumConstruct",
+    "FlagsEnumConstruct",
     "Adapter",
     "ConstantOrContextLambda",
     "Construct",
