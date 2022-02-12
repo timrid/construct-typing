@@ -220,21 +220,18 @@ class AttrsStruct:
         # save construct format and make the class compatible to `Constructable` protocol
         setattr(cls, "__construct__", lambda: constr)
 
-        # the `construct` library is using the [] access internally, so struct objects
-        # should also make this possible and not only via the dot access.
-        setattr(cls, "__getitem__", lambda self, key: getattr(self, key))  # type: ignore
-        setattr(cls, "__setitem__", lambda self, key, value: setattr(self, key, value))  # type: ignore
-
         return cls
+
+    # the `construct` library is using the [] access internally, so struct objects
+    # should also make this possible and not only via the dot access.
+    def __getitem__(self, key: str) -> t.Any:
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value: t.Any) -> None:
+        setattr(self, key, value)
 
     if t.TYPE_CHECKING:
 
         @classmethod
         def __construct__(cls: t.Type[T]) -> "AttrsConstruct[T]":
-            ...
-
-        def __getitem__(self, key: str) -> t.Any:
-            ...
-
-        def __setitem__(self, key: str, value: t.Any) -> None:
             ...
