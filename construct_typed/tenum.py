@@ -8,62 +8,35 @@ from .generics import *
 T = t.TypeVar("T")
 
 
-class ConstructEnumMeta(enum.EnumMeta):
-    @classmethod
-    def __prepare__(
-        metacls,  # type: ignore
-        name: str,
-        bases: t.Tuple[type, ...],
-        **kwargs: t.Any,
-    ) -> t.Mapping[str, object]:
-        # This method is needed, because the original __prepare__ method does not accept kwargs.
-        return super().__prepare__(name, bases)
-
-    def __new__(
-        metacls: t.Type[T],  # type: ignore
-        name: str,
-        bases: t.Tuple[type, ...],
-        namespace: t.Dict[str, t.Any],
-        **kwargs: t.Any,
-    ) -> T:
-        # create new enum object
-        cls = super().__new__(metacls, name, bases, namespace)  # type: ignore
-
-        # if the `EnumBase` class is created, there are no parameters
-        if len(kwargs) == 0:
-            return cls
-
-        # extract parameters from kwargs
-        subcon: "cs.Construct[t.Any, t.Any]" = kwargs.pop("subcon", None)
-        if not isinstance(subcon, cs.Construct):  # type: ignore
-            raise ValueError(
-                f"`subcon` parameter has to be an `Construct` object but is {type(subcon)}"
-            )
-        if len(kwargs) > 0:  # check remaining parameters
-            unsupp_parm = ", ".join([f"'{k}'" for k in kwargs.keys()])
-            raise ValueError(f"unsupported parameter(s) detected: {unsupp_parm}")
-
-        # create construct format
-        if EnumBase in bases:
-            enum_constr = EnumConstruct(subcon, cls)  # type: ignore
-        elif FlagsEnumBase in bases:
-            enum_constr = FlagsEnumConstruct(subcon, cls)  # type: ignore
-        else:
-            enum_constr = None
-
-        # save construct format and make the class compatible to `Constructable` protocol
-        setattr(cls, "__construct__", lambda: enum_constr)  # type: ignore
-
-        return cls
-
-
 # ## EnumConstruct ############################################################################################################
-class EnumBase(enum.IntEnum, metaclass=ConstructEnumMeta):
+class EnumBase(enum.IntEnum):
     """
     Base class for an Enum used in `construct_typed.EnumConstruct`.
 
     This class extends the standard `enum.IntEnum`, so that missing values are automatically generated.
     """
+
+    @classmethod
+    def __init_subclass__(
+        cls,
+        subcon: "cs.Construct[t.Any, t.Any]",
+        **kwargs: t.Any,
+    ):
+        super().__init_subclass__(**kwargs)
+
+        # validate types
+        if not isinstance(subcon, cs.Construct):  # type: ignore
+            raise ValueError(
+                f"`subcon` parameter has to be an `Construct` object but is {type(subcon)}"
+            )
+
+        # create construct format
+        enum_constr = EnumConstruct(subcon, cls)
+
+        # save construct format and make the class compatible to `Constructable` protocol
+        setattr(cls, "__construct__", lambda: enum_constr)
+
+        return cls
 
     # Extend the enum type with __missing__ method. So if a enum value
     # not found in the enum, a new pseudo member is created.
@@ -137,7 +110,29 @@ class EnumConstruct(Adapter[int, int, EnumType, EnumType]):
 
 
 # ## FlagsEnumConstruct #######################################################################################################
-class FlagsEnumBase(enum.IntFlag, metaclass=ConstructEnumMeta):
+class FlagsEnumBase(enum.IntFlag):
+    @classmethod
+    def __init_subclass__(
+        cls,
+        subcon: "cs.Construct[t.Any, t.Any]",
+        **kwargs: t.Any,
+    ):
+        super().__init_subclass__(**kwargs)
+
+        # validate types
+        if not isinstance(subcon, cs.Construct):  # type: ignore
+            raise ValueError(
+                f"`subcon` parameter has to be an `Construct` object but is {type(subcon)}"
+            )
+
+        # create construct format
+        enum_constr = FlagsEnumConstruct(subcon, cls)
+
+        # save construct format and make the class compatible to `Constructable` protocol
+        setattr(cls, "__construct__", lambda: enum_constr)
+
+        return cls
+
     if t.TYPE_CHECKING:
 
         @classmethod

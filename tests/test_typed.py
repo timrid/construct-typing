@@ -519,16 +519,12 @@ def test_tenum_no_enumbase() -> None:
     assert raises(lambda: cst.EnumConstruct(cs.Byte, cls)) == TypeError
 
 
-def test_dataclass_struct_wrong_enumbase() -> None:
-    class E1(cst.EnumBase):
-        a = 1
-        b = 2
+def test_tenum_no_subcon() -> None:
+    with pytest.raises(TypeError):
 
-    class E2(cst.EnumBase):
-        a = 1
-        b = 2
-
-    assert raises(cst.EnumConstruct(cs.Byte, E1).build, E2.a) == TypeError
+        class E1(cst.EnumBase):  # type: ignore
+            a = 1
+            b = 2
 
 
 def test_tenum_in_tstruct() -> None:
