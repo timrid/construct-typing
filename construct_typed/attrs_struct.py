@@ -200,10 +200,7 @@ class AttrsStruct:
         cls,
         constr: "cs.Construct[t.Any, t.Any]" = this_struct,
         reverse_fields: bool = False,
-        **kwargs: t.Any,
     ):
-        super().__init_subclass__(**kwargs)
-
         # validate types
         if not isinstance(constr, cs.Construct):  # type: ignore
             raise ValueError("`constr` parameter has to be an `Construct` object")
