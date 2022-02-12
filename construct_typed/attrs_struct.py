@@ -5,14 +5,7 @@ import typing as t
 
 import attr
 import construct as cs
-import abc
-from .generics import (
-    Adapter,
-    Construct,
-    Context,
-    ParsedType,
-    PathType,
-)
+from .generics import Adapter, Construct, Context, ParsedType, PathType
 
 T = t.TypeVar("T")
 
@@ -174,50 +167,7 @@ def _replace_this_struct(constr: "Construct[t.Any, t.Any]", replacement: t.Any):
 
 
 @__dataclass_transform__(kw_only_default=True, field_descriptors=(attrs_field,))
-class AttrsStructMeta(abc.ABCMeta):
-    def __new__(
-        metacls,  # type: ignore
-        name: str,
-        bases: t.Tuple[type, ...],
-        namespace: t.Dict[str, t.Any],
-        **kwargs: t.Any,
-    ):
-        # extract parameters from kwargs
-        constr: "cs.Construct[t.Any, t.Any]" = kwargs.pop("constr", this_struct)
-        if not isinstance(constr, cs.Construct):  # type: ignore
-            raise ValueError("`constr` parameter has to be an `Construct` object")
-        reverse_fields = kwargs.pop("reverse_fields", False)
-        if not isinstance(reverse_fields, bool):
-            raise ValueError("`reverse_fields` parameter has to be an `bool` object")
-        if len(kwargs) > 0:  # check remaining parameters
-            unsupp_parm = ", ".join([f"'{k}'" for k in kwargs.keys()])
-            raise ValueError(f"unsupported parameter(s) detected: {unsupp_parm}")
-
-        # create new class object
-        cls = super().__new__(metacls, name, bases, namespace)
-
-        # create attrs class
-        cls = attr.define(cls, kw_only=True, slots=False)
-
-        # create construct format
-        attrs_constr = AttrsConstruct(cls, reverse_fields)  # type: ignore
-        if constr is this_struct:
-            constr = attrs_constr
-        else:
-            _replace_this_struct(constr, attrs_constr)
-
-        # save construct format and make the class compatible to `Constructable` protocol
-        setattr(cls, "__construct__", lambda: constr)
-
-        # the `construct` library is using the [] access internally, so struct objects
-        # should also make this possible and not only via the dot access.
-        setattr(cls, "__getitem__", lambda self, key: getattr(self, key))  # type: ignore
-        setattr(cls, "__setitem__", lambda self, key, value: setattr(self, key, value))  # type: ignore
-
-        return cls
-
-
-class AttrsStruct(metaclass=AttrsStructMeta):
+class AttrsStruct:
     """
     Adapter for a attrs-class for optimised type hints / static autocompletion in comparision to the original Struct.
 
@@ -244,6 +194,41 @@ class AttrsStruct(metaclass=AttrsStructMeta):
         >>> d.parse(b"\x01\x0212")
         Image(width=1, height=2, pixels=b'12')
     """
+
+    @classmethod
+    def __init_subclass__(
+        cls,
+        constr: "cs.Construct[t.Any, t.Any]" = this_struct,
+        reverse_fields: bool = False,
+        **kwargs: t.Any,
+    ):
+        super().__init_subclass__(**kwargs)
+
+        # validate types
+        if not isinstance(constr, cs.Construct):  # type: ignore
+            raise ValueError("`constr` parameter has to be an `Construct` object")
+        if not isinstance(reverse_fields, bool):  # type: ignore
+            raise ValueError("`reverse_fields` parameter has to be an `bool` object")
+
+        # create attrs class
+        cls = attr.define(cls, kw_only=True, slots=False)
+
+        # create construct format
+        attrs_constr = AttrsConstruct(cls, reverse_fields)
+        if constr is this_struct:
+            constr = attrs_constr
+        else:
+            _replace_this_struct(constr, attrs_constr)
+
+        # save construct format and make the class compatible to `Constructable` protocol
+        setattr(cls, "__construct__", lambda: constr)
+
+        # the `construct` library is using the [] access internally, so struct objects
+        # should also make this possible and not only via the dot access.
+        setattr(cls, "__getitem__", lambda self, key: getattr(self, key))  # type: ignore
+        setattr(cls, "__setitem__", lambda self, key, value: setattr(self, key, value))  # type: ignore
+
+        return cls
 
     if t.TYPE_CHECKING:
 

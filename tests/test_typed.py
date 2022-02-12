@@ -125,8 +125,6 @@ def test_attrs_struct_example() -> None:
     assert obj.height is obj["height"]
     assert obj.pixels is obj["pixels"]
 
-    
-
 
 def test_attrs_struct() -> None:
     class Test(cst5.AttrsStruct):
@@ -219,15 +217,17 @@ def test_attrs_struct_reverse_fields() -> None:
 
 
 def test_attrs_struct_unsupported_param() -> None:
-    with pytest.raises(ValueError, match=r".*strange_parameter.*"):
+    with pytest.raises(TypeError):
 
         class Test(cst5.AttrsStruct, strange_parameter=True):  # type: ignore
             a: int = cst5.attrs_field(cs.Byte)
+
 
 @pytest.mark.skip
 def test_attrs_default() -> None:
     # TODO: Implement `default` parameter for `attrs_field`
     raise NotImplementedError
+
 
 def test_dataclass_struct_reverse() -> None:
     @dataclasses.dataclass
