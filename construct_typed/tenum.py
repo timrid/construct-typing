@@ -162,15 +162,15 @@ class TFlags(enum.IntFlag, metaclass=_EnumMeta):
 
         @classmethod
         def __construct__(
-            cls: "t.Type[FlagsEnumType]",
-        ) -> "TFlagsConstruct[FlagsEnumType]":
+            cls: "t.Type[FlagsType]",
+        ) -> "TFlagsConstruct[FlagsType]":
             ...
 
 
-FlagsEnumType = t.TypeVar("FlagsEnumType", bound=TFlags)
+FlagsType = t.TypeVar("FlagsType", bound=TFlags)
 
 
-class TFlagsConstruct(Adapter[int, int, FlagsEnumType, FlagsEnumType]):
+class TFlagsConstruct(Adapter[int, int, FlagsType, FlagsType]):
     """
     Typed flags.
     """
@@ -178,28 +178,28 @@ class TFlagsConstruct(Adapter[int, int, FlagsEnumType, FlagsEnumType]):
     if t.TYPE_CHECKING:
 
         def __new__(
-            cls, subcon: Construct[int, int], enum_type: t.Type[FlagsEnumType]
-        ) -> "TFlagsConstruct[FlagsEnumType]":
+            cls, subcon: Construct[int, int], enum_type: t.Type[FlagsType]
+        ) -> "TFlagsConstruct[FlagsType]":
             ...
 
-    def __init__(self, subcon: Construct[int, int], enum_type: t.Type[FlagsEnumType]):
+    def __init__(self, subcon: Construct[int, int], enum_type: t.Type[FlagsType]):
         if not issubclass(enum_type, TFlags):
             raise TypeError(
                 "'{}' has to be a '{}'".format(repr(enum_type), repr(TFlags))
             )
 
         # save enum type
-        self.enum_type = t.cast(t.Type[FlagsEnumType], enum_type)  # type: ignore
+        self.enum_type = t.cast(t.Type[FlagsType], enum_type)  # type: ignore
 
         # init adatper
         super(TFlagsConstruct, self).__init__(subcon)  # type: ignore
 
-    def _decode(self, obj: int, context: Context, path: PathType) -> FlagsEnumType:
+    def _decode(self, obj: int, context: Context, path: PathType) -> FlagsType:
         return self.enum_type(obj)
 
     def _encode(
         self,
-        obj: FlagsEnumType,
+        obj: FlagsType,
         context: Context,
         path: PathType,
     ) -> int:

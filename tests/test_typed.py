@@ -359,19 +359,19 @@ def test_tenum_in_dataclass_struct() -> None:
     )
 
 
-def test_tenum_flags() -> None:
-    class TestEnum(TFlags, subcon=cs.Byte):
+def test_tflags() -> None:
+    class TestFlags(TFlags, subcon=cs.Byte):
         one = 1
         two = 2
         four = 4
         eight = 8
 
-    d = construct(TestEnum)
-    common(d, b"\x03", TestEnum.one | TestEnum.two, 1)
-    assert d.build(TestEnum(0)) == b"\x00"
-    assert d.build(TestEnum.one | TestEnum.two) == b"\x03"
-    assert d.build(TestEnum(8)) == b"\x08"
-    assert d.build(TestEnum(1 | 2)) == b"\x03"
-    assert d.build(TestEnum(255)) == b"\xff"
-    assert d.build(TestEnum.eight) == b"\x08"
+    d = construct(TestFlags)
+    common(d, b"\x03", TestFlags.one | TestFlags.two, 1)
+    assert d.build(TestFlags(0)) == b"\x00"
+    assert d.build(TestFlags.one | TestFlags.two) == b"\x03"
+    assert d.build(TestFlags(8)) == b"\x08"
+    assert d.build(TestFlags(1 | 2)) == b"\x03"
+    assert d.build(TestFlags(255)) == b"\xff"
+    assert d.build(TestFlags.eight) == b"\x08"
     assert raises(d.build, 2) == TypeError
