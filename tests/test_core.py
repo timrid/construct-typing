@@ -634,7 +634,7 @@ def test_numpy() -> None:
 @pytest.mark.xfail(reason="docs stated that it throws StreamError, not true at all")
 def test_numpy_error() -> None:
     import numpy, io
-    numpy.load(io.BytesIO(b""))
+    numpy.load(io.BytesIO(b""))  # type: ignore
 
 def test_namedtuple() -> None:
     import collections
