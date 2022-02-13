@@ -12,7 +12,7 @@ from construct.lib.containers import (
 )
 from construct.lib.py3compat import bytestringtype, reprstring, unicodestringtype
 
-from .generic_wrapper import Adapter, Construct, Context, ParsedType, PathType
+from construct_typed.generic import Adapter, Construct, Context, ParsedType, PathType
 
 
 class DataclassMixin:

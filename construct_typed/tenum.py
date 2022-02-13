@@ -1,7 +1,7 @@
 import enum
 import typing as t
 
-from .generic_wrapper import *
+from construct_typed.generic import *
 
 
 # ## TEnum ############################################################################################################

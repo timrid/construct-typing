@@ -1,4 +1,4 @@
-from .dataclass_struct import (
+from construct_typed.dataclass_struct import (
     DataclassBitStruct,
     DataclassMixin,
     DataclassStruct,
@@ -10,7 +10,7 @@ from .dataclass_struct import (
     csfield,
     sfield,
 )
-from .generic_wrapper import (
+from construct_typed.generic import (
     Adapter,
     ConstantOrContextLambda,
     Construct,
@@ -18,7 +18,7 @@ from .generic_wrapper import (
     ListContainer,
     PathType,
 )
-from .tenum import EnumBase, FlagsEnumBase, TEnum, TFlagsEnum
+from construct_typed.tenum import EnumBase, FlagsEnumBase, TEnum, TFlagsEnum
 
 __all__ = [
     "DataclassBitStruct",
