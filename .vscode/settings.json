@@ -1,24 +1,25 @@
 {
-    "python.pythonPath": "python",
     "python.languageServer": "Pylance",
-    // "python.testing.unittestEnabled": false,
-    // "python.testing.nosetestsEnabled": false,
-    // "python.testing.pytestEnabled": true,
-    "pythonTestExplorer.testFramework": "pytest",
+
+    // configure code formating
     "python.formatting.provider": "black",
     "python.sortImports.path": "isort",
     "python.sortImports.args": [
         "--profile=black",
     ],
-    // "[python]": {
-    //     "editor.codeActionsOnSave": {
-    //         "source.organizeImports": true
-    //     }
-    // }
+    
+    // configure pylance
     "python.analysis.typeCheckingMode": "strict",
     "python.analysis.autoImportCompletions": false,
     "python.analysis.diagnosticSeverityOverrides": {
         "reportPrivateUsage": "information",
         "reportUntypedNamedTuple": "information",
     },
+
+    // configure pytest
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
 }
