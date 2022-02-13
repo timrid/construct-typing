@@ -1,3 +1,4 @@
+from construct_typed.generic import construct
 from construct_typed.dataclass_struct import (
     DataclassBitStruct,
     DataclassStruct,
@@ -16,6 +17,7 @@ from construct_typed.tenum import TEnum, TFlags, TEnumConstruct, TFlagsConstruct
 __all__ = [
     "DataclassBitStruct",
     "DataclassStruct",
+    "construct",
     "csfield",
     "TEnum",
     "TEnumConstruct",
