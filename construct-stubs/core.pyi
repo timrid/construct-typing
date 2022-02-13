@@ -526,7 +526,7 @@ class Const(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTy
     def __new__(
         cls,
         value: bytes,
-    ) -> Const[None, None, bytes, Bytes[bytes, int]]: ...
+    ) -> Const[None, None, bytes, t.Optional[bytes]]: ...
     @t.overload
     def __new__(
         cls,
