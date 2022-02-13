@@ -8,35 +8,78 @@ from .generic import *
 T = t.TypeVar("T")
 
 
-# ## TEnum ############################################################################################################
-class TEnum(enum.IntEnum):
+class _EnumMeta(enum.EnumMeta):
+    @classmethod
+    def __prepare__(
+        metacls,  # type: ignore
+        name: str,
+        bases: t.Tuple[type, ...],
+        **kwargs: t.Any,
+    ) -> t.Mapping[str, object]:
+        # This method is needed, because the original __prepare__ method does not accept kwargs.
+        return super().__prepare__(name, bases)
+
+    def __new__(
+        metacls: t.Type[T],  # type: ignore
+        name: str,
+        bases: t.Tuple[type, ...],
+        namespace: t.Dict[str, t.Any],
+        **kwargs: t.Any,
+    ) -> T:
+        # create new enum object
+        cls = super().__new__(metacls, name, bases, namespace)  # type: ignore
+
+        # if the `TEnum` class is created, there are no parameters
+        if len(kwargs) == 0:
+            return cls
+
+        # extract parameters from kwargs
+        subcon: "cs.Construct[t.Any, t.Any]" = kwargs.pop("subcon", None)
+        if not isinstance(subcon, cs.Construct):  # type: ignore
+            raise ValueError(
+                f"`subcon` parameter has to be an `Construct` object but is {type(subcon)}"
+            )
+        if len(kwargs) > 0:  # check remaining parameters
+            unsupp_parm = ", ".join([f"'{k}'" for k in kwargs.keys()])
+            raise ValueError(f"unsupported parameter(s) detected: {unsupp_parm}")
+
+        # create construct format
+        if TEnum in bases:
+            enum_constr = TEnumConstruct(subcon, cls)  # type: ignore
+        elif TFlags in bases:
+            enum_constr = TFlagsConstruct(subcon, cls)  # type: ignore
+        else:
+            enum_constr = None
+
+        # save construct format and make the class compatible to `Constructable` protocol
+        setattr(cls, "__construct__", lambda: enum_constr)  # type: ignore
+
+        return cls
+
+
+# ## TEnumConstruct ############################################################################################################
+class TEnum(enum.IntEnum, metaclass=_EnumMeta):
     """
     Base class for an Enum used in `construct_typed.TEnumConstruct`.
 
     This class extends the standard `enum.IntEnum`, so that missing values are automatically generated.
     """
 
-    @classmethod
-    def __init_subclass__(
-        cls,
-        subcon: "cs.Construct[t.Any, t.Any]",
-        **kwargs: t.Any,
-    ):
-        super().__init_subclass__(**kwargs)
+    if t.TYPE_CHECKING:
+        # unfortunately the metaclass `enum.EnumMeta` does not forward the parameters to __init_subclass__, so that
+        # we have to make our own metaclass `ConstructEnumMeta`.
+        # But pylance/pyright is checking the type parameters passed to the class via __init_subclass__, so that we
+        # have to fake one.
+        @classmethod
+        def __init_subclass__(
+            cls,
+            subcon: "cs.Construct[t.Any, t.Any]",
+        ):
+            ...
 
-        # validate types
-        if not isinstance(subcon, cs.Construct):  # type: ignore
-            raise ValueError(
-                f"`subcon` parameter has to be an `Construct` object but is {type(subcon)}"
-            )
-
-        # create construct format
-        enum_constr = TEnumConstruct(subcon, cls)
-
-        # save construct format and make the class compatible to `Constructable` protocol
-        setattr(cls, "__construct__", lambda: enum_constr)
-
-        return cls
+        @classmethod
+        def __construct__(cls: "t.Type[EnumType]") -> "TEnumConstruct[EnumType]":
+            ...
 
     # Extend the enum type with __missing__ method. So if a enum value
     # not found in the enum, a new pseudo member is created.
@@ -58,12 +101,6 @@ class TEnum(enum.IntEnum):
             new_member._value_ = value
             pseudo_member = cls._value2member_map_.setdefault(value, new_member)  # type: ignore
         return pseudo_member  # type: ignore
-
-    if t.TYPE_CHECKING:
-
-        @classmethod
-        def __construct__(cls: "t.Type[EnumType]") -> "TEnumConstruct[EnumType]":
-            ...
 
 
 EnumType = t.TypeVar("EnumType", bound=TEnum)
@@ -108,31 +145,20 @@ class TEnumConstruct(Adapter[int, int, EnumType, EnumType]):
             "'{}' has to be of type {}".format(repr(obj), repr(self.enum_type))
         )
 
+
 # ## TFlags #######################################################################################################
-class TFlags(enum.IntFlag):
-    @classmethod
-    def __init_subclass__(
-        cls,
-        subcon: "cs.Construct[t.Any, t.Any]",
-        **kwargs: t.Any,
-    ):
-        super().__init_subclass__(**kwargs)
-
-        # validate types
-        if not isinstance(subcon, cs.Construct):  # type: ignore
-            raise ValueError(
-                f"`subcon` parameter has to be an `Construct` object but is {type(subcon)}"
-            )
-
-        # create construct format
-        enum_constr = TFlagsConstruct(subcon, cls)
-
-        # save construct format and make the class compatible to `Constructable` protocol
-        setattr(cls, "__construct__", lambda: enum_constr)
-
-        return cls
-
+class TFlags(enum.IntFlag, metaclass=_EnumMeta):
     if t.TYPE_CHECKING:
+        # unfortunately the metaclass `enum.EnumMeta` does not forward the parameters to __init_subclass__, so that
+        # we have to make our own metaclass `ConstructEnumMeta`.
+        # But pylance/pyright is checking the type parameters passed to the class via __init_subclass__, so that we
+        # have to fake one.
+        @classmethod
+        def __init_subclass__(
+            cls,
+            subcon: "cs.Construct[t.Any, t.Any]",
+        ):
+            ...
 
         @classmethod
         def __construct__(
