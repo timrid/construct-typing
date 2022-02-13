@@ -6,7 +6,7 @@ import typing as t
 
 import construct as cs
 import construct_typed as cst
-from construct_typed import DataclassBitStruct, DataclassMixin, DataclassStruct, csfield
+from construct_typed import DataclassBitStruct, DataclassStruct, csfield
 
 from .declarativeunittest import common, raises, setattrs
 

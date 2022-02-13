@@ -118,8 +118,8 @@ class DataclassConstruct(Adapter[t.Any, t.Any, T, T]):
         dc_type: t.Type[T],
         reverse: bool = False,
     ) -> None:
-        if not isinstance(dc_type, DataclassStruct):
-            raise TypeError(f"'{repr(dc_type)}' has to be a 'DataclassStruct'")
+        if not issubclass(dc_type, DataclassStruct):
+            raise TypeError(f"'{repr(dc_type)}' has to be a subclass of 'DataclassStruct'")
         if not dataclasses.is_dataclass(dc_type):
             raise TypeError(f"'{repr(dc_type)}' has to be a 'dataclasses.dataclass'")
         self.dc_type = dc_type
