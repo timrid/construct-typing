@@ -9,6 +9,18 @@ import functools
 import abc
 import _thread
 from types import FunctionType
+from dataclasses import (
+    _FIELD,
+    _FIELD_CLASSVAR,
+    _FIELD_INITVAR,
+    _FIELDS,
+    _PARAMS,
+    _POST_INIT_NAME,
+    _EMPTY_METADATA,
+    MISSING,
+    _HAS_DEFAULT_FACTORY,
+    FrozenInstanceError
+)
 
 
 __all__ = ['dataclass',
@@ -169,21 +181,21 @@ __all__ = ['dataclass',
 
 
 # Raised when an attempt is made to modify a frozen class.
-class FrozenInstanceError(AttributeError): pass
+# class FrozenInstanceError(AttributeError): pass
 
 # A sentinel object for default values to signal that a default
 # factory will be used.  This is given a nice repr() which will appear
 # in the function signature of dataclasses' constructors.
-class _HAS_DEFAULT_FACTORY_CLASS:
-    def __repr__(self):
-        return '<factory>'
-_HAS_DEFAULT_FACTORY = _HAS_DEFAULT_FACTORY_CLASS()
+# class _HAS_DEFAULT_FACTORY_CLASS:
+#     def __repr__(self):
+#         return '<factory>'
+# _HAS_DEFAULT_FACTORY = _HAS_DEFAULT_FACTORY_CLASS()
 
 # A sentinel object to detect if a parameter is supplied or not.  Use
 # a class to give it a better repr.
-class _MISSING_TYPE:
-    pass
-MISSING = _MISSING_TYPE()
+# class _MISSING_TYPE:
+#     pass
+# MISSING = _MISSING_TYPE()
 
 # A sentinel object to indicate that following fields are keyword-only by
 # default.  Use a class to give it a better repr.
@@ -193,29 +205,29 @@ KW_ONLY = _KW_ONLY_TYPE()
 
 # Since most per-field metadata will be unused, create an empty
 # read-only proxy that can be shared among all fields.
-_EMPTY_METADATA = types.MappingProxyType({})
+# _EMPTY_METADATA = types.MappingProxyType({})
 
 # Markers for the various kinds of fields and pseudo-fields.
-class _FIELD_BASE:
-    def __init__(self, name):
-        self.name = name
-    def __repr__(self):
-        return self.name
-_FIELD = _FIELD_BASE('_FIELD')
-_FIELD_CLASSVAR = _FIELD_BASE('_FIELD_CLASSVAR')
-_FIELD_INITVAR = _FIELD_BASE('_FIELD_INITVAR')
+# class _FIELD_BASE:
+#     def __init__(self, name):
+#         self.name = name
+#     def __repr__(self):
+#         return self.name
+# _FIELD = _FIELD_BASE('_FIELD')
+# _FIELD_CLASSVAR = _FIELD_BASE('_FIELD_CLASSVAR')
+# _FIELD_INITVAR = _FIELD_BASE('_FIELD_INITVAR')
 
 # The name of an attribute on the class where we store the Field
 # objects.  Also used to check if a class is a Data Class.
-_FIELDS = '__dataclass_fields__'
+# _FIELDS = '__dataclass_fields__'
 
 # The name of an attribute on the class that stores the parameters to
 # @dataclass.
-_PARAMS = '__dataclass_params__'
+# _PARAMS = '__dataclass_params__'
 
 # The name of the function, that if it exists, is called at the end of
 # __init__.
-_POST_INIT_NAME = '__post_init__'
+# _POST_INIT_NAME = '__post_init__'
 
 # String regex that string annotations for ClassVar or InitVar must match.
 # Allows "identifier.identifier[" or "identifier[".
