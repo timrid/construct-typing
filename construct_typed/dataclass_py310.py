@@ -8,7 +8,7 @@ import builtins
 import functools
 import abc
 import _thread
-from types import FunctionType, GenericAlias
+from types import FunctionType
 
 
 __all__ = ['dataclass',
@@ -229,7 +229,7 @@ class InitVar:
         self.type = type
 
     def __repr__(self):
-        if isinstance(self.type, type) and not isinstance(self.type, GenericAlias):
+        if isinstance(self.type, type):
             type_name = self.type.__name__
         else:
             # typing objects, e.g. List[int]
@@ -308,8 +308,6 @@ class Field:
             # There is a __set_name__ method on the descriptor, call
             # it.
             func(self.default, owner, name)
-
-    __class_getitem__ = classmethod(GenericAlias)
 
 
 class _DataclassParams:
@@ -1101,8 +1099,6 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen,
     if slots:
         cls = _add_slots(cls, frozen)
 
-    abc.update_abstractmethods(cls)
-
     return cls
 
 
@@ -1211,7 +1207,7 @@ def _is_dataclass_instance(obj):
 def is_dataclass(obj):
     """Returns True if obj is a dataclass or an instance of a
     dataclass."""
-    cls = obj if isinstance(obj, type) and not isinstance(obj, GenericAlias) else type(obj)
+    cls = obj if isinstance(obj, type) else type(obj)
     return hasattr(cls, _FIELDS)
 
 
