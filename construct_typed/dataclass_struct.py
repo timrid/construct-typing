@@ -31,29 +31,29 @@ def __dataclass_transform__(
 
 DATACLASS_METADATA_KEY = "__construct_typed_subcon"
 
-if t.TYPE_CHECKING:
-    # specialisation for constructs, that builds from none and dont have to be declared in the __init__ method
-    @t.overload
-    def csfield(
-        subcon: cs.Construct[ParsedType, None],
-        doc: t.Optional[str] = None,
-        parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
-        init: t.Literal[False] = False,
-    ) -> ParsedType:
-        ...
+# specialisation for constructs, that builds from none and dont have to be declared in the __init__ method
+@t.overload
+def csfield(
+    subcon: "cs.Construct[ParsedType, None]",
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    init: t.Literal[False] = False,
+) -> ParsedType:
+    ...
 
-    @t.overload
-    def csfield(
-        subcon: Construct[ParsedType, t.Any],
-        doc: t.Optional[str] = None,
-        parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
-        init: bool = True,
-    ) -> ParsedType:
-        ...
+
+@t.overload
+def csfield(
+    subcon: "Construct[ParsedType, t.Any]",
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    init: bool = True,
+) -> ParsedType:
+    ...
 
 
 def csfield(
-    subcon: Construct[ParsedType, t.Any],
+    subcon: "Construct[ParsedType, t.Any]",
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
     init: bool = True,
@@ -119,7 +119,9 @@ class DataclassConstruct(Adapter[t.Any, t.Any, T, T]):
         reverse: bool = False,
     ) -> None:
         if not issubclass(dc_type, DataclassStruct):
-            raise TypeError(f"'{repr(dc_type)}' has to be a subclass of 'DataclassStruct'")
+            raise TypeError(
+                f"'{repr(dc_type)}' has to be a subclass of 'DataclassStruct'"
+            )
         if not dataclasses.is_dataclass(dc_type):
             raise TypeError(f"'{repr(dc_type)}' has to be a 'dataclasses.dataclass'")
         self.dc_type = dc_type
@@ -155,7 +157,7 @@ class DataclassConstruct(Adapter[t.Any, t.Any, T, T]):
                 dc_init[field.name] = value
 
         # create object of dataclass
-        dc = self.dc_type(**dc_init)  # type: ignore
+        dc: T = self.dc_type(**dc_init)  # type: ignore
 
         # extract all other values from the container, an pass it to the dataclass
         for field in fields:
@@ -185,7 +187,7 @@ class DataclassConstruct(Adapter[t.Any, t.Any, T, T]):
 this_struct: Construct[t.Any, t.Any] = Construct()
 
 
-def _replace_this_struct(constr: "Construct[t.Any, t.Any]", replacement: t.Any):
+def _replace_this_struct(constr: "Construct[t.Any, t.Any]", replacement: t.Any) -> None:
     """Recursive search for `this_struct` in all SubConstructs and replace it with AttrsStruct"""
     subcon = getattr(constr, "subcon", None)
     if subcon is this_struct:
@@ -231,7 +233,7 @@ class DataclassStruct:
         cls,
         constr: "cs.Construct[t.Any, t.Any]" = this_struct,
         reverse_fields: bool = False,
-    ):
+    ) -> None:
         # validate types
         if not isinstance(constr, cs.Construct):  # type: ignore
             raise ValueError("`constr` parameter has to be an `Construct` object")
@@ -250,8 +252,6 @@ class DataclassStruct:
 
         # save construct format and make the class compatible to `Constructable` protocol
         setattr(cls, "__constr__", lambda: constr)
-
-        return cls
 
     # the `construct` library is using the [] access internally, so struct objects
     # should also make this possible and not only via the dot access.
@@ -336,6 +336,5 @@ class DataclassBitStruct(DataclassStruct):
         cls,
         constr: "cs.Construct[t.Any, t.Any]" = this_struct,
         reverse_fields: bool = False,
-    ):
+    ) -> None:
         cls = DataclassStruct.__init_subclass__.__func__(cls, cs.Bitwise(constr), reverse_fields)  # type: ignore
-        return cls

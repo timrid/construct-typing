@@ -12,22 +12,22 @@ class _EnumMeta(enum.EnumMeta):
     @classmethod
     def __prepare__(
         metacls,  # type: ignore
-        name: str,
-        bases: t.Tuple[type, ...],
+        __name: str,
+        __bases: t.Tuple[type, ...],
         **kwargs: t.Any,
     ) -> t.Mapping[str, object]:
         # This method is needed, because the original __prepare__ method does not accept kwargs.
-        return super().__prepare__(name, bases)
+        return super().__prepare__(__name, __bases)
 
     def __new__(
         metacls: t.Type[T],  # type: ignore
-        name: str,
-        bases: t.Tuple[type, ...],
-        namespace: t.Dict[str, t.Any],
+        __name: str,
+        __bases: t.Tuple[type, ...],
+        __namespace: t.Dict[str, t.Any],
         **kwargs: t.Any,
     ) -> T:
         # create new enum object
-        cls = super().__new__(metacls, name, bases, namespace)  # type: ignore
+        cls: T = super().__new__(metacls, __name, __bases, __namespace)  # type: ignore
 
         # if the `TEnum` class is created, there are no parameters
         if len(kwargs) == 0:
@@ -44,9 +44,9 @@ class _EnumMeta(enum.EnumMeta):
             raise ValueError(f"unsupported parameter(s) detected: {unsupp_parm}")
 
         # create construct format
-        if TEnum in bases:
+        if TEnum in __bases:
             enum_constr = TEnumConstruct(subcon, cls)  # type: ignore
-        elif TFlags in bases:
+        elif TFlags in __bases:
             enum_constr = TFlagsConstruct(subcon, cls)  # type: ignore
         else:
             enum_constr = None
@@ -74,7 +74,7 @@ class TEnum(enum.IntEnum, metaclass=_EnumMeta):
         def __init_subclass__(
             cls,
             subcon: "cs.Construct[t.Any, t.Any]",
-        ):
+        ) -> None:
             ...
 
         @classmethod
@@ -157,7 +157,7 @@ class TFlags(enum.IntFlag, metaclass=_EnumMeta):
         def __init_subclass__(
             cls,
             subcon: "cs.Construct[t.Any, t.Any]",
-        ):
+        ) -> None:
             ...
 
         @classmethod
