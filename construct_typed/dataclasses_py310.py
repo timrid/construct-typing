@@ -1,3 +1,4 @@
+# type: ignore
 import re
 import sys
 import copy
@@ -6,7 +7,6 @@ import inspect
 import keyword
 import builtins
 import functools
-import abc
 import _thread
 from types import FunctionType
 from dataclasses import (
