@@ -7,7 +7,7 @@ from construct_typed import (
     DataclassBitStruct,
     DataclassStruct,
     csfield,
-    construct,
+    constr,
     TEnum,
     TFlags,
 )
@@ -61,7 +61,7 @@ def test_dataclass_str_repr() -> None:
         width: int = csfield(cs.Int8ub)
         height: int = csfield(cs.Int8ub)
 
-    format = construct(Image)
+    format = constr(Image)
     obj = Image(width=3, height=2)
     assert (
         str(obj)
@@ -81,13 +81,13 @@ def test_dataclass_struct() -> None:
         pixels: bytes = csfield(cs.Bytes(cs.this.height * cs.this.width))
 
     common(
-        construct(Image),
+        constr(Image),
         b"\x01\x0212",
         Image(width=1, height=2, pixels=b"12"),
     )
 
     # check __getattr__
-    c = Image.__construct__()
+    c = Image.__constr__()
     assert c.width.name == "width"
     assert c.height.name == "height"
     assert c.width.subcon is cs.Int8ub
@@ -100,7 +100,7 @@ def test_dataclass_struct_reverse() -> None:
         b: int = csfield(cs.Int8ub)
 
     common(
-        construct(TestContainer),
+        constr(TestContainer),
         b"\x02\x00\x01",
         TestContainer(a=1, b=2),
         3,
@@ -114,10 +114,10 @@ def test_dataclass_struct_nested() -> None:
             c: bytes = csfield(cs.Bytes(cs.this._.length))
 
         length: int = csfield(cs.Byte)
-        a: InnerDataclass = csfield(construct(InnerDataclass))
+        a: InnerDataclass = csfield(constr(InnerDataclass))
 
     common(
-        construct(TestContainer),
+        constr(TestContainer),
         b"\x02\x01\xF1\xF2",
         TestContainer(length=2, a=TestContainer.InnerDataclass(b=1, c=b"\xF1\xF2")),
     )
@@ -135,7 +135,7 @@ def test_dataclass_struct_default_field() -> None:
         )
 
     common(
-        construct(Image),
+        constr(Image),
         b"\x02\x03\x00\x00\x00\x00\x00\x00",
         setattrs(Image(2, 3), pixels=bytes(6)),
         sample_building=Image(2, 3),
@@ -147,7 +147,7 @@ def test_dataclass_struct_const_field() -> None:
         const_field: t.Optional[bytes] = csfield(cs.Const(b"\x00"))
 
     common(
-        construct(TestContainer),
+        constr(TestContainer),
         bytes(1),
         setattrs(TestContainer(), const_field=b"\x00"),
         1,
@@ -155,7 +155,7 @@ def test_dataclass_struct_const_field() -> None:
 
     assert (
         raises(
-            construct(TestContainer).build,
+            constr(TestContainer).build,
             setattrs(TestContainer(), const_field=b"\x01"),
         )
         == cs.ConstError
@@ -167,7 +167,7 @@ def test_dataclass_struct_array_field() -> None:
         array_field: t.List[int] = csfield(cs.Array(5, cs.Int8ub))
 
     common(
-        construct(TestContainer),
+        constr(TestContainer),
         bytes(5),
         TestContainer(array_field=[0, 0, 0, 0, 0]),
         5,
@@ -182,7 +182,7 @@ def test_dataclass_struct_anonymus_fields_1() -> None:
         _4: None = csfield(cs.Terminated)
 
     common(
-        construct(TestContainer),
+        constr(TestContainer),
         bytes(2),
         setattrs(TestContainer(), _1=b"\x00"),
         cs.SizeofError,
@@ -196,7 +196,7 @@ def test_dataclass_struct_anonymus_fields_2() -> None:
         _3: None = csfield(cs.Pass)
         _4: None = csfield(cs.Terminated)
 
-    d = construct(TestContainer)
+    d = constr(TestContainer)
     assert d.build(TestContainer()) == d.build(TestContainer())
 
 
@@ -219,7 +219,7 @@ def test_dataclass_struct_overloaded_method() -> None:
         update: int = csfield(cs.Int8ul)
         values: int = csfield(cs.Int8ul)
 
-    d = construct(TestContainer)
+    d = constr(TestContainer)
     obj = d.parse(
         d.build(
             TestContainer(
@@ -266,7 +266,7 @@ def test_dataclass_struct_wrong_container() -> None:
         b: int = csfield(cs.Int8ub)
 
     assert (
-        raises(construct(TestContainer1).build, TestContainer2(a=1, b=2)) == TypeError
+        raises(constr(TestContainer1).build, TestContainer2(a=1, b=2)) == TypeError
     )
 
 
@@ -284,7 +284,7 @@ def test_dataclass_struct_doc() -> None:
             """,
         )
 
-    format = TestContainer.__construct__()
+    format = TestContainer.__constr__()
     common(format, b"\x00\x01\x02\x03", TestContainer(a=1, b=2, c=3), 4)
 
     assert format.subcon.a.docs == "This is the documentation of a"
@@ -302,14 +302,14 @@ def test_dataclass_bitstruct() -> None:
         c: int = csfield(cs.BitsInteger(8))
 
     common(
-        construct(TestContainer),
+        constr(TestContainer),
         b"\xFD\x12",
         TestContainer(a=0x7E, b=1, c=0x12),
         2,
     )
 
     # check __getattr__
-    c = TestContainer.__construct__()
+    c = TestContainer.__constr__()
     assert c.subcon.a.name == "a"
     assert c.subcon.b.name == "b"
     assert c.subcon.c.name == "c"
@@ -325,7 +325,7 @@ def test_tenum() -> None:
         four = 4
         eight = 8
 
-    d = construct(TestEnum)
+    d = constr(TestEnum)
 
     common(d, b"\x01", TestEnum.one, 1)
     common(d, b"\xff", TestEnum(255), 1)
@@ -344,18 +344,18 @@ def test_tenum_in_dataclass_struct() -> None:
         b = 2
 
     class TestContainer(DataclassStruct):
-        a: TestEnum = csfield(construct(TestEnum))
+        a: TestEnum = csfield(constr(TestEnum))
         b: int = csfield(cs.Int8ub)
 
     common(
-        construct(TestContainer),
+        constr(TestContainer),
         b"\x01\x02",
         TestContainer(a=TestEnum.a, b=2),
         2,
     )
 
     assert (
-        raises(construct(TestEnum).build, TestContainer(a=1, b=2)) == TypeError  # type: ignore
+        raises(constr(TestEnum).build, TestContainer(a=1, b=2)) == TypeError  # type: ignore
     )
 
 
@@ -366,7 +366,7 @@ def test_tflags() -> None:
         four = 4
         eight = 8
 
-    d = construct(TestFlags)
+    d = constr(TestFlags)
     common(d, b"\x03", TestFlags.one | TestFlags.two, 1)
     assert d.build(TestFlags(0)) == b"\x00"
     assert d.build(TestFlags.one | TestFlags.two) == b"\x03"

@@ -52,7 +52,7 @@ class _EnumMeta(enum.EnumMeta):
             enum_constr = None
 
         # save construct format and make the class compatible to `Constructable` protocol
-        setattr(cls, "__construct__", lambda: enum_constr)  # type: ignore
+        setattr(cls, "__constr__", lambda: enum_constr)  # type: ignore
 
         return cls
 
@@ -78,7 +78,7 @@ class TEnum(enum.IntEnum, metaclass=_EnumMeta):
             ...
 
         @classmethod
-        def __construct__(cls: "t.Type[EnumType]") -> "TEnumConstruct[EnumType]":
+        def __constr__(cls: "t.Type[EnumType]") -> "TEnumConstruct[EnumType]":
             ...
 
     # Extend the enum type with __missing__ method. So if a enum value
@@ -161,7 +161,7 @@ class TFlags(enum.IntFlag, metaclass=_EnumMeta):
             ...
 
         @classmethod
-        def __construct__(
+        def __constr__(
             cls: "t.Type[FlagsType]",
         ) -> "TFlagsConstruct[FlagsType]":
             ...

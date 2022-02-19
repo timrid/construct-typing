@@ -78,7 +78,7 @@ def csfield(
         init = True
         default = dataclasses.MISSING
 
-    # Set default values in case of special sucons
+    # Set default values in case of special subcons
     if isinstance(orig_subcon, cs.Const):
         const_subcon: "cs.Const[t.Any, t.Any, t.Any, t.Any]" = orig_subcon
         default = const_subcon.value
@@ -249,7 +249,7 @@ class DataclassStruct:
             _replace_this_struct(constr, dc_constr)
 
         # save construct format and make the class compatible to `Constructable` protocol
-        setattr(cls, "__construct__", lambda: constr)
+        setattr(cls, "__constr__", lambda: constr)
 
         return cls
 
@@ -303,7 +303,7 @@ class DataclassStruct:
     if t.TYPE_CHECKING:
 
         @classmethod
-        def __construct__(cls: t.Type[T]) -> "DataclassConstruct[T]":
+        def __constr__(cls: t.Type[T]) -> "DataclassConstruct[T]":
             ...
 
 

@@ -43,16 +43,16 @@ else:
 
 @t.runtime_checkable
 class Constructable(t.Protocol[ParsedType, BuildTypes]):
-    def __construct__(self) -> "Construct[ParsedType, BuildTypes]":
+    def __constr__(self) -> "Construct[ParsedType, BuildTypes]":
         raise NotImplementedError
 
 
-def construct(
+def constr(
     constr: t.Union[
         Constructable[ParsedType, BuildTypes], "Construct[ParsedType, BuildTypes]"
     ],
 ) -> Construct[ParsedType, BuildTypes]:
     """Get construct instance of `Constructable` or `Construct`"""
     if isinstance(constr, Constructable):
-        constr = constr.__construct__()
+        constr = constr.__constr__()
     return constr
