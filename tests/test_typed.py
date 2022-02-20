@@ -301,6 +301,29 @@ def test_dataclass_struct_doc() -> None:
     )
 
 
+def test_dataclass_bitwise() -> None:
+    class TestContainer(DataclassStruct, constr=lambda cls: cs.Bitwise(cls)):
+        a: int = csfield(cs.BitsInteger(7))
+        b: int = csfield(cs.Bit)
+        c: int = csfield(cs.BitsInteger(8))
+
+    common(
+        constr(TestContainer),
+        b"\xFD\x12",
+        TestContainer(a=0x7E, b=1, c=0x12),
+        2,
+    )
+
+    # check __getattr__
+    c = TestContainer.__constr__()
+    assert c.subcon.a.name == "a"
+    assert c.subcon.b.name == "b"
+    assert c.subcon.c.name == "c"
+    assert isinstance(c.subcon.a.subcon, cs.BitsInteger)
+    assert c.subcon.b.subcon is cs.Bit
+    assert isinstance(c.subcon.c.subcon, cs.BitsInteger)
+
+
 def test_dataclass_bitstruct() -> None:
     class TestContainer(DataclassBitStruct):
         a: int = csfield(cs.BitsInteger(7))

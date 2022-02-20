@@ -2,8 +2,7 @@ from construct_typed.generic import constr
 from construct_typed.dataclass_struct import (
     DataclassBitStruct,
     DataclassStruct,
-    csfield,
-    this_struct
+    csfield
 )
 from construct_typed.generic import (
     Adapter,
@@ -24,7 +23,6 @@ __all__ = [
     "TEnumConstruct",
     "TFlags",
     "TFlagsConstruct",
-    "this_struct",
     "Adapter",
     "ConstantOrContextLambda",
     "Construct",

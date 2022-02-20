@@ -224,23 +224,6 @@ class DataclassConstruct(Adapter[t.Any, t.Any, T, T]):
         return ret_dict
 
 
-# Helper object for defining the `constr` of a `struct`. Will be replaced with the proper construct, when class is created.
-this_struct: Construct[t.Any, t.Any] = Construct()
-
-
-def _replace_this_struct(constr: "Construct[t.Any, t.Any]", replacement: t.Any) -> None:
-    """Recursive search for `this_struct` in all SubConstructs and replace it with AttrsStruct"""
-    subcon = getattr(constr, "subcon", None)
-    if subcon is this_struct:
-        setattr(constr, "subcon", replacement)
-    elif subcon is not None:
-        _replace_this_struct(subcon, replacement)
-    else:
-        raise ValueError(
-            "Could not find `this_struct`. Only SubConstructs are supported"
-        )
-
-
 @__dataclass_transform__(field_descriptors=(csfield,), kw_only_default=True)
 class DataclassStruct:
     """
@@ -258,7 +241,7 @@ class DataclassStruct:
     are internally used for creating a `Const` or `Default` construct but also adds the default/const value to the DataclassStruct while creating
     it via __init__.
 
-    :param constr: This can be used if the structure is nested inside a Subconstruct. To represent this struct use the constant `this_struct`.
+    :param constr: Lambda for creating the construct object. This can be used if the DataclassStruct is nested inside a Subconstruct. Eg. `lambda cls: cs.Bitwise(cls)`.
     :param reverse: Flag if the fields of the dataclass should be reversed
 
     Example::
@@ -276,13 +259,15 @@ class DataclassStruct:
 
     @classmethod
     def __init_subclass__(
-        cls,
-        constr: "cs.Construct[t.Any, t.Any]" = this_struct,
+        cls: t.Type[T],
+        constr: t.Callable[
+            [DataclassConstruct[T]], Construct[t.Any, t.Any]
+        ] = lambda cls: cls,
         reverse_fields: bool = False,
     ) -> None:
         # validate types
-        if not isinstance(constr, cs.Construct):  # type: ignore
-            raise ValueError("`constr` parameter has to be an `Construct` object")
+        if not callable(constr):
+            raise ValueError("`constr` parameter has to be a function or lambda")
         if not isinstance(reverse_fields, bool):  # type: ignore
             raise ValueError("`reverse_fields` parameter has to be an `bool` object")
 
@@ -290,14 +275,12 @@ class DataclassStruct:
         dataclasses.dataclass(cls, kw_only=True)  # type: ignore
 
         # create construct format
-        dc_constr = DataclassConstruct(cls, reverse_fields)
-        if constr is this_struct:
-            constr = dc_constr
-        else:
-            _replace_this_struct(constr, dc_constr)
+        dc_constr = constr(DataclassConstruct(cls, reverse_fields))
+        if not isinstance(dc_constr, cs.Construct):  # type: ignore
+            raise ValueError("`constr` sould return a `Construct` object")
 
         # save construct format and make the class compatible to `Constructable` protocol
-        setattr(cls, "__constr__", lambda: constr)
+        setattr(cls, "__constr__", lambda: dc_constr)
 
     # the `construct` library is using the [] access internally, so struct objects
     # should also make this possible and not only via the dot access.
@@ -379,8 +362,10 @@ class DataclassBitStruct(DataclassStruct):
 
     @classmethod
     def __init_subclass__(
-        cls,
-        constr: "cs.Construct[t.Any, t.Any]" = this_struct,
+        cls: t.Type[T],
+        constr: t.Callable[
+            [DataclassConstruct[T]], Construct[t.Any, t.Any]
+        ] = lambda cls: cls,
         reverse_fields: bool = False,
     ) -> None:
-        cls = DataclassStruct.__init_subclass__.__func__(cls, cs.Bitwise(constr), reverse_fields)  # type: ignore
+        DataclassStruct.__init_subclass__.__func__(cls, lambda cls: cs.Bitwise(constr(cls)), reverse_fields)  # type: ignore
