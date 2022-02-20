@@ -1,9 +1,10 @@
 import enum
+import textwrap
 import typing as t
 
 import construct as cs
 
-from .generic import *
+from construct_typed.generic import *
 
 T = t.TypeVar("T")
 
@@ -26,6 +27,11 @@ class _EnumMeta(enum.EnumMeta):
         __namespace: t.Dict[str, t.Any],
         **kwargs: t.Any,
     ) -> T:
+        # get documentation before creating the enum
+        docs = ""
+        if "__doc__" in __namespace:
+            docs = textwrap.dedent(__namespace["__doc__"]).strip("\n")
+
         # create new enum object
         cls: T = super().__new__(metacls, __name, __bases, __namespace)  # type: ignore
 
@@ -49,7 +55,10 @@ class _EnumMeta(enum.EnumMeta):
         elif TFlags in __bases:
             enum_constr = TFlagsConstruct(subcon, cls)  # type: ignore
         else:
-            enum_constr = None
+            raise TypeError("neither `TEnum` nor `TFlags` in bases")
+
+        # save documentation
+        enum_constr.docs = docs
 
         # save construct format and make the class compatible to `Constructable` protocol
         setattr(cls, "__constr__", lambda: enum_constr)  # type: ignore

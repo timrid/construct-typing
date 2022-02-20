@@ -271,6 +271,11 @@ class DataclassStruct:
         if not isinstance(reverse_fields, bool):  # type: ignore
             raise ValueError("`reverse_fields` parameter has to be an `bool` object")
 
+        # get documentation before creating the dataclass
+        docs = ""
+        if cls.__doc__ is not None:
+            docs = textwrap.dedent(cls.__doc__).strip("\n")
+
         # create dataclass
         dataclasses.dataclass(cls, kw_only=True)  # type: ignore
 
@@ -278,6 +283,9 @@ class DataclassStruct:
         dc_constr = constr(DataclassConstruct(cls, reverse_fields))
         if not isinstance(dc_constr, cs.Construct):  # type: ignore
             raise ValueError("`constr` sould return a `Construct` object")
+
+        # save docs
+        dc_constr.docs = docs
 
         # save construct format and make the class compatible to `Constructable` protocol
         setattr(cls, "__constr__", lambda: dc_constr)

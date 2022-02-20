@@ -277,28 +277,39 @@ def test_dataclass_struct_wrong_container() -> None:
 
 
 def test_dataclass_struct_doc() -> None:
-    class TestContainer(DataclassStruct):
-        a: int = csfield(cs.Int16ub, doc="This is the documentation of a")
-        b: int = csfield(
-            cs.Int8ub, doc="This is the documentation of b\nwhich is multiline"
-        )
+    class TestContainer1(DataclassStruct):
+        """
+        Documentation of TestContainer
+        """
+
+        a: int = csfield(cs.Int16ub, doc="This is the doc of a")
+        b: int = csfield(cs.Int8ub, doc="This is the doc of b\nwhich is multiline")
         c: int = csfield(
             cs.Int8ub,
             doc="""
-            This is the documentation of c
+            This is the doc of c
             which is also multiline
             """,
         )
 
-    format = TestContainer.__constr__()
-    common(format, b"\x00\x01\x02\x03", TestContainer(a=1, b=2, c=3), 4)
+    format1 = TestContainer1.__constr__()
+    common(format1, b"\x00\x01\x02\x03", TestContainer1(a=1, b=2, c=3), 4)
 
-    assert format.subcon.a.docs == "This is the documentation of a"
-    assert format.subcon.b.docs == "This is the documentation of b\nwhich is multiline"
-    assert (
-        format.subcon.c.docs
-        == "This is the documentation of c\nwhich is also multiline"
-    )
+    assert format1.docs == "Documentation of TestContainer"
+    assert format1.subcon.a.docs == "This is the doc of a"
+    assert format1.subcon.b.docs == "This is the doc of b\nwhich is multiline"
+    assert format1.subcon.c.docs == "This is the doc of c\nwhich is also multiline"
+
+    class TestContainer2(DataclassStruct):
+        a: int = csfield(cs.Int16ub)
+        b: int = csfield(cs.Int8ub)
+        c: int = csfield(cs.Int8ub)
+
+    format2 = TestContainer2.__constr__()
+    assert format2.docs == ""
+    assert format2.subcon.a.docs == ""
+    assert format2.subcon.b.docs == ""
+    assert format2.subcon.c.docs == ""
 
 
 def test_dataclass_bitwise() -> None:
@@ -365,6 +376,24 @@ def test_tenum() -> None:
     assert d.parse(b"\xff") == 255
     assert int(d.parse(b"\xff")) == 255
     assert raises(d.build, 8) == TypeError
+
+
+def test_tenum_doc() -> None:
+    class TestEnum1(TEnum, subcon=cs.Byte):
+        """
+        TestEnum documentation
+        """
+
+        one = 1
+
+    d1 = constr(TestEnum1)
+    assert d1.docs == "TestEnum documentation"
+
+    class TestEnum2(TEnum, subcon=cs.Byte):
+        two = 2
+
+    d2 = constr(TestEnum2)
+    assert d2.docs == ""
 
 
 def test_tenum_in_dataclass_struct() -> None:
