@@ -39,63 +39,96 @@ def __dataclass_transform__(
 
 DATACLASS_METADATA_KEY = "__construct_typed_subcon"
 
-# specialisation for constructs, that builds from none and dont have to be declared in the __init__ method
+# specialisation for constructs, that builds from none -> this field does not appear in the __init__ method and has a default of None
 @t.overload
 def csfield(
     subcon: "cs.Construct[ParsedType, None]",
-    doc: t.Optional[str] = None,
-    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    *,
+    doc: t.Optional[str] = ...,
     init: t.Literal[False] = False,
-) -> ParsedType:
+    default: t.Literal[None] = None,
+    const: t.Literal[dataclasses.MISSING] = ...,
+) -> t.Optional[ParsedType]:
     ...
 
 
+# normal mode, when neither default nor const is defined -> this field does appear in the __init__ method but has no default value
 @t.overload
 def csfield(
     subcon: "Construct[ParsedType, t.Any]",
-    doc: t.Optional[str] = None,
-    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
-    init: bool = True,
+    *,
+    doc: t.Optional[str] = ...,
+    init: t.Literal[True] = ...,
+    default: t.Literal[dataclasses.MISSING] = ...,
+    const: t.Literal[dataclasses.MISSING] = ...,
+) -> ParsedType:
+    ...
+
+
+# specialisation when const parameter is set -> this field does not appear in the __init__ method but has a default value
+@t.overload
+def csfield(
+    subcon: "Construct[ParsedType, t.Any]",
+    *,
+    doc: t.Optional[str] = ...,
+    init: t.Literal[False] = ...,
+    default: t.Literal[dataclasses.MISSING] = ...,
+    const: t.Optional[ParsedType] = ...,
+) -> ParsedType:
+    ...
+
+
+# specialisation when default parameter is set -> this field does appear in the __init__ method and has a default value
+@t.overload
+def csfield(
+    subcon: "Construct[ParsedType, t.Any]",
+    *,
+    doc: t.Optional[str] = ...,
+    init: t.Literal[True] = ...,
+    default: t.Optional[ParsedType] = ...,
+    const: t.Literal[dataclasses.MISSING] = ...,
 ) -> ParsedType:
     ...
 
 
 def csfield(
     subcon: "Construct[ParsedType, t.Any]",
+    *,
     doc: t.Optional[str] = None,
-    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
-    init: bool = True,
+    init: bool = True,  # dont use this parameter, this is only used for `dataclass_transform`
+    default: t.Optional[t.Any] = dataclasses.MISSING,
+    const: t.Optional[t.Any] = dataclasses.MISSING,
 ) -> ParsedType:
     """
     Helper method for "DataclassStruct" and "DataclassBitStruct" to create the dataclass fields.
 
     This method also processes Const and Default, to pass these values als default values to the dataclass.
+
+    Only one of the parameters `default` or `const` can be vaild. They are mutually exclusive.
     """
-    orig_subcon = subcon
 
-    # Rename subcon, if doc or parsed are available
-    if (doc is not None) or (parsed is not None):
-        if doc is not None:
-            doc = textwrap.dedent(doc).strip("\n")
-        subcon = cs.Renamed(subcon, newdocs=doc, newparsed=parsed)
+    if (default is not dataclasses.MISSING) and (const is not dataclasses.MISSING):
+        raise ValueError("default and const are mutally exclusive")
 
-    if orig_subcon.flagbuildnone is True:
+    # Rename subcon, if doc is available
+    if doc is not None:
+        doc = textwrap.dedent(doc).strip("\n")
+        subcon = cs.Renamed(subcon, newdocs=doc)
+
+    if default is not dataclasses.MISSING:
+        init = True
+        default = default
+        subcon = cs.Default(subcon, default)
+    elif const is not dataclasses.MISSING:
+        init = False
+        default = const
+        subcon = cs.Const(const, subcon)
+    elif subcon.flagbuildnone is True:
         init = False
         default = None
     else:
         init = True
         default = dataclasses.MISSING
-
-    # Set default values in case of special subcons
-    if isinstance(orig_subcon, cs.Const):
-        const_subcon: "cs.Const[t.Any, t.Any, t.Any, t.Any]" = orig_subcon
-        default = const_subcon.value
-    elif isinstance(orig_subcon, cs.Default):
-        default_subcon: "cs.Default[t.Any, t.Any, t.Any, t.Any]" = orig_subcon
-        if callable(default_subcon.value):
-            default = None  # context lambda is only defined at parsing/building
-        else:
-            default = default_subcon.value
 
     return t.cast(
         ParsedType,

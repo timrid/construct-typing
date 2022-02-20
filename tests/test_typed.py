@@ -12,28 +12,36 @@ from construct_typed import (
     TFlags,
 )
 
-from .declarativeunittest import common, raises, setattrs
+from tests.declarativeunittest import common, raises, setattrs
 
 
 def test_dataclass_const_default() -> None:
     class ConstDefaultTest(DataclassStruct):
-        const_bytes: bytes = csfield(cs.Const(b"BMP"))
-        const_int: int = csfield(cs.Const(5, cs.Int8ub))
-        default_int: int = csfield(cs.Default(cs.Int8ub, 28))
-        default_lambda: bytes = csfield(
+        const_bytes: bytes = csfield(cs.Bytes(3), const=b"BMP")
+        const_int: int = csfield(cs.Int8ub, const=5)
+        default_int: int = csfield(cs.Int8ub, default=26)
+        default_lambda: t.Optional[bytes] = csfield(
             cs.Default(cs.Bytes(cs.this.const_int), lambda ctx: bytes(ctx.const_int))
         )
 
     a = ConstDefaultTest()
     assert a.const_bytes == b"BMP"
     assert a.const_int == 5
-    assert a.default_int == 28
+    assert a.default_int == 26
     assert a.default_lambda == None
+    a = ConstDefaultTest(default_int=1)
+    assert a.default_int == 1
+
+    format = ConstDefaultTest.__constr__()
+    assert isinstance(format.const_bytes.subcon, cs.Const)
+    assert isinstance(format.const_int.subcon, cs.Const)
+    assert isinstance(format.default_int.subcon, cs.Default)
+    assert isinstance(format.default_lambda.subcon, cs.Default)
 
 
 def test_dataclass_access() -> None:
     class TestTContainer(DataclassStruct):
-        a: t.Optional[int] = csfield(cs.Const(1, cs.Byte))
+        a: int = csfield(cs.Byte, const=1)
         b: int = csfield(cs.Int8ub)
 
     tcontainer = TestTContainer(b=2)
@@ -57,7 +65,7 @@ def test_dataclass_access() -> None:
 
 def test_dataclass_str_repr() -> None:
     class Image(DataclassStruct):
-        signature: t.Optional[bytes] = csfield(cs.Const(b"BMP"))
+        signature: bytes = csfield(cs.Bytes(3), const=b"BMP")
         width: int = csfield(cs.Int8ub)
         height: int = csfield(cs.Int8ub)
 
@@ -137,8 +145,8 @@ def test_dataclass_struct_default_field() -> None:
     common(
         constr(Image),
         b"\x02\x03\x00\x00\x00\x00\x00\x00",
-        setattrs(Image(2, 3), pixels=bytes(6)),
-        sample_building=Image(2, 3),
+        setattrs(Image(width=2, height=3), pixels=bytes(6)),
+        sample_building=Image(width=2, height=3),
     )
 
 
@@ -191,7 +199,7 @@ def test_dataclass_struct_anonymus_fields_1() -> None:
 
 def test_dataclass_struct_anonymus_fields_2() -> None:
     class TestContainer(DataclassStruct):
-        _1: int = csfield(cs.Computed(7))
+        _1: t.Optional[int] = csfield(cs.Computed(7))
         _2: t.Optional[bytes] = csfield(cs.Const(b"JPEG"))
         _3: None = csfield(cs.Pass)
         _4: None = csfield(cs.Terminated)
@@ -265,20 +273,18 @@ def test_dataclass_struct_wrong_container() -> None:
         a: int = csfield(cs.Int16ub)
         b: int = csfield(cs.Int8ub)
 
-    assert (
-        raises(constr(TestContainer1).build, TestContainer2(a=1, b=2)) == TypeError
-    )
+    assert raises(constr(TestContainer1).build, TestContainer2(a=1, b=2)) == TypeError
 
 
 def test_dataclass_struct_doc() -> None:
     class TestContainer(DataclassStruct):
-        a: int = csfield(cs.Int16ub, "This is the documentation of a")
+        a: int = csfield(cs.Int16ub, doc="This is the documentation of a")
         b: int = csfield(
             cs.Int8ub, doc="This is the documentation of b\nwhich is multiline"
         )
         c: int = csfield(
             cs.Int8ub,
-            """
+            doc="""
             This is the documentation of c
             which is also multiline
             """,
