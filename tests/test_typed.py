@@ -16,7 +16,7 @@ from tests.declarativeunittest import common, raises, setattrs
 
 
 def test_dataclass_const_default() -> None:
-    class ConstDefaultTest(DataclassStruct):
+    class TestDataclass(DataclassStruct):
         const_bytes: bytes = csfield(cs.Bytes(3), const=b"BMP")
         const_int: int = csfield(cs.Int8ub, const=5)
         default_int: int = csfield(cs.Int8ub, default=26)
@@ -24,43 +24,42 @@ def test_dataclass_const_default() -> None:
             cs.Default(cs.Bytes(cs.this.const_int), lambda ctx: bytes(ctx.const_int))
         )
 
-    a = ConstDefaultTest()
-    assert a.const_bytes == b"BMP"
-    assert a.const_int == 5
-    assert a.default_int == 26
-    assert a.default_lambda == None
-    a = ConstDefaultTest(default_int=1)
-    assert a.default_int == 1
+    obj = TestDataclass()
+    assert obj.const_bytes == b"BMP"
+    assert obj.const_int == 5
+    assert obj.default_int == 26
+    assert obj.default_lambda == None
+    obj = TestDataclass(default_int=1)
+    assert obj.default_int == 1
 
-    format = ConstDefaultTest.__constr__()
-    assert isinstance(format.const_bytes.subcon, cs.Const)
-    assert isinstance(format.const_int.subcon, cs.Const)
-    assert isinstance(format.default_int.subcon, cs.Default)
-    assert isinstance(format.default_lambda.subcon, cs.Default)
+    fmt = TestDataclass.__constr__()
+    assert isinstance(fmt.const_bytes.subcon, cs.Const)
+    assert isinstance(fmt.const_int.subcon, cs.Const)
+    assert isinstance(fmt.default_int.subcon, cs.Default)
+    assert isinstance(fmt.default_lambda.subcon, cs.Default)
 
 
 def test_dataclass_access() -> None:
-    class TestTContainer(DataclassStruct):
+    class TestDataclass(DataclassStruct):
         a: int = csfield(cs.Byte, const=1)
         b: int = csfield(cs.Int8ub)
 
-    tcontainer = TestTContainer(b=2)
+    obj = TestDataclass(b=2)
 
-    # tcontainer
-    assert tcontainer.a == 1
-    assert tcontainer["a"] == 1
-    assert tcontainer.b == 2
-    assert tcontainer["b"] == 2
+    assert obj.a == 1
+    assert obj["a"] == 1
+    assert obj.b == 2
+    assert obj["b"] == 2
 
-    tcontainer.a = 5
-    assert tcontainer.a == 5
-    assert tcontainer["a"] == 5
-    tcontainer["a"] = 6
-    assert tcontainer.a == 6
-    assert tcontainer["a"] == 6
+    obj.a = 5
+    assert obj.a == 5
+    assert obj["a"] == 5
+    obj["a"] = 6
+    assert obj.a == 6
+    assert obj["a"] == 6
 
     # wrong creation
-    assert raises(lambda: TestTContainer(a=0, b=1)) == TypeError  # type: ignore
+    assert raises(lambda: TestDataclass(a=0, b=1)) == TypeError  # type: ignore
 
 
 def test_dataclass_str_repr() -> None:
@@ -69,13 +68,13 @@ def test_dataclass_str_repr() -> None:
         width: int = csfield(cs.Int8ub)
         height: int = csfield(cs.Int8ub)
 
-    format = constr(Image)
+    fmt = constr(Image)
     obj = Image(width=3, height=2)
     assert (
         str(obj)
         == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
     )
-    obj = format.parse(format.build(obj))
+    obj = fmt.parse(fmt.build(obj))
     assert (
         str(obj)
         == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
@@ -95,28 +94,28 @@ def test_dataclass_struct() -> None:
     )
 
     # check __getattr__
-    c = Image.__constr__()
-    assert c.width.name == "width"
-    assert c.height.name == "height"
-    assert c.width.subcon is cs.Int8ub
-    assert c.height.subcon is cs.Int8ub
+    fmt = Image.__constr__()
+    assert fmt.width.name == "width"
+    assert fmt.height.name == "height"
+    assert fmt.width.subcon is cs.Int8ub
+    assert fmt.height.subcon is cs.Int8ub
 
 
 def test_dataclass_struct_reverse() -> None:
-    class TestContainer(DataclassStruct, reverse_fields=True):
+    class TestDataclass(DataclassStruct, reverse_fields=True):
         a: int = csfield(cs.Int16ub)
         b: int = csfield(cs.Int8ub)
 
     common(
-        constr(TestContainer),
+        constr(TestDataclass),
         b"\x02\x00\x01",
-        TestContainer(a=1, b=2),
+        TestDataclass(a=1, b=2),
         3,
     )
 
 
 def test_dataclass_struct_nested() -> None:
-    class TestContainer(DataclassStruct):
+    class TestDataclass(DataclassStruct):
         class InnerDataclass(DataclassStruct):
             b: int = csfield(cs.Byte)
             c: bytes = csfield(cs.Bytes(cs.this._.length))
@@ -125,9 +124,9 @@ def test_dataclass_struct_nested() -> None:
         a: InnerDataclass = csfield(constr(InnerDataclass))
 
     common(
-        constr(TestContainer),
+        constr(TestDataclass),
         b"\x02\x01\xF1\xF2",
-        TestContainer(length=2, a=TestContainer.InnerDataclass(b=1, c=b"\xF1\xF2")),
+        TestDataclass(length=2, a=TestDataclass.InnerDataclass(b=1, c=b"\xF1\xF2")),
     )
 
 
@@ -151,67 +150,67 @@ def test_dataclass_struct_default_field() -> None:
 
 
 def test_dataclass_struct_const_field() -> None:
-    class TestContainer(DataclassStruct):
+    class TestDataclass(DataclassStruct):
         const_field: t.Optional[bytes] = csfield(cs.Const(b"\x00"))
 
     common(
-        constr(TestContainer),
+        constr(TestDataclass),
         bytes(1),
-        setattrs(TestContainer(), const_field=b"\x00"),
+        setattrs(TestDataclass(), const_field=b"\x00"),
         1,
     )
 
     assert (
         raises(
-            constr(TestContainer).build,
-            setattrs(TestContainer(), const_field=b"\x01"),
+            constr(TestDataclass).build,
+            setattrs(TestDataclass(), const_field=b"\x01"),
         )
         == cs.ConstError
     )
 
 
 def test_dataclass_struct_array_field() -> None:
-    class TestContainer(DataclassStruct):
+    class TestDataclass(DataclassStruct):
         array_field: t.List[int] = csfield(cs.Array(5, cs.Int8ub))
 
     common(
-        constr(TestContainer),
+        constr(TestDataclass),
         bytes(5),
-        TestContainer(array_field=[0, 0, 0, 0, 0]),
+        TestDataclass(array_field=[0, 0, 0, 0, 0]),
         5,
     )
 
 
 def test_dataclass_struct_anonymus_fields_1() -> None:
-    class TestContainer(DataclassStruct):
+    class TestDataclass(DataclassStruct):
         _1: t.Optional[bytes] = csfield(cs.Const(b"\x00"))
         _2: None = csfield(cs.Padding(1))
         _3: None = csfield(cs.Pass)
         _4: None = csfield(cs.Terminated)
 
     common(
-        constr(TestContainer),
+        constr(TestDataclass),
         bytes(2),
-        setattrs(TestContainer(), _1=b"\x00"),
+        setattrs(TestDataclass(), _1=b"\x00"),
         cs.SizeofError,
     )
 
 
 def test_dataclass_struct_anonymus_fields_2() -> None:
-    class TestContainer(DataclassStruct):
+    class TestDataclass(DataclassStruct):
         _1: t.Optional[int] = csfield(cs.Computed(7))
         _2: t.Optional[bytes] = csfield(cs.Const(b"JPEG"))
         _3: None = csfield(cs.Pass)
         _4: None = csfield(cs.Terminated)
 
-    d = constr(TestContainer)
-    assert d.build(TestContainer()) == d.build(TestContainer())
+    fmt = constr(TestDataclass)
+    assert fmt.build(TestDataclass()) == fmt.build(TestDataclass())
 
 
 def test_dataclass_struct_overloaded_method() -> None:
     # Test dot access to some names that are not accessable via dot
     # in the original 'cs.Container'.
-    class TestContainer(DataclassStruct):
+    class TestDataclass(DataclassStruct):
         clear: int = csfield(cs.Int8ul)
         copy: int = csfield(cs.Int8ul)
         fromkeys: int = csfield(cs.Int8ul)
@@ -227,10 +226,10 @@ def test_dataclass_struct_overloaded_method() -> None:
         update: int = csfield(cs.Int8ul)
         values: int = csfield(cs.Int8ul)
 
-    d = constr(TestContainer)
-    obj = d.parse(
-        d.build(
-            TestContainer(
+    fmt = constr(TestDataclass)
+    obj = fmt.parse(
+        fmt.build(
+            TestDataclass(
                 clear=1,
                 copy=2,
                 fromkeys=3,
@@ -277,9 +276,9 @@ def test_dataclass_struct_wrong_container() -> None:
 
 
 def test_dataclass_struct_doc() -> None:
-    class TestContainer1(DataclassStruct):
+    class TestDataclass1(DataclassStruct):
         """
-        Documentation of TestContainer
+        Documentation of TestDataclass1
         """
 
         a: int = csfield(cs.Int16ub, doc="This is the doc of a")
@@ -292,70 +291,70 @@ def test_dataclass_struct_doc() -> None:
             """,
         )
 
-    format1 = TestContainer1.__constr__()
-    common(format1, b"\x00\x01\x02\x03", TestContainer1(a=1, b=2, c=3), 4)
+    fmt1 = TestDataclass1.__constr__()
+    common(fmt1, b"\x00\x01\x02\x03", TestDataclass1(a=1, b=2, c=3), 4)
 
-    assert format1.docs == "Documentation of TestContainer"
-    assert format1.subcon.a.docs == "This is the doc of a"
-    assert format1.subcon.b.docs == "This is the doc of b\nwhich is multiline"
-    assert format1.subcon.c.docs == "This is the doc of c\nwhich is also multiline"
+    assert fmt1.docs == "Documentation of TestDataclass1"
+    assert fmt1.subcon.a.docs == "This is the doc of a"
+    assert fmt1.subcon.b.docs == "This is the doc of b\nwhich is multiline"
+    assert fmt1.subcon.c.docs == "This is the doc of c\nwhich is also multiline"
 
-    class TestContainer2(DataclassStruct):
+    class TestDataclass2(DataclassStruct):
         a: int = csfield(cs.Int16ub)
         b: int = csfield(cs.Int8ub)
         c: int = csfield(cs.Int8ub)
 
-    format2 = TestContainer2.__constr__()
-    assert format2.docs == ""
-    assert format2.subcon.a.docs == ""
-    assert format2.subcon.b.docs == ""
-    assert format2.subcon.c.docs == ""
+    fmt2 = TestDataclass2.__constr__()
+    assert fmt2.docs == ""
+    assert fmt2.subcon.a.docs == ""
+    assert fmt2.subcon.b.docs == ""
+    assert fmt2.subcon.c.docs == ""
 
 
 def test_dataclass_bitwise() -> None:
-    class TestContainer(DataclassStruct, constr=lambda cls: cs.Bitwise(cls)):
+    class TestDataclass(DataclassStruct, constr=lambda cls: cs.Bitwise(cls)):
         a: int = csfield(cs.BitsInteger(7))
         b: int = csfield(cs.Bit)
         c: int = csfield(cs.BitsInteger(8))
 
     common(
-        constr(TestContainer),
+        constr(TestDataclass),
         b"\xFD\x12",
-        TestContainer(a=0x7E, b=1, c=0x12),
+        TestDataclass(a=0x7E, b=1, c=0x12),
         2,
     )
 
     # check __getattr__
-    c = TestContainer.__constr__()
-    assert c.subcon.a.name == "a"
-    assert c.subcon.b.name == "b"
-    assert c.subcon.c.name == "c"
-    assert isinstance(c.subcon.a.subcon, cs.BitsInteger)
-    assert c.subcon.b.subcon is cs.Bit
-    assert isinstance(c.subcon.c.subcon, cs.BitsInteger)
+    fmt = TestDataclass.__constr__()
+    assert fmt.subcon.a.name == "a"
+    assert fmt.subcon.b.name == "b"
+    assert fmt.subcon.c.name == "c"
+    assert isinstance(fmt.subcon.a.subcon, cs.BitsInteger)
+    assert fmt.subcon.b.subcon is cs.Bit
+    assert isinstance(fmt.subcon.c.subcon, cs.BitsInteger)
 
 
 def test_dataclass_bitstruct() -> None:
-    class TestContainer(DataclassBitStruct):
+    class TestDataclass(DataclassBitStruct):
         a: int = csfield(cs.BitsInteger(7))
         b: int = csfield(cs.Bit)
         c: int = csfield(cs.BitsInteger(8))
 
     common(
-        constr(TestContainer),
+        constr(TestDataclass),
         b"\xFD\x12",
-        TestContainer(a=0x7E, b=1, c=0x12),
+        TestDataclass(a=0x7E, b=1, c=0x12),
         2,
     )
 
     # check __getattr__
-    c = TestContainer.__constr__()
-    assert c.subcon.a.name == "a"
-    assert c.subcon.b.name == "b"
-    assert c.subcon.c.name == "c"
-    assert isinstance(c.subcon.a.subcon, cs.BitsInteger)
-    assert c.subcon.b.subcon is cs.Bit
-    assert isinstance(c.subcon.c.subcon, cs.BitsInteger)
+    fmt = TestDataclass.__constr__()
+    assert fmt.subcon.a.name == "a"
+    assert fmt.subcon.b.name == "b"
+    assert fmt.subcon.c.name == "c"
+    assert isinstance(fmt.subcon.a.subcon, cs.BitsInteger)
+    assert fmt.subcon.b.subcon is cs.Bit
+    assert isinstance(fmt.subcon.c.subcon, cs.BitsInteger)
 
 
 def test_tenum() -> None:
@@ -365,17 +364,17 @@ def test_tenum() -> None:
         four = 4
         eight = 8
 
-    d = constr(TestEnum)
+    fmt = constr(TestEnum)
 
-    common(d, b"\x01", TestEnum.one, 1)
-    common(d, b"\xff", TestEnum(255), 1)
-    assert d.parse(b"\x01") == TestEnum.one
-    assert d.parse(b"\x01") == 1
-    assert int(d.parse(b"\x01")) == 1
-    assert d.parse(b"\xff") == TestEnum(255)
-    assert d.parse(b"\xff") == 255
-    assert int(d.parse(b"\xff")) == 255
-    assert raises(d.build, 8) == TypeError
+    common(fmt, b"\x01", TestEnum.one, 1)
+    common(fmt, b"\xff", TestEnum(255), 1)
+    assert fmt.parse(b"\x01") == TestEnum.one
+    assert fmt.parse(b"\x01") == 1
+    assert int(fmt.parse(b"\x01")) == 1
+    assert fmt.parse(b"\xff") == TestEnum(255)
+    assert fmt.parse(b"\xff") == 255
+    assert int(fmt.parse(b"\xff")) == 255
+    assert raises(fmt.build, 8) == TypeError
 
 
 def test_tenum_doc() -> None:
@@ -401,19 +400,19 @@ def test_tenum_in_dataclass_struct() -> None:
         a = 1
         b = 2
 
-    class TestContainer(DataclassStruct):
+    class TestDataclass(DataclassStruct):
         a: TestEnum = csfield(constr(TestEnum))
         b: int = csfield(cs.Int8ub)
 
     common(
-        constr(TestContainer),
+        constr(TestDataclass),
         b"\x01\x02",
-        TestContainer(a=TestEnum.a, b=2),
+        TestDataclass(a=TestEnum.a, b=2),
         2,
     )
 
     assert (
-        raises(constr(TestEnum).build, TestContainer(a=1, b=2)) == TypeError  # type: ignore
+        raises(constr(TestEnum).build, TestDataclass(a=1, b=2)) == TypeError  # type: ignore
     )
 
 
@@ -424,12 +423,12 @@ def test_tflags() -> None:
         four = 4
         eight = 8
 
-    d = constr(TestFlags)
-    common(d, b"\x03", TestFlags.one | TestFlags.two, 1)
-    assert d.build(TestFlags(0)) == b"\x00"
-    assert d.build(TestFlags.one | TestFlags.two) == b"\x03"
-    assert d.build(TestFlags(8)) == b"\x08"
-    assert d.build(TestFlags(1 | 2)) == b"\x03"
-    assert d.build(TestFlags(255)) == b"\xff"
-    assert d.build(TestFlags.eight) == b"\x08"
-    assert raises(d.build, 2) == TypeError
+    fmt = constr(TestFlags)
+    common(fmt, b"\x03", TestFlags.one | TestFlags.two, 1)
+    assert fmt.build(TestFlags(0)) == b"\x00"
+    assert fmt.build(TestFlags.one | TestFlags.two) == b"\x03"
+    assert fmt.build(TestFlags(8)) == b"\x08"
+    assert fmt.build(TestFlags(1 | 2)) == b"\x03"
+    assert fmt.build(TestFlags(255)) == b"\xff"
+    assert fmt.build(TestFlags.eight) == b"\x08"
+    assert raises(fmt.build, 2) == TypeError
