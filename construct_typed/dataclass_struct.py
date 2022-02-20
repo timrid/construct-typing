@@ -253,6 +253,11 @@ class DataclassStruct:
 
     Parses to a dataclasses.dataclass instance, and builds from such instance. Size is the sum of all subcon sizes, unless any subcon raises SizeofError.
 
+    Every construct that builds from None (eg. Const, Default, Index, Rebuild, Check, Checksum, ...) will automatically initialised with None.
+    If a default or const value should be used in a DataclassStruct the best is to use the `default` or `const` parameters of `csfield`. These
+    are internally used for creating a `Const` or `Default` construct but also adds the default/const value to the DataclassStruct while creating
+    it via __init__.
+
     :param constr: This can be used if the structure is nested inside a Subconstruct. To represent this struct use the constant `this_struct`.
     :param reverse: Flag if the fields of the dataclass should be reversed
 
