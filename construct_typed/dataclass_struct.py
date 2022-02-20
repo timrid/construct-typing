@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # pyright: strict
 import dataclasses
+import sys
 import textwrap
 import typing as t
 
@@ -13,6 +14,13 @@ from construct.lib.containers import (
 from construct.lib.py3compat import bytestringtype, reprstring, unicodestringtype
 
 from construct_typed.generic import Adapter, Construct, Context, ParsedType, PathType
+
+# The `key_only` keyword is possible since python 3.10. To support it in python 3.8 & 3.9
+# the dataclasses module from python 3.10 is copied to this package.
+if sys.version_info >= (3, 10) or t.TYPE_CHECKING:
+    import dataclasses
+else:
+    import construct_typed.dataclasses_py310 as dataclasses
 
 T = t.TypeVar("T")
 
@@ -200,7 +208,7 @@ def _replace_this_struct(constr: "Construct[t.Any, t.Any]", replacement: t.Any) 
         )
 
 
-@__dataclass_transform__(field_descriptors=(csfield,))
+@__dataclass_transform__(field_descriptors=(csfield,), kw_only_default=True)
 class DataclassStruct:
     """
     Adapter for a dataclasses for optimised type hints / static autocompletion in comparision to the original Struct.
@@ -241,7 +249,7 @@ class DataclassStruct:
             raise ValueError("`reverse_fields` parameter has to be an `bool` object")
 
         # create dataclass
-        cls = dataclasses.dataclass(cls)
+        dataclasses.dataclass(cls, kw_only=True)  # type: ignore
 
         # create construct format
         dc_constr = DataclassConstruct(cls, reverse_fields)
