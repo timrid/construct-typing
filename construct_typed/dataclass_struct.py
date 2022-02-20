@@ -4,6 +4,7 @@ import dataclasses
 import sys
 import textwrap
 import typing as t
+import enum
 
 import construct as cs
 from construct.lib.containers import (
@@ -37,17 +38,22 @@ def __dataclass_transform__(
     return lambda a: a
 
 
+# this is nessesary, because typing.Literal type has to be an enum
+class Flag(enum.Enum):
+    MISSING = dataclasses.MISSING
+
+
 DATACLASS_METADATA_KEY = "__construct_typed_subcon"
 
 # specialisation for constructs, that builds from none -> this field does not appear in the __init__ method and has a default of None
 @t.overload
-def csfield(
-    subcon: "cs.Construct[ParsedType, None]",
+def csfield(  # type: ignore
+    subcon: "Construct[ParsedType, None]",
     *,
     doc: t.Optional[str] = ...,
-    init: t.Literal[False] = False,
-    default: t.Literal[None] = None,
-    const: t.Literal[dataclasses.MISSING] = ...,
+    init: t.Literal[False] = ...,
+    default: t.Literal[None] = ...,
+    const: t.Literal[Flag.MISSING] = ...,
 ) -> t.Optional[ParsedType]:
     ...
 
@@ -59,8 +65,8 @@ def csfield(
     *,
     doc: t.Optional[str] = ...,
     init: t.Literal[True] = ...,
-    default: t.Literal[dataclasses.MISSING] = ...,
-    const: t.Literal[dataclasses.MISSING] = ...,
+    default: t.Literal[Flag.MISSING] = ...,
+    const: t.Literal[Flag.MISSING] = ...,
 ) -> ParsedType:
     ...
 
@@ -72,7 +78,7 @@ def csfield(
     *,
     doc: t.Optional[str] = ...,
     init: t.Literal[False] = ...,
-    default: t.Literal[dataclasses.MISSING] = ...,
+    default: t.Literal[Flag.MISSING] = ...,
     const: t.Optional[ParsedType] = ...,
 ) -> ParsedType:
     ...
@@ -86,7 +92,7 @@ def csfield(
     doc: t.Optional[str] = ...,
     init: t.Literal[True] = ...,
     default: t.Optional[ParsedType] = ...,
-    const: t.Literal[dataclasses.MISSING] = ...,
+    const: t.Literal[Flag.MISSING] = ...,
 ) -> ParsedType:
     ...
 
@@ -95,10 +101,10 @@ def csfield(
     subcon: "Construct[ParsedType, t.Any]",
     *,
     doc: t.Optional[str] = None,
-    init: bool = True,  # dont use this parameter, this is only used for `dataclass_transform`
-    default: t.Optional[t.Any] = dataclasses.MISSING,
-    const: t.Optional[t.Any] = dataclasses.MISSING,
-) -> ParsedType:
+    init: bool = True,  # dont use `init`, this is only used for `dataclass_transform`
+    default: t.Optional[t.Any] = Flag.MISSING,
+    const: t.Optional[t.Any] = Flag.MISSING,
+) -> t.Optional[ParsedType]:
     """
     Helper method for "DataclassStruct" and "DataclassBitStruct" to create the dataclass fields.
 
@@ -107,7 +113,7 @@ def csfield(
     Only one of the parameters `default` or `const` can be vaild. They are mutually exclusive.
     """
 
-    if (default is not dataclasses.MISSING) and (const is not dataclasses.MISSING):
+    if (default is not Flag.MISSING) and (const is not Flag.MISSING):
         raise ValueError("default and const are mutally exclusive")
 
     # Rename subcon, if doc is available
@@ -115,11 +121,11 @@ def csfield(
         doc = textwrap.dedent(doc).strip("\n")
         subcon = cs.Renamed(subcon, newdocs=doc)
 
-    if default is not dataclasses.MISSING:
+    if default is not Flag.MISSING:
         init = True
         default = default
         subcon = cs.Default(subcon, default)
-    elif const is not dataclasses.MISSING:
+    elif const is not Flag.MISSING:
         init = False
         default = const
         subcon = cs.Const(const, subcon)
@@ -131,7 +137,7 @@ def csfield(
         default = dataclasses.MISSING
 
     return t.cast(
-        ParsedType,
+        t.Optional[ParsedType],
         dataclasses.field(
             default=default,
             init=init,
