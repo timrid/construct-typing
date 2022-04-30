@@ -107,6 +107,7 @@ def csfield(
         if callable(default_subcon.value):
             default = None  # context lambda is only defined at parsing/building
         else:
+            init = True
             default = default_subcon.value
 
     return t.cast(
