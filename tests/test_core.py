@@ -1213,7 +1213,7 @@ def test_checksum() -> None:
 def test_checksum_nonbytes_issue_323() -> None:
     d = Struct(
         "vals" / Byte[2],
-        "checksum" / Checksum(Byte, lambda vals: sum(vals) & 0xFF, this.vals),
+        "checksum" / Checksum(Byte, lambda vals: int(sum(vals)) & 0xFF, this.vals),
     )
     assert d.parse(b"\x00\x00\x00") == Container(vals=[0, 0], checksum=0)
     assert raises(d.parse, b"\x00\x00\x01") == ChecksumError
@@ -1704,7 +1704,7 @@ def test_from_issue_324() -> None:
         )),
         "checksum" / Checksum(
             Byte,
-            lambda data: sum(data) & 0xFF,
+            lambda data: int(sum(data)) & 0xFF,
             this.vals.data
         ),
     )
