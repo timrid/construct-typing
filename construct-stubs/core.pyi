@@ -482,8 +482,8 @@ class RepeatUntil(
     Subconstruct[
         SubconParsedType,
         SubconBuildTypes,
-        ListContainer[SubconParsedType],
-        t.List[SubconBuildTypes],
+        ParsedType,
+        BuildTypes,
     ]
 ):
     predicate: t.Union[
@@ -491,8 +491,8 @@ class RepeatUntil(
         t.Callable[[SubconParsedType, ListContainer[SubconParsedType], Context], bool],
     ]
     discard: bool
-    def __init__(
-        self,
+    def __new__(
+        cls, 
         predicate: t.Union[
             bool,
             t.Callable[
@@ -501,7 +501,12 @@ class RepeatUntil(
         ],
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         discard: bool = ...,
-    ) -> None: ...
+    ) -> RepeatUntil[
+        SubconParsedType,
+        SubconBuildTypes,
+        ListContainer[SubconParsedType],
+        t.List[SubconBuildTypes],
+    ]: ...
 
 # ===============================================================================
 # specials
@@ -994,7 +999,7 @@ class Restreamed(
     ) -> None: ...
 
 class ProcessXor(
-    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconParsedType]
+    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
 ):
     padfunc: ConstantOrContextLambda2[t.Union[int, bytes]]
     def __new__(
@@ -1004,7 +1009,7 @@ class ProcessXor(
     ) -> ProcessXor[SubconParsedType, SubconBuildTypes]: ...
 
 class ProcessRotateLeft(
-    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconParsedType]
+    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
 ):
     amount: ConstantOrContextLambda2[int]
     group: ConstantOrContextLambda2[int]
