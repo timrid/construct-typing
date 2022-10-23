@@ -1,6 +1,6 @@
 construct==2.10.67
 pytest>=6.2.0
-numpy==1.21.*
+numpy==1.23.*
 arrow
 ruamel.yaml
 cloudpickle
