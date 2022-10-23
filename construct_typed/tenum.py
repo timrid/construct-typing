@@ -18,11 +18,11 @@ class EnumBase(enum.IntEnum):
     @classmethod
     def _missing_(cls, value: t.Any) -> t.Optional["EnumBase"]:
         if isinstance(value, int):
-            return cls._create_pseudo_member_(value)
+            return cls._create_pseudo_member(value)
         return None  # will raise the ValueError in Enum.__new__
 
     @classmethod
-    def _create_pseudo_member_(cls, value: int) -> "EnumBase":
+    def _create_pseudo_member(cls, value: int) -> "EnumBase":
         pseudo_member = cls._value2member_map_.get(value, None)  # type: ignore
         if pseudo_member is None:
             new_member = int.__new__(cls, value)
