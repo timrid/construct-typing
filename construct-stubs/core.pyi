@@ -182,9 +182,9 @@ class Subconstruct(
 class Adapter(
     Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
 ):
-    def __new__(
-        cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
-    ) -> Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
+    def __init__(
+        self, subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> None: ...
     def _decode(
         self, obj: SubconBuildTypes, context: Context, path: PathType
     ) -> ParsedType: ...
@@ -391,6 +391,12 @@ class Enum(Adapter[int, int, ParsedType, BuildTypes]):
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
         **mapping: int
     ) -> Enum[t.Union[EnumInteger, EnumIntegerString], t.Union[int, str]]: ...
+    def __init__(
+        self,
+        subcon: Construct[int, int],
+        *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
+        **mapping: int
+    ) -> None: ...
     def __getattr__(self, name: str) -> EnumIntegerString: ...
 
 class BitwisableString(str):
@@ -405,6 +411,12 @@ class FlagsEnum(Adapter[int, int, ParsedType, BuildTypes]):
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
         **flags: int
     ) -> FlagsEnum[Container[bool], t.Union[int, str, t.Dict[str, bool]]]: ...
+    def __init__(
+        self,
+        subcon: Construct[int, int],
+        *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
+        **flags: int
+    ) -> None: ...
     def __getattr__(self, name: str) -> BitwisableString: ...
 
 class Mapping(Adapter[SubconParsedType, SubconBuildTypes, t.Any, t.Any]):
@@ -415,6 +427,11 @@ class Mapping(Adapter[SubconParsedType, SubconBuildTypes, t.Any, t.Any]):
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         mapping: t.Dict[t.Any, t.Any],
     ) -> Mapping[t.Any, t.Any]: ...
+    def __init__(
+        self,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        mapping: t.Dict[t.Any, t.Any],
+    ) -> None: ...
 
 # ===============================================================================
 # structures and sequences
@@ -492,7 +509,7 @@ class RepeatUntil(
     ]
     discard: bool
     def __new__(
-        cls, 
+        cls,
         predicate: t.Union[
             bool,
             t.Callable[
@@ -615,6 +632,12 @@ class NamedTuple(
         t.Tuple[t.Any, ...],
         t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]],
     ]: ...
+    def __init__(
+        self,
+        tuplename: str,
+        tuplefields: str,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
 
 if sys.version_info >= (3, 8):
     MSDOS = t.Literal["msdos"]
@@ -1121,30 +1144,28 @@ class LazyBound(Construct[ParsedType, BuildTypes]):
 # adapters and validators
 # ===============================================================================
 class ExprAdapter(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
-    def __new__(
-        cls,
+    def __init__(
+        self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         decoder: t.Callable[[SubconParsedType, Context], ParsedType],
         encoder: t.Callable[[BuildTypes, Context], SubconBuildTypes],
-    ) -> ExprAdapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
+    ) -> None: ...
 
 class ExprSymmetricAdapter(
     ExprAdapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]
 ):
-    def __new__(
-        cls,
+    def __init__(
+        self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         encoder: t.Callable[[BuildTypes, Context], SubconBuildTypes],
-    ) -> ExprSymmetricAdapter[
-        SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes
-    ]: ...
+    ) -> None: ...
 
 class ExprValidator(Validator[SubconParsedType, SubconBuildTypes]):
-    def __new__(
-        cls,
+    def __init__(
+        self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         validator: t.Callable[[SubconParsedType, Context], bool],
-    ) -> ExprValidator[SubconParsedType, SubconBuildTypes]: ...
+    ) -> None: ...
 
 def OneOf(
     subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1186,12 +1207,34 @@ class Slicing(
         step: int = ...,
         empty: t.Optional[SubconParsedType] = ...,
     ) -> Slicing[ListContainer[SubconParsedType], t.List[SubconBuildTypes]]: ...
+    def __init__(
+        self,
+        subcon: t.Union[
+            Array[
+                SubconParsedType,
+                SubconBuildTypes,
+                ListContainer[SubconParsedType],
+                t.List[SubconBuildTypes],
+            ],
+            GreedyRange[
+                SubconParsedType,
+                SubconBuildTypes,
+                ListContainer[SubconParsedType],
+                t.List[SubconBuildTypes],
+            ],
+        ],
+        count: int,
+        start: t.Optional[int],
+        stop: t.Optional[int],
+        step: int = ...,
+        empty: t.Optional[SubconParsedType] = ...,
+    ) -> None: ...
 
 class Indexing(
     Adapter[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
 ):
-    def __new__(
-        cls,
+    def __init__(
+        self,
         subcon: t.Union[
             Array[
                 SubconParsedType,
@@ -1209,4 +1252,4 @@ class Indexing(
         count: int,
         index: int,
         empty: t.Optional[SubconParsedType] = ...,
-    ) -> Indexing[SubconParsedType, SubconBuildTypes]: ...
+    ) -> None: ...
