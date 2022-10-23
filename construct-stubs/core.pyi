@@ -25,6 +25,11 @@ from construct.lib import (
 #   - Higher Kinded Types: https://github.com/python/typing/issues/548
 #   - Higher Kinded Types: https://sobolevn.me/2020/10/higher-kinded-types-in-python
 
+# The type checkers mypy and pyright/pylance unfortunately work a little bit different with __init__ and __new__.
+# For supporting some constructs (eg. Enum, NamedTuple, Slicing) in mypy the __init__ self parameter has to have a
+# type hint. But for supporting pyright/pylance, the same type hint has to be used as the return type of __new__.
+# (see discussion here: https://github.com/python/typeshed/issues/4846).
+
 StreamType = t.BinaryIO
 FilenameType = t.Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
 PathType = str
@@ -392,7 +397,7 @@ class Enum(Adapter[int, int, ParsedType, BuildTypes]):
         **mapping: int
     ) -> Enum[t.Union[EnumInteger, EnumIntegerString], t.Union[int, str]]: ...
     def __init__(
-        self,
+        self: Enum[t.Union[EnumInteger, EnumIntegerString], t.Union[int, str]],
         subcon: Construct[int, int],
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
         **mapping: int
@@ -412,7 +417,7 @@ class FlagsEnum(Adapter[int, int, ParsedType, BuildTypes]):
         **flags: int
     ) -> FlagsEnum[Container[bool], t.Union[int, str, t.Dict[str, bool]]]: ...
     def __init__(
-        self,
+        self: FlagsEnum[Container[bool], t.Union[int, str, t.Dict[str, bool]]],
         subcon: Construct[int, int],
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
         **flags: int
@@ -428,7 +433,7 @@ class Mapping(Adapter[SubconParsedType, SubconBuildTypes, t.Any, t.Any]):
         mapping: t.Dict[t.Any, t.Any],
     ) -> Mapping[t.Any, t.Any]: ...
     def __init__(
-        self,
+        self: Mapping[t.Any, t.Any],
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         mapping: t.Dict[t.Any, t.Any],
     ) -> None: ...
@@ -633,7 +638,12 @@ class NamedTuple(
         t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]],
     ]: ...
     def __init__(
-        self,
+        self: NamedTuple[
+            SubconParsedType,
+            SubconBuildTypes,
+            t.Tuple[t.Any, ...],
+            t.Union[t.Tuple[t.Any, ...], t.List[t.Any], t.Dict[str, t.Any]],
+        ],
         tuplename: str,
         tuplefields: str,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1208,7 +1218,7 @@ class Slicing(
         empty: t.Optional[SubconParsedType] = ...,
     ) -> Slicing[ListContainer[SubconParsedType], t.List[SubconBuildTypes]]: ...
     def __init__(
-        self,
+        self: Slicing[ListContainer[SubconParsedType], t.List[SubconBuildTypes]],
         subcon: t.Union[
             Array[
                 SubconParsedType,
