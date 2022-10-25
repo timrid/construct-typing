@@ -12,26 +12,22 @@ class EnumBase(enum.IntEnum):
     This class extends the standard `enum.IntEnum`, so that missing values are automatically generated.
     """
 
-    # Extend the enum type with __missing__ method. So if a enum value
+    # Extend the enum type with _missing_ method. So if a enum value
     # not found in the enum, a new pseudo member is created.
     # The idea is taken from: https://stackoverflow.com/a/57179436
     @classmethod
-    def _missing_(cls, value: t.Any) -> t.Optional["EnumBase"]:
+    def _missing_(cls, value: t.Any) -> t.Optional[enum.Enum]:
         if isinstance(value, int):
-            return cls._create_pseudo_member(value)
+            pseudo_member = cls._value2member_map_.get(value, None)
+            if pseudo_member is None:
+                new_member = int.__new__(cls, value)
+                # I expect a name attribute to hold a string, hence str(value)
+                # However, new_member._name_ = value works, too
+                new_member._name_ = str(value)
+                new_member._value_ = value
+                pseudo_member = cls._value2member_map_.setdefault(value, new_member)
+            return pseudo_member
         return None  # will raise the ValueError in Enum.__new__
-
-    @classmethod
-    def _create_pseudo_member(cls, value: int) -> "EnumBase":
-        pseudo_member = cls._value2member_map_.get(value, None)  # type: ignore
-        if pseudo_member is None:
-            new_member = int.__new__(cls, value)
-            # I expect a name attribute to hold a string, hence str(value)
-            # However, new_member._name_ = value works, too
-            new_member._name_ = str(value)
-            new_member._value_ = value
-            pseudo_member = cls._value2member_map_.setdefault(value, new_member)  # type: ignore
-        return pseudo_member  # type: ignore
 
 
 EnumType = t.TypeVar("EnumType", bound=EnumBase)
