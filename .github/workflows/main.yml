@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-latest', 'windows-latest']
-        python-version: [ '3.7', '3.8', '3.9' ]
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
         
     runs-on: ${{ matrix.os }}
     name: OS ${{ matrix.os }}, Python ${{ matrix.python-version }}
@@ -20,16 +20,16 @@ jobs:
 
       # Setup python
       - name: Setup python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
       # Setup node.js (for pyright)
       - name: Setup node.js (for pyright)
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: 16
         
       # Install pyright
       - name: Install pyright
