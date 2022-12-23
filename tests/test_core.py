@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+# mypy: no-warn-unused-ignores
 from .declarativeunittest import raises, common, commonhex, commondumpdeprecated, commondump, commonbytes, ident, devzero
 from construct.core import *
 from construct import *
