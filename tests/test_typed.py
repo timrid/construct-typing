@@ -384,6 +384,42 @@ def test_tenum_no_enumbase() -> None:
     assert raises(lambda: cst.TEnum(cs.Byte, cls)) == TypeError
 
 
+def test_tenum_docstring() -> None:
+    class TestEnum(cst.EnumBase):
+        """
+        This is an test enum.
+        """
+
+        Value_WithDoc = cst.EnumValue(0, doc="an enum with a documentation")
+        Value_WithMultilineDoc = cst.EnumValue(
+            1,
+            """
+            An enum with a multiline documentation...
+            ...next line...
+            """,
+        )
+        Value_NoDoc = cst.EnumValue(2)
+        Value_NoDoc2 = 3
+
+    assert (
+        TestEnum.__doc__
+        == """
+        This is an test enum.
+        """
+    )
+    assert TestEnum.Value_WithDoc.__doc__ == "an enum with a documentation"
+    assert (
+        TestEnum.Value_WithMultilineDoc.__doc__
+        == """
+            An enum with a multiline documentation...
+            ...next line...
+            """
+    )
+    assert TestEnum.Value_NoDoc.__doc__ == ""
+    assert TestEnum.Value_NoDoc2.__doc__ == ""
+    assert TestEnum(5).__doc__ == "missing value"
+
+
 def test_dataclass_struct_wrong_enumbase() -> None:
     class E1(cst.EnumBase):
         a = 1
@@ -434,3 +470,39 @@ def test_tenum_flags() -> None:
     assert d.build(TestEnum(255)) == b"\xff"
     assert d.build(TestEnum.eight) == b"\x08"
     assert raises(d.build, 2) == TypeError
+
+
+def test_tenum_flags_docstring() -> None:
+    class TestEnum(cst.FlagsEnumBase):
+        """
+        This is an test flags enum.
+        """
+
+        Value_WithDoc = cst.EnumValue(0, doc="an enum with a documentation")
+        Value_WithMultilineDoc = cst.EnumValue(
+            1,
+            """
+            An enum with a multiline documentation...
+            ...next line...
+            """,
+        )
+        Value_NoDoc = cst.EnumValue(2)
+        Value_NoDoc2 = 4
+
+    assert (
+        TestEnum.__doc__
+        == """
+        This is an test flags enum.
+        """
+    )
+    assert TestEnum.Value_WithDoc.__doc__ == "an enum with a documentation"
+    assert (
+        TestEnum.Value_WithMultilineDoc.__doc__
+        == """
+            An enum with a multiline documentation...
+            ...next line...
+            """
+    )
+    assert TestEnum.Value_NoDoc.__doc__ == ""
+    assert TestEnum.Value_NoDoc2.__doc__ == ""
+    assert TestEnum(8).__doc__ == "missing value"

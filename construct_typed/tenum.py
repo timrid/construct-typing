@@ -5,12 +5,54 @@ from .generic_wrapper import *
 
 
 # ## TEnum ############################################################################################################
+class EnumValue:
+    """
+    This is a helper class for adding documentation to an enum value.
+    """
+
+    def __init__(self, value: int, doc: t.Optional[str] = None) -> None:
+        self.value = value
+        self.__doc__ = doc if doc else ""
+
+    def __int__(self) -> int:
+        return self.value
+
+
 class EnumBase(enum.IntEnum):
     """
     Base class for an Enum used in `construct_typed.TEnum`.
 
-    This class extends the standard `enum.IntEnum`, so that missing values are automatically generated.
+    This class extends the standard `enum.IntEnum` by.
+     - missing values are automatically generated
+     - possibility to add documentation for each enum value (see `EnumValue`)
+
+    Example::
+
+        >>> class State(EnumBase):
+        ...     Idle = 1
+        ...     Running = EnumValue(2, "This is the running state.")
+
+        >>> State(1)
+        <State.Idle: 1>
+
+        >>> State["Idle"]
+        <State.Idle: 1>
+
+        >>> State.Idle
+        <State.Idle: 1>
+
+        >>> State(3)  # missing value
+        <State.3: 3>
+
+        >>> State.Running.__doc__  # documentation
+        'This is the running state.'
     """
+
+    def __init__(self, val: t.Union[EnumValue, int]):
+        if isinstance(val, EnumValue):
+            self.__doc__ = val.__doc__
+        else:
+            self.__doc__ = ""
 
     # Extend the enum type with _missing_ method. So if a enum value
     # not found in the enum, a new pseudo member is created.
@@ -25,6 +67,7 @@ class EnumBase(enum.IntEnum):
                 # However, new_member._name_ = value works, too
                 new_member._name_ = str(value)
                 new_member._value_ = value
+                new_member.__doc__ = "missing value"
                 pseudo_member = cls._value2member_map_.setdefault(value, new_member)
             return pseudo_member
         return None  # will raise the ValueError in Enum.__new__
@@ -75,7 +118,51 @@ class TEnum(Adapter[int, int, EnumType, EnumType]):
 
 # ## TFlagsEnum #######################################################################################################
 class FlagsEnumBase(enum.IntFlag):
-    pass
+    """
+    Base class for an Enum used in `construct_typed.TFlagsEnum`.
+
+    This class extends the standard `enum.IntFlag` by.
+     - possibility to add documentation for each enum value (see `EnumValue`)
+
+    Example::
+
+        >>> class Option(FlagsEnumBase):
+        ...     OptOne = 1
+        ...     OptTwo = EnumValue(2, "This is option two.")
+
+        >>> Option(1)
+        <Option.OptOne: 1>
+
+        >>> Option["OptOne"]
+        <Option.OptOne: 1>
+
+        >>> Option.OptOne
+        <Option.OptOne: 1>
+
+        >>> Option(3)
+        <Option.OptTwo|OptOne: 3>
+
+        >>> Option(4)
+        <Option.4: 4>
+
+        >>> Option.OptTwo.__doc__  # documentation
+        'This is option two.'
+    """
+
+    def __init__(self, val: t.Union[EnumValue, int]):
+        if isinstance(val, EnumValue):
+            self.__doc__ = val.__doc__
+        else:
+            self.__doc__ = ""
+
+    @classmethod
+    def _missing_(cls, value: t.Any) -> t.Any:
+        """
+        Returns member (possibly creating it) if one can be found for value.
+        """
+        new_member = super()._missing_(value)
+        new_member.__doc__ = "missing value"
+        return new_member
 
 
 FlagsEnumType = t.TypeVar("FlagsEnumType", bound=FlagsEnumBase)

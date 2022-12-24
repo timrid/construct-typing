@@ -18,7 +18,7 @@ from .generic_wrapper import (
     ListContainer,
     PathType,
 )
-from .tenum import EnumBase, FlagsEnumBase, TEnum, TFlagsEnum
+from .tenum import EnumBase, EnumValue, FlagsEnumBase, TEnum, TFlagsEnum
 
 __all__ = [
     "DataclassBitStruct",
@@ -32,6 +32,7 @@ __all__ = [
     "csfield",
     "sfield",
     "EnumBase",
+    "EnumValue",
     "FlagsEnumBase",
     "TEnum",
     "TFlagsEnum",
