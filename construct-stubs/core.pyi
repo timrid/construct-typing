@@ -1020,15 +1020,6 @@ class IfThenElse(Construct[ParsedType, BuildTypes]):
     ) -> IfThenElse[
         t.Union[ThenParsedType, ElseParsedType], t.Union[ThenBuildTypes, ElseBuildTypes]
     ]: ...
-    def __init__(
-        self: IfThenElse[
-            t.Union[ThenParsedType, ElseParsedType],
-            t.Union[ThenBuildTypes, ElseBuildTypes],
-        ],
-        condfunc: ConstantOrContextLambda[bool],
-        thensubcon: Construct[ThenParsedType, ThenBuildTypes],
-        elsesubcon: Construct[ElseParsedType, ElseBuildTypes],
-    ) -> None: ...
 
 def If(
     condfunc: ConstantOrContextLambda[bool],
