@@ -444,6 +444,7 @@ class Mapping(Adapter[SubconParsedType, SubconBuildTypes, t.Any, t.Any]):
 # this can maybe made better when variadic generics are available
 class Struct(Construct[ParsedType, BuildTypes]):
     subcons: t.List[Construct[t.Any, t.Any]]
+    _subcons: t.Dict[str, Construct[t.Any, t.Any]]
     def __new__(
         cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
     ) -> Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
@@ -452,6 +453,7 @@ class Struct(Construct[ParsedType, BuildTypes]):
 # this can maybe made better when variadic generics are available
 class Sequence(Construct[ParsedType, BuildTypes]):
     subcons: t.List[Construct[t.Any, t.Any]]
+    _subcons: t.Dict[str, Construct[t.Any, t.Any]]
     def __new__(
         cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
     ) -> Sequence[ListContainer[t.Any], t.Optional[t.List[t.Any]]]: ...
@@ -603,6 +605,7 @@ Error: Construct[None, None]
 
 class FocusedSeq(Construct[t.Any, t.Any]):
     subcons: t.List[Construct[t.Any, t.Any]]
+    _subcons: t.Dict[str, Construct[t.Any, t.Any]]
     def __init__(
         self,
         parsebuildfrom: ConstantOrContextLambda[str],
@@ -743,6 +746,7 @@ class HexDump(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes
 class Union(Construct[Container[t.Any], t.Dict[str, t.Any]]):
     parsefrom: t.Optional[ConstantOrContextLambda[t.Union[int, str]]]
     subcons: t.List[Construct[t.Any, t.Any]]
+    _subcons: t.Dict[str, Construct[t.Any, t.Any]]
     def __init__(
         self,
         parsefrom: t.Optional[ConstantOrContextLambda[t.Union[int, str]]],
@@ -1117,6 +1121,8 @@ class LazyContainer(t.Generic[ContainerType], t.Dict[str, ContainerType]):
 
 class LazyStruct(Construct[ParsedType, BuildTypes]):
     subcons: t.List[Construct[t.Any, t.Any]]
+    _subcons: t.Dict[str, Construct[t.Any, t.Any]]
+    _subconsindexes: t.Dict[str, Construct[t.Any, t.Any]]
     def __new__(
         cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
     ) -> LazyStruct[LazyContainer[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
