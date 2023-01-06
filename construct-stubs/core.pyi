@@ -183,6 +183,19 @@ class Subconstruct(
     def __new__(
         cls, *args: t.Any, **kwargs: t.Any
     ) -> Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
+    @t.overload
+    def __init__(
+        self: Subconstruct[
+            SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> None: ...
 
 class Adapter(
     Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
@@ -224,8 +237,13 @@ class Tunnel(
 class Bytes(Construct[ParsedType, BuildTypes]):
     length: ConstantOrContextLambda[int]
     def __new__(
-        cls, length: ConstantOrContextLambda[int]
+        cls,
+        length: ConstantOrContextLambda[int],
     ) -> Bytes[bytes, t.Union[bytes, int]]: ...
+    def __init__(
+        self: Bytes[bytes, t.Union[bytes, int]],
+        length: ConstantOrContextLambda[int],
+    ) -> None: ...
 
 GreedyBytes: Construct[bytes, bytes]
 
@@ -255,20 +273,63 @@ class FormatField(Construct[ParsedType, BuildTypes]):
         FORMAT_BOOL = t.Literal["?"]
         @t.overload
         def __new__(
-            cls, endianity: str, format: FORMAT_INT
+            cls,
+            endianity: str,
+            format: FORMAT_INT,
         ) -> FormatField[int, int]: ...
         @t.overload
         def __new__(
-            cls, endianity: str, format: FORMAT_FLOAT
+            cls,
+            endianity: str,
+            format: FORMAT_FLOAT,
         ) -> FormatField[float, float]: ...
         @t.overload
         def __new__(
-            cls, endianity: str, format: FORMAT_BOOL
+            cls,
+            endianity: str,
+            format: FORMAT_BOOL,
         ) -> FormatField[bool, bool]: ...
         @t.overload
-        def __new__(cls, endianity: str, format: str) -> FormatField[t.Any, t.Any]: ...
+        def __new__(
+            cls,
+            endianity: str,
+            format: str,
+        ) -> FormatField[t.Any, t.Any]: ...
+        @t.overload
+        def __init__(
+            self: FormatField[int, int],
+            endianity: str,
+            format: FORMAT_INT,
+        ) -> None: ...
+        @t.overload
+        def __init__(
+            self: FormatField[float, float],
+            endianity: str,
+            format: FORMAT_FLOAT,
+        ) -> None: ...
+        @t.overload
+        def __init__(
+            self: FormatField[bool, bool],
+            endianity: str,
+            format: FORMAT_BOOL,
+        ) -> None: ...
+        @t.overload
+        def __init__(
+            self: FormatField[t.Any, t.Any],
+            endianity: str,
+            format: str,
+        ) -> None: ...
     else:
-        def __new__(cls, endianity: str, format: str) -> FormatField[t.Any, t.Any]: ...
+        def __new__(
+            cls,
+            endianity: str,
+            format: str,
+        ) -> FormatField[t.Any, t.Any]: ...
+        def __init__(
+            self: FormatField[t.Any, t.Any],
+            endianity: str,
+            format: str,
+        ) -> None: ...
 
 class BytesInteger(Construct[ParsedType, BuildTypes]):
     length: ConstantOrContextLambda[int]
@@ -280,6 +341,12 @@ class BytesInteger(Construct[ParsedType, BuildTypes]):
         signed: bool = ...,
         swapped: ConstantOrContextLambda[bool] = ...,
     ) -> BytesInteger[int, int]: ...
+    def __init__(
+        self: BytesInteger[int, int],
+        length: ConstantOrContextLambda[int],
+        signed: bool = ...,
+        swapped: ConstantOrContextLambda[bool] = ...,
+    ) -> None: ...
 
 class BitsInteger(Construct[ParsedType, BuildTypes]):
     length: ConstantOrContextLambda[int]
@@ -291,6 +358,12 @@ class BitsInteger(Construct[ParsedType, BuildTypes]):
         signed: bool = ...,
         swapped: ConstantOrContextLambda[bool] = ...,
     ) -> BitsInteger[int, int]: ...
+    def __init__(
+        self: BitsInteger[int, int],
+        length: ConstantOrContextLambda[int],
+        signed: bool = ...,
+        swapped: ConstantOrContextLambda[bool] = ...,
+    ) -> None: ...
 
 Bit: BitsInteger[int, int]
 Nibble: BitsInteger[int, int]
@@ -363,8 +436,15 @@ class StringEncoded(Construct[ParsedType, BuildTypes]):
         ENCODING = str
     encoding: ENCODING
     def __new__(
-        cls, subcon: Construct[ParsedType, BuildTypes], encoding: ENCODING
+        cls,
+        subcon: Construct[ParsedType, BuildTypes],
+        encoding: ENCODING,
     ) -> StringEncoded[str, str]: ...
+    def __init__(
+        self: StringEncoded[str, str],
+        subcon: Construct[ParsedType, BuildTypes],
+        encoding: ENCODING,
+    ) -> None: ...
 
 def PaddedString(
     length: ConstantOrContextLambda[int], encoding: StringEncoded.ENCODING
@@ -394,13 +474,13 @@ class Enum(Adapter[int, int, ParsedType, BuildTypes]):
         cls,
         subcon: Construct[int, int],
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
-        **mapping: int
+        **mapping: int,
     ) -> Enum[t.Union[EnumInteger, EnumIntegerString], t.Union[int, str]]: ...
     def __init__(
         self: Enum[t.Union[EnumInteger, EnumIntegerString], t.Union[int, str]],
         subcon: Construct[int, int],
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
-        **mapping: int
+        **mapping: int,
     ) -> None: ...
     def __getattr__(self, name: str) -> EnumIntegerString: ...
 
@@ -414,13 +494,13 @@ class FlagsEnum(Adapter[int, int, ParsedType, BuildTypes]):
         cls,
         subcon: Construct[int, int],
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
-        **flags: int
+        **flags: int,
     ) -> FlagsEnum[Container[bool], t.Union[int, str, t.Dict[str, bool]]]: ...
     def __init__(
         self: FlagsEnum[Container[bool], t.Union[int, str, t.Dict[str, bool]]],
         subcon: Construct[int, int],
         *merge: t.Union[t.Type[enum.IntEnum], t.Type[enum.IntFlag]],
-        **flags: int
+        **flags: int,
     ) -> None: ...
     def __getattr__(self, name: str) -> BitwisableString: ...
 
@@ -446,8 +526,15 @@ class Struct(Construct[ParsedType, BuildTypes]):
     subcons: t.List[Construct[t.Any, t.Any]]
     _subcons: t.Dict[str, Construct[t.Any, t.Any]]
     def __new__(
-        cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
+        cls,
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any],
     ) -> Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
+    def __init__(
+        self: Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]],
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any],
+    ) -> None: ...
     def __getattr__(self, name: str) -> t.Any: ...
 
 # this can maybe made better when variadic generics are available
@@ -455,8 +542,15 @@ class Sequence(Construct[ParsedType, BuildTypes]):
     subcons: t.List[Construct[t.Any, t.Any]]
     _subcons: t.Dict[str, Construct[t.Any, t.Any]]
     def __new__(
-        cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
+        cls,
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any],
     ) -> Sequence[ListContainer[t.Any], t.Optional[t.List[t.Any]]]: ...
+    def __init__(
+        self: Sequence[ListContainer[t.Any], t.Optional[t.List[t.Any]]],
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any],
+    ) -> None: ...
     def __getattr__(self, name: str) -> t.Any: ...
 
 # ===============================================================================
@@ -483,6 +577,17 @@ class Array(
         ListContainer[SubconParsedType],
         t.List[SubconBuildTypes],
     ]: ...
+    def __init__(
+        self: Array[
+            SubconParsedType,
+            SubconBuildTypes,
+            ListContainer[SubconParsedType],
+            t.List[SubconBuildTypes],
+        ],
+        count: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        discard: bool = ...,
+    ) -> None: ...
 
 class GreedyRange(
     Subconstruct[
@@ -494,13 +599,25 @@ class GreedyRange(
 ):
     discard: bool
     def __new__(
-        cls, subcon: Construct[SubconParsedType, SubconBuildTypes], discard: bool = ...
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        discard: bool = ...,
     ) -> GreedyRange[
         SubconParsedType,
         SubconBuildTypes,
         ListContainer[SubconParsedType],
         t.List[SubconBuildTypes],
     ]: ...
+    def __init__(
+        self: GreedyRange[
+            SubconParsedType,
+            SubconBuildTypes,
+            ListContainer[SubconParsedType],
+            t.List[SubconBuildTypes],
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        discard: bool = ...,
+    ) -> None: ...
 
 class RepeatUntil(
     Subconstruct[
@@ -531,6 +648,22 @@ class RepeatUntil(
         ListContainer[SubconParsedType],
         t.List[SubconBuildTypes],
     ]: ...
+    def __init__(
+        self: RepeatUntil[
+            SubconParsedType,
+            SubconBuildTypes,
+            ListContainer[SubconParsedType],
+            t.List[SubconBuildTypes],
+        ],
+        predicate: t.Union[
+            bool,
+            t.Callable[
+                [SubconParsedType, ListContainer[SubconParsedType], Context], bool
+            ],
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        discard: bool = ...,
+    ) -> None: ...
 
 # ===============================================================================
 # specials
@@ -567,12 +700,24 @@ class Computed(Construct[ParsedType, BuildTypes]):
     func: ConstantOrContextLambda2[ParsedType]
     @t.overload
     def __new__(
-        cls, func: ConstantOrContextLambda2[ParsedType]
+        cls,
+        func: ConstantOrContextLambda2[ParsedType],
     ) -> Computed[ParsedType, None]: ...
     @t.overload
     def __new__(
-        cls, func: ConstantOrContextLambda2[t.Any]
+        cls,
+        func: ConstantOrContextLambda2[t.Any],
     ) -> Computed[t.Any, None]: ...
+    @t.overload
+    def __init__(
+        self: Computed[ParsedType, None],
+        func: ConstantOrContextLambda2[ParsedType],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: Computed[t.Any, None],
+        func: ConstantOrContextLambda2[t.Any],
+    ) -> None: ...
 
 Index: Construct[int, t.Any]
 
@@ -583,6 +728,11 @@ class Rebuild(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         func: ConstantOrContextLambda[SubconBuildTypes],
     ) -> Rebuild[SubconParsedType, SubconBuildTypes, SubconParsedType, None]: ...
+    def __init__(
+        self: Rebuild[SubconParsedType, SubconBuildTypes, SubconParsedType, None],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        func: ConstantOrContextLambda[SubconBuildTypes],
+    ) -> None: ...
 
 class Default(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
     value: ConstantOrContextLambda[SubconBuildTypes]
@@ -596,10 +746,27 @@ class Default(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, Build
         SubconParsedType,
         t.Optional[SubconBuildTypes],
     ]: ...
+    def __init__(
+        self: Default[
+            SubconParsedType,
+            SubconBuildTypes,
+            SubconParsedType,
+            t.Optional[SubconBuildTypes],
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        value: ConstantOrContextLambda[SubconBuildTypes],
+    ) -> None: ...
 
 class Check(Construct[ParsedType, BuildTypes]):
     func: ConstantOrContextLambda[bool]
-    def __new__(cls, func: ConstantOrContextLambda[bool]) -> Check[None, None]: ...
+    def __new__(
+        cls,
+        func: ConstantOrContextLambda[bool],
+    ) -> Check[None, None]: ...
+    def __init__(
+        self: Check[None, None],
+        func: ConstantOrContextLambda[bool],
+    ) -> None: ...
 
 Error: Construct[None, None]
 
@@ -610,7 +777,7 @@ class FocusedSeq(Construct[t.Any, t.Any]):
         self,
         parsebuildfrom: ConstantOrContextLambda[str],
         *subcons: Construct[t.Any, t.Any],
-        **subconskw: Construct[t.Any, t.Any]
+        **subconskw: Construct[t.Any, t.Any],
     ) -> None: ...
     def __getattr__(self, name: str) -> t.Any: ...
 
@@ -711,6 +878,40 @@ class Hex(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
     ) -> Hex[
         SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
     ]: ...
+    @t.overload
+    def __init__(
+        self: Hex[int, BuildTypes, HexDisplayedInteger, BuildTypes],
+        subcon: Construct[int, BuildTypes],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: Hex[bytes, BuildTypes, HexDisplayedBytes, BuildTypes],
+        subcon: Construct[bytes, BuildTypes],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: Hex[
+            RawCopyObj[SubconParsedType],
+            BuildTypes,
+            HexDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
+            BuildTypes,
+        ],
+        subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: Hex[
+            Container[t.Any], BuildTypes, HexDisplayedDict[str, t.Any], BuildTypes
+        ],
+        subcon: Construct[Container[t.Any], BuildTypes],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: Hex[
+            SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
 
 class HexDump(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
     @t.overload
@@ -738,6 +939,35 @@ class HexDump(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes
     ) -> HexDump[
         SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
     ]: ...
+    @t.overload
+    def __init__(
+        self: HexDump[bytes, BuildTypes, HexDumpDisplayedBytes, BuildTypes],
+        subcon: Construct[bytes, BuildTypes],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: HexDump[
+            RawCopyObj[SubconParsedType],
+            BuildTypes,
+            HexDumpDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
+            BuildTypes,
+        ],
+        subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: HexDump[
+            Container[t.Any], BuildTypes, HexDumpDisplayedDict[str, t.Any], BuildTypes
+        ],
+        subcon: Construct[Container[t.Any], BuildTypes],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: HexDump[
+            SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
 
 # ===============================================================================
 # conditional
@@ -751,7 +981,7 @@ class Union(Construct[Container[t.Any], t.Dict[str, t.Any]]):
         self,
         parsefrom: t.Optional[ConstantOrContextLambda[t.Union[int, str]]],
         *subcons: Construct[t.Any, t.Any],
-        **subconskw: Construct[t.Any, t.Any]
+        **subconskw: Construct[t.Any, t.Any],
     ) -> None: ...
     def __getattr__(self, name: str) -> t.Any: ...
 
@@ -759,8 +989,15 @@ class Union(Construct[Container[t.Any], t.Dict[str, t.Any]]):
 class Select(Construct[ParsedType, BuildTypes]):
     subcons: t.List[Construct[t.Any, t.Any]]
     def __new__(
-        cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
+        cls,
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any],
     ) -> Select[t.Any, t.Any]: ...
+    def __init__(
+        self: Select[t.Any, t.Any],
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any],
+    ) -> None: ...
 
 def Optional(
     subcon: Construct[SubconParsedType, SubconBuildTypes]
@@ -783,6 +1020,15 @@ class IfThenElse(Construct[ParsedType, BuildTypes]):
     ) -> IfThenElse[
         t.Union[ThenParsedType, ElseParsedType], t.Union[ThenBuildTypes, ElseBuildTypes]
     ]: ...
+    def __init__(
+        self: IfThenElse[
+            t.Union[ThenParsedType, ElseParsedType],
+            t.Union[ThenBuildTypes, ElseBuildTypes],
+        ],
+        condfunc: ConstantOrContextLambda[bool],
+        thensubcon: Construct[ThenParsedType, ThenBuildTypes],
+        elsesubcon: Construct[ElseParsedType, ElseBuildTypes],
+    ) -> None: ...
 
 def If(
     condfunc: ConstantOrContextLambda[bool],
@@ -809,10 +1055,31 @@ class Switch(Construct[ParsedType, BuildTypes]):
         cases: t.Dict[t.Any, Construct[t.Any, t.Any]],
         default: t.Optional[Construct[t.Any, t.Any]] = ...,
     ) -> Switch[t.Any, t.Any]: ...
+    @t.overload
+    def __init__(
+        self: Switch[int, t.Optional[int]],
+        keyfunc: ConstantOrContextLambda[SwitchType],
+        cases: t.Dict[SwitchType, Construct[int, int]],
+        default: t.Optional[Construct[int, int]] = ...,
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self: Switch[t.Any, t.Any],
+        keyfunc: ConstantOrContextLambda[t.Any],
+        cases: t.Dict[t.Any, Construct[t.Any, t.Any]],
+        default: t.Optional[Construct[t.Any, t.Any]] = ...,
+    ) -> None: ...
 
 class StopIf(Construct[ParsedType, BuildTypes]):
     condfunc: ConstantOrContextLambda[bool]
-    def __new__(cls, condfunc: ConstantOrContextLambda[bool]) -> StopIf[None, None]: ...
+    def __new__(
+        cls,
+        condfunc: ConstantOrContextLambda[bool],
+    ) -> StopIf[None, None]: ...
+    def __init__(
+        self: StopIf[None, None],
+        condfunc: ConstantOrContextLambda[bool],
+    ) -> None: ...
 
 # ===============================================================================
 # alignment and padding
@@ -848,7 +1115,7 @@ class Aligned(
 def AlignedStruct(
     modulus: ConstantOrContextLambda[int],
     *subcons: Construct[t.Any, t.Any],
-    **subconskw: Construct[t.Any, t.Any]
+    **subconskw: Construct[t.Any, t.Any],
 ) -> Struct[Container[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
 def BitStruct(
     *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
@@ -882,6 +1149,15 @@ class Peek(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTyp
         SubconParsedType,
         t.Union[SubconBuildTypes, None],
     ]: ...
+    def __init__(
+        self: Peek[
+            SubconParsedType,
+            SubconBuildTypes,
+            SubconParsedType,
+            t.Union[SubconBuildTypes, None],
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
 
 class Seek(Construct[int, None]):
     at: ConstantOrContextLambda[int]
@@ -913,13 +1189,23 @@ class RawCopyObj(t.Generic[ParsedType], Container[t.Any]):
 
 class RawCopy(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
     def __new__(
-        cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> RawCopy[
         SubconParsedType,
         SubconBuildTypes,
         RawCopyObj[SubconParsedType],
         t.Optional[t.Dict[str, t.Union[SubconBuildTypes, bytes]]],
     ]: ...
+    def __init__(
+        self: RawCopy[
+            SubconParsedType,
+            SubconBuildTypes,
+            RawCopyObj[SubconParsedType],
+            t.Optional[t.Dict[str, t.Union[SubconBuildTypes, bytes]]],
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
 
 def ByteSwapped(
     subcon: Construct[SubconParsedType, SubconBuildTypes]
@@ -1044,6 +1330,11 @@ class ProcessXor(
         padfunc: ConstantOrContextLambda2[t.Union[int, bytes]],
         subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> ProcessXor[SubconParsedType, SubconBuildTypes]: ...
+    def __init__(
+        self: ProcessXor[SubconParsedType, SubconBuildTypes],
+        padfunc: ConstantOrContextLambda2[t.Union[int, bytes]],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
 
 class ProcessRotateLeft(
     Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
@@ -1056,6 +1347,12 @@ class ProcessRotateLeft(
         group: ConstantOrContextLambda2[int],
         subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> ProcessRotateLeft[SubconParsedType, SubconBuildTypes]: ...
+    def __init__(
+        self: ProcessRotateLeft[SubconParsedType, SubconBuildTypes],
+        amount: ConstantOrContextLambda2[int],
+        group: ConstantOrContextLambda2[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
 
 T = t.TypeVar("T")
 
@@ -1111,6 +1408,15 @@ class Lazy(Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTyp
         t.Callable[[], SubconParsedType],
         t.Union[t.Callable[[], SubconParsedType], SubconParsedType],
     ]: ...
+    def __init__(
+        self: Lazy[
+            SubconParsedType,
+            SubconBuildTypes,
+            t.Callable[[], SubconParsedType],
+            t.Union[t.Callable[[], SubconParsedType], SubconParsedType],
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
 
 class LazyContainer(t.Generic[ContainerType], t.Dict[str, ContainerType]):
     def __getattr__(self, name: str) -> ContainerType: ...
@@ -1124,8 +1430,15 @@ class LazyStruct(Construct[ParsedType, BuildTypes]):
     _subcons: t.Dict[str, Construct[t.Any, t.Any]]
     _subconsindexes: t.Dict[str, int]
     def __new__(
-        cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
+        cls,
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any],
     ) -> LazyStruct[LazyContainer[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
+    def __init__(
+        self: LazyStruct[LazyContainer[t.Any], t.Optional[t.Dict[str, t.Any]]],
+        *subcons: Construct[t.Any, t.Any],
+        **subconskw: Construct[t.Any, t.Any],
+    ) -> None: ...
     def __getattr__(self, name: str) -> t.Any: ...
 
 class LazyListContainer(t.List[ListType]): ...
@@ -1149,12 +1462,27 @@ class LazyArray(
         ListContainer[SubconParsedType],
         t.List[SubconBuildTypes],
     ]: ...
+    def __init__(
+        self: LazyArray[
+            SubconParsedType,
+            SubconBuildTypes,
+            ListContainer[SubconParsedType],
+            t.List[SubconBuildTypes],
+        ],
+        count: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
 
 class LazyBound(Construct[ParsedType, BuildTypes]):
     subconfunc: t.Callable[[], Construct[ParsedType, BuildTypes]]
     def __new__(
-        cls, subconfunc: t.Callable[[], Construct[ParsedType, BuildTypes]]
+        cls,
+        subconfunc: t.Callable[[], Construct[ParsedType, BuildTypes]],
     ) -> LazyBound[ParsedType, BuildTypes]: ...
+    def __init__(
+        self: LazyBound[ParsedType, BuildTypes],
+        subconfunc: t.Callable[[], Construct[ParsedType, BuildTypes]],
+    ) -> None: ...
 
 # ===============================================================================
 # adapters and validators
