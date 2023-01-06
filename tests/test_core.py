@@ -1033,13 +1033,14 @@ def test_prefixed() -> None:
     common(d5, b"\x0a"+bytes(10), u"\x00"*10, SizeofError)
 
 def test_prefixedarray() -> None:
-    common(PrefixedArray(Byte,Byte), b"\x02\x0a\x0b", [10,11], SizeofError)
-    assert PrefixedArray(Byte, Byte).parse(b"\x03\x01\x02\x03") == [1,2,3]
-    assert PrefixedArray(Byte, Byte).parse(b"\x00") == []
-    assert PrefixedArray(Byte, Byte).build([1,2,3]) == b"\x03\x01\x02\x03"
-    assert raises(PrefixedArray(Byte, Byte).parse, b"") == StreamError
-    assert raises(PrefixedArray(Byte, Byte).parse, b"\x03\x01") == StreamError
-    assert raises(PrefixedArray(Byte, Byte).sizeof) == SizeofError
+    d = PrefixedArray(Byte, Byte)
+    common(d, b"\x02\x0a\x0b", [10,11], SizeofError)
+    assert d.parse(b"\x03\x01\x02\x03") == [1,2,3]
+    assert d.parse(b"\x00") == []
+    assert d.build([1,2,3]) == b"\x03\x01\x02\x03"
+    assert raises(d.parse, b"") == StreamError
+    assert raises(d.parse, b"\x03\x01") == StreamError
+    assert raises(d.sizeof) == SizeofError
 
 def test_fixedsized() -> None:
     d1 = FixedSized(10, Byte)
