@@ -1122,7 +1122,7 @@ class LazyContainer(t.Generic[ContainerType], t.Dict[str, ContainerType]):
 class LazyStruct(Construct[ParsedType, BuildTypes]):
     subcons: t.List[Construct[t.Any, t.Any]]
     _subcons: t.Dict[str, Construct[t.Any, t.Any]]
-    _subconsindexes: t.Dict[str, Construct[t.Any, t.Any]]
+    _subconsindexes: t.Dict[str, int]
     def __new__(
         cls, *subcons: Construct[t.Any, t.Any], **subconskw: Construct[t.Any, t.Any]
     ) -> LazyStruct[LazyContainer[t.Any], t.Optional[t.Dict[str, t.Any]]]: ...
