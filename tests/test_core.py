@@ -224,8 +224,8 @@ def test_paddedstring() -> None:
         common(PaddedString(100, e), data, s, 100)
 
     for e in ["ascii","utf8","utf16","utf-16-le","utf32","utf-32-le"]:
-        PaddedString(10, e).sizeof() == 10
-        PaddedString(this.n, e).sizeof(n=10) == 10
+        assert PaddedString(10, e).sizeof() == 10
+        assert PaddedString(this.n, e).sizeof(n=10) == 10
 
 def test_pascalstring() -> None:
     for e,_ in [("utf8",1),("utf16",2),("utf_16_le",2),("utf32",4),("utf_32_le",4)]:
@@ -236,8 +236,8 @@ def test_pascalstring() -> None:
             common(PascalString(sc, e), sc.build(0), u"")
 
     for e in ["utf8","utf16","utf-16-le","utf32","utf-32-le","ascii"]:
-        raises(PascalString(Byte, e).sizeof) == SizeofError
-        raises(PascalString(VarInt, e).sizeof) == SizeofError
+        assert raises(PascalString(Byte, e).sizeof) == SizeofError
+        assert raises(PascalString(VarInt, e).sizeof) == SizeofError
 
 def test_cstring() -> None:
     s = u""
@@ -246,12 +246,12 @@ def test_cstring() -> None:
         common(CString(e), s.encode(e)+bytes(us), s)
         common(CString(e), bytes(us), u"")
 
-    CString("utf8").build(s) == b'\xd0\x90\xd1\x84\xd0\xbe\xd0\xbd'+b"\x00"
-    CString("utf16").build(s) == b'\xff\xfe\x10\x04D\x04>\x04=\x04'+b"\x00\x00"
-    CString("utf32").build(s) == b'\xff\xfe\x00\x00\x10\x04\x00\x00D\x04\x00\x00>\x04\x00\x00=\x04\x00\x00'+b"\x00\x00\x00\x00"
+    assert CString("utf8").build(s) == b'\xd0\x90\xd1\x84\xd0\xbe\xd0\xbd'+b"\x00"
+    assert CString("utf16").build(s) == b'\xff\xfe\x10\x04D\x04>\x04=\x04'+b"\x00\x00"
+    assert CString("utf32").build(s) == b'\xff\xfe\x00\x00\x10\x04\x00\x00D\x04\x00\x00>\x04\x00\x00=\x04\x00\x00'+b"\x00\x00\x00\x00"
 
     for e in ["utf8","utf16","utf-16-le","utf32","utf-32-le","ascii"]:
-        raises(CString(e).sizeof) == SizeofError
+        assert raises(CString(e).sizeof) == SizeofError
 
 def test_greedystring() -> None:
     for e,_ in [("utf8",1),("utf16",2),("utf_16_le",2),("utf32",4),("utf_32_le",4)]:
@@ -260,7 +260,7 @@ def test_greedystring() -> None:
         common(GreedyString(e), b"", u"")
 
     for e in ["utf8","utf16","utf-16-le","utf32","utf-32-le","ascii"]:
-        raises(GreedyString(e).sizeof) == SizeofError
+        assert raises(GreedyString(e).sizeof) == SizeofError
 
 def test_string_encodings() -> None:
     # checks that "-" is replaced with "_"
@@ -271,7 +271,7 @@ def test_flag() -> None:
     d = Flag
     common(d, b"\x00", False, 1)
     common(d, b"\x01", True, 1)
-    d.parse(b"\xff") == True
+    assert d.parse(b"\xff") == True
 
 def test_enum() -> None:
     d = Enum(Byte, one=1, two=2, four=4, eight=8)
@@ -591,7 +591,7 @@ def test_rebuild_issue_664() -> None:
 def test_default() -> None:
     d = Default(Byte, 0)
     common(d, b"\xff", 255, 1)
-    d.build(None) == b"\x00"
+    assert d.build(None) == b"\x00"
 
 def test_check() -> None:
     common(Check(True), b"", None, 0)
