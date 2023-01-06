@@ -37,5 +37,11 @@ else:
     class Context:
         pass
 
+    class Array(
+        t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
+        cs.Array,
+    ):
+        pass
+
     ConstantOrContextLambda = t.Union[ValueType, t.Callable[[Context], t.Any]]
     PathType = str
