@@ -14,9 +14,6 @@ class EnumValue:
         self.value = value
         self.__doc__ = doc if doc else ""
 
-    def __int__(self) -> int:
-        return self.value
-
 
 class EnumBase(enum.IntEnum):
     """
@@ -48,11 +45,16 @@ class EnumBase(enum.IntEnum):
         'This is the running state.'
     """
 
-    def __init__(self, val: t.Union[EnumValue, int]):
+    def __new__(cls, val: t.Union[EnumValue, int]) -> "EnumBase":
         if isinstance(val, EnumValue):
-            self.__doc__ = val.__doc__
+            obj = int.__new__(cls, val.value)
+            obj._value_ = val.value
+            obj.__doc__ = val.__doc__
         else:
-            self.__doc__ = ""
+            obj = int.__new__(cls, val)
+            obj._value_ = val
+            obj.__doc__ = ""
+        return obj
 
     # Extend the enum type with _missing_ method. So if a enum value
     # not found in the enum, a new pseudo member is created.
@@ -149,11 +151,16 @@ class FlagsEnumBase(enum.IntFlag):
         'This is option two.'
     """
 
-    def __init__(self, val: t.Union[EnumValue, int]):
+    def __new__(cls, val: t.Union[EnumValue, int]) -> "FlagsEnumBase":
         if isinstance(val, EnumValue):
-            self.__doc__ = val.__doc__
+            obj = int.__new__(cls, val.value)
+            obj._value_ = val.value
+            obj.__doc__ = val.__doc__
         else:
-            self.__doc__ = ""
+            obj = int.__new__(cls, val)
+            obj._value_ = val
+            obj.__doc__ = ""
+        return obj
 
     @classmethod
     def _missing_(cls, value: t.Any) -> t.Any:
