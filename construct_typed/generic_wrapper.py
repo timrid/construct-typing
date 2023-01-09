@@ -16,6 +16,7 @@ if t.TYPE_CHECKING:
     from construct import Context as Context
     from construct import ListContainer as ListContainer
     from construct import PathType as PathType
+    from construct import Array as Array
 
 
 else:

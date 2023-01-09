@@ -17,6 +17,7 @@ from .generic_wrapper import (
     Context,
     ListContainer,
     PathType,
+    Array
 )
 from .tenum import EnumBase, EnumValue, FlagsEnumBase, TEnum, TFlagsEnum
 
@@ -42,4 +43,5 @@ __all__ = [
     "Context",
     "ListContainer",
     "PathType",
+    "Array"
 ]
