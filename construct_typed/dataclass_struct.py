@@ -27,7 +27,7 @@ class DataclassMixin:
     methods exists and every name can be used.
     """
 
-    __dataclass_fields__: "t.ClassVar[dict[str, dataclasses.Field[t.Any]]]"
+    __dataclass_fields__: "t.ClassVar[t.Dict[str, dataclasses.Field[t.Any]]]"
 
     def __getitem__(self, key: str) -> t.Any:
         return getattr(self, key)
