@@ -384,7 +384,7 @@ def test_tenum_no_enumbase() -> None:
     assert raises(lambda: cst.TEnum(cs.Byte, cls)) == TypeError
 
 
-def test_tenum_asdict():
+def test_tenum_asdict() -> None:
     # see: https://github.com/timrid/construct-typing/issues/21
     import construct_typed as cst
     import dataclasses
@@ -498,7 +498,7 @@ def test_tenum_flags() -> None:
     assert raises(d.build, 2) == TypeError
 
 
-def test_tenum_flags_asdict():
+def test_tenum_flags_asdict() -> None:
     import construct_typed as cst
     import dataclasses
 
