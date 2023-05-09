@@ -74,6 +74,13 @@ class EnumBase(enum.IntEnum):
             return pseudo_member
         return None  # will raise the ValueError in Enum.__new__
 
+    def __reduce_ex__(self, proto: t.Any) -> t.Tuple[t.Any, ...]:
+        """
+        Pickle enums by value instead of name (restores pre-3.11 behavior).
+        See https://github.com/python/cpython/pull/26658 for why this exists.
+        """
+        return self.__class__, (self._value_,)
+
 
 EnumType = t.TypeVar("EnumType", bound=EnumBase)
 
@@ -170,6 +177,13 @@ class FlagsEnumBase(enum.IntFlag):
         new_member = super()._missing_(value)
         new_member.__doc__ = "missing value"
         return new_member
+
+    def __reduce_ex__(self, proto: t.Any) -> t.Tuple[t.Any, ...]:
+        """
+        Pickle enums by value instead of name (restores pre-3.11 behavior).
+        See https://github.com/python/cpython/pull/26658 for why this exists.
+        """
+        return self.__class__, (self._value_,)
 
 
 FlagsEnumType = t.TypeVar("FlagsEnumType", bound=FlagsEnumBase)

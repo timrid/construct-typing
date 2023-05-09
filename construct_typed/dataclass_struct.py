@@ -27,6 +27,8 @@ class DataclassMixin:
     methods exists and every name can be used.
     """
 
+    __dataclass_fields__: "t.ClassVar[t.Dict[str, dataclasses.Field[t.Any]]]"
+
     def __getitem__(self, key: str) -> t.Any:
         return getattr(self, key)
 
@@ -210,7 +212,7 @@ class DataclassStruct(Adapter[t.Any, t.Any, DataclassType, DataclassType]):
                 value = obj[field.name]
                 setattr(dc, field.name, value)
 
-        return dc
+        return dc  # type: ignore
 
     def _encode(
         self, obj: DataclassType, context: Context, path: PathType

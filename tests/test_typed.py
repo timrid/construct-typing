@@ -384,6 +384,32 @@ def test_tenum_no_enumbase() -> None:
     assert raises(lambda: cst.TEnum(cs.Byte, cls)) == TypeError
 
 
+def test_tenum_asdict() -> None:
+    # see: https://github.com/timrid/construct-typing/issues/21
+    import construct_typed as cst
+    import dataclasses
+
+    class TestEnum(cst.EnumBase):
+        one = 1
+        two = 2
+        four = 4
+        eight = 8
+
+    @dataclasses.dataclass
+    class SomeDataclass:
+        a: TestEnum
+
+    dc = SomeDataclass(TestEnum.one)
+    dc_dict = dataclasses.asdict(dc)
+    assert dc_dict["a"] == dc.a
+    assert dc_dict["a"] is dc.a
+
+    dc = SomeDataclass(TestEnum(5))
+    dc_dict = dataclasses.asdict(dc)
+    assert dc_dict["a"] == dc.a
+    assert dc_dict["a"] is dc.a
+
+
 def test_tenum_docstring() -> None:
     class TestEnum(cst.EnumBase):
         """
@@ -470,6 +496,31 @@ def test_tenum_flags() -> None:
     assert d.build(TestEnum(255)) == b"\xff"
     assert d.build(TestEnum.eight) == b"\x08"
     assert raises(d.build, 2) == TypeError
+
+
+def test_tenum_flags_asdict() -> None:
+    import construct_typed as cst
+    import dataclasses
+
+    class TestEnum(cst.FlagsEnumBase):
+        one = 1
+        two = 2
+        four = 4
+        eight = 8
+
+    @dataclasses.dataclass
+    class SomeDataclass:
+        a: TestEnum
+
+    dc = SomeDataclass(TestEnum.one)
+    dc_dict = dataclasses.asdict(dc)
+    assert dc_dict["a"] == dc.a
+    assert dc_dict["a"] is dc.a
+
+    dc = SomeDataclass(TestEnum(5))
+    dc_dict = dataclasses.asdict(dc)
+    assert dc_dict["a"] == dc.a
+    assert dc_dict["a"] is dc.a
 
 
 def test_tenum_flags_docstring() -> None:
