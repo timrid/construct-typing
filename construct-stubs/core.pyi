@@ -30,7 +30,7 @@ from construct.lib import (
 # type hint. But for supporting pyright/pylance, the same type hint has to be used as the return type of __new__.
 # (see discussion here: https://github.com/python/typeshed/issues/4846).
 
-StreamType = t.BinaryIO
+StreamType = t.IO[bytes]
 FilenameType = t.Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
 PathType = str
 ContextKWType = t.Any
