@@ -152,7 +152,7 @@ class DataclassStruct(Adapter[t.Any, t.Any, DataclassType, DataclassType]):
         Image(width=1, height=2, pixels=b'12')
     """
 
-    subcon: "cs.Struct[t.Any, t.Any]"
+    subcon: "cs.Struct"
     if t.TYPE_CHECKING:
 
         def __new__(
