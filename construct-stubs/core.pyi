@@ -200,6 +200,9 @@ class Subconstruct(
 class Adapter(
     Subconstruct[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
 ):
+    def __new__(
+        cls, subcon: Construct[SubconParsedType, SubconBuildTypes]
+    ) -> Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
     def __init__(
         self, subcon: Construct[SubconParsedType, SubconBuildTypes]
     ) -> None: ...
@@ -671,6 +674,13 @@ class RepeatUntil(
 class Renamed(
     Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
 ):
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        newname: t.Optional[str] = ...,
+        newdocs: t.Optional[str] = ...,
+        newparsed: t.Optional[t.Callable[[t.Any, Context], None]] = ...,
+    ) -> Renamed[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1084,6 +1094,12 @@ class Padded(
 ):
     length: ConstantOrContextLambda[int]
     pattern: bytes
+    def __new__(
+        cls,
+        length: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        pattern: bytes = ...,
+    ) -> Padded[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         length: ConstantOrContextLambda[int],
@@ -1096,6 +1112,12 @@ class Aligned(
 ):
     modulus: ConstantOrContextLambda[int]
     pattern: bytes
+    def __new__(
+        cls,
+        modulus: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        pattern: bytes = ...,
+    ) -> Aligned[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         modulus: ConstantOrContextLambda[int],
@@ -1123,6 +1145,12 @@ class Pointer(
 ):
     offset: ConstantOrContextLambda[int]
     stream: t.Optional[t.Callable[[Context], StreamType]]
+    def __new__(
+        cls,
+        offset: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        stream: t.Optional[t.Callable[[Context], StreamType]] = ...,
+    ) -> Pointer[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         offset: ConstantOrContextLambda[int],
@@ -1213,6 +1241,12 @@ class Prefixed(
 ):
     lengthfield: Construct[SubconParsedType, SubconBuildTypes]
     includelength: t.Optional[bool]
+    def __new__(
+        cls,
+        lengthfield: Construct[int, int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        includelength: t.Optional[bool] = ...,
+    ) -> Prefixed[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         lengthfield: Construct[int, int],
@@ -1234,6 +1268,11 @@ class FixedSized(
     Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
 ):
     length: ConstantOrContextLambda[int]
+    def __new__(
+        cls,
+        length: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> FixedSized[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         length: ConstantOrContextLambda[int],
@@ -1247,6 +1286,14 @@ class NullTerminated(
     include: t.Optional[bool]
     consume: t.Optional[bool]
     require: t.Optional[bool]
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        term: bytes = ...,
+        include: t.Optional[bool] = ...,
+        consume: t.Optional[bool] = ...,
+        require: t.Optional[bool] = ...,
+    ) -> NullTerminated[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1260,6 +1307,9 @@ class NullStripped(
     Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
 ):
     pad: bytes
+    def __new__(
+        cls, subcon: Construct[SubconParsedType, SubconBuildTypes], pad: bytes = ...
+    ) -> NullStripped[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self, subcon: Construct[SubconParsedType, SubconBuildTypes], pad: bytes = ...
     ) -> None: ...
@@ -1270,6 +1320,13 @@ class RestreamData(
     datafunc: t.Union[
         bytes, io.BytesIO, Construct[bytes, t.Any], t.Callable[[Context], bytes]
     ]
+    def __new__(
+        cls,
+        datafunc: t.Union[
+            bytes, io.BytesIO, Construct[bytes, t.Any], t.Callable[[Context], bytes]
+        ],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> RestreamData[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         datafunc: t.Union[
@@ -1285,6 +1342,14 @@ class Transformed(
     decodeamount: t.Optional[int]
     encodefunc: t.Callable[[bytes], bytes]
     encodeamount: t.Optional[int]
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        decodefunc: t.Callable[[bytes], bytes],
+        decodeamount: t.Optional[int],
+        encodefunc: t.Callable[[bytes], bytes],
+        encodeamount: t.Optional[int],
+    ) -> Transformed[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1302,6 +1367,15 @@ class Restreamed(
     encoder: t.Callable[[bytes], bytes]
     encoderunit: int
     sizecomputer: t.Callable[[int], int]
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        decoder: t.Callable[[bytes], bytes],
+        decoderunit: int,
+        encoder: t.Callable[[bytes], bytes],
+        encoderunit: int,
+        sizecomputer: t.Callable[[int], int],
+    ) -> Restreamed[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1362,6 +1436,12 @@ class Compressed(Tunnel[SubconParsedType, SubconBuildTypes]):
     encoding: str
     level: t.Optional[int]
     lib: t.Any
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        encoding: str,
+        level: t.Optional[int] = ...,
+    ) -> Compressed[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1371,6 +1451,10 @@ class Compressed(Tunnel[SubconParsedType, SubconBuildTypes]):
 
 class CompressedLZ4(Tunnel[SubconParsedType, SubconBuildTypes]):
     lib: t.Any
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> CompressedLZ4[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1380,6 +1464,11 @@ class Rebuffered(
     Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
 ):
     stream2: RebufferedBytesIO
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        tailcutoff: t.Optional[int] = ...,
+    ) -> Rebuffered[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1479,6 +1568,12 @@ class LazyBound(Construct[ParsedType, BuildTypes]):
 # adapters and validators
 # ===============================================================================
 class ExprAdapter(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        decoder: t.Callable[[SubconParsedType, Context], ParsedType],
+        encoder: t.Callable[[BuildTypes, Context], SubconBuildTypes],
+    ) -> ExprAdapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1489,6 +1584,11 @@ class ExprAdapter(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildT
 class ExprSymmetricAdapter(
     ExprAdapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]
 ):
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        encoder: t.Callable[[BuildTypes, Context], SubconBuildTypes],
+    ) -> ExprSymmetricAdapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1496,6 +1596,11 @@ class ExprSymmetricAdapter(
     ) -> None: ...
 
 class ExprValidator(Validator[SubconParsedType, SubconBuildTypes]):
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        validator: t.Callable[[SubconParsedType, Context], bool],
+    ) -> ExprValidator[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
@@ -1568,6 +1673,26 @@ class Slicing(
 class Indexing(
     Adapter[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
 ):
+    def __new__(
+        cls,
+        subcon: t.Union[
+            Array[
+                SubconParsedType,
+                SubconBuildTypes,
+                ListContainer[SubconParsedType],
+                t.List[SubconBuildTypes],
+            ],
+            GreedyRange[
+                SubconParsedType,
+                SubconBuildTypes,
+                ListContainer[SubconParsedType],
+                t.List[SubconBuildTypes],
+            ],
+        ],
+        count: int,
+        index: int,
+        empty: t.Optional[SubconParsedType] = ...,
+    ) -> Indexing[SubconParsedType, SubconBuildTypes]: ...
     def __init__(
         self,
         subcon: t.Union[
