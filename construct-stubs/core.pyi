@@ -246,41 +246,45 @@ def Bytewise(
 # ===============================================================================
 # integers and floats
 # ===============================================================================
-class _FormatField(Construct[ParsedType, BuildTypes]):
+class FormatField(Construct[ParsedType, BuildTypes]):
     fmtstr: str
     length: int
+    if sys.version_info >= (3, 8):
+        ENDIANITY = t.Union[t.Literal["=", "<", ">"], str]
+        FORMAT_INT = t.Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
+        FORMAT_FLOAT = t.Literal["f", "d", "e"]
+        FORMAT_BOOL = t.Literal["?"]
+        @t.overload
+        def __new__(
+            cls,
+            endianity: str,
+            format: FORMAT_INT,
+        ) -> FormatField[int, int]: ...
+        @t.overload
+        def __new__(
+            cls,
+            endianity: str,
+            format: FORMAT_FLOAT,
+        ) -> FormatField[float, float]: ...
+        @t.overload
+        def __new__(
+            cls,
+            endianity: str,
+            format: FORMAT_BOOL,
+        ) -> FormatField[bool, bool]: ...
+        @t.overload
+        def __new__(
+            cls,
+            endianity: str,
+            format: str,
+        ) -> FormatField[t.Any, t.Any]: ...
 
-if sys.version_info >= (3, 8):
-    ENDIANITY = t.Union[t.Literal["=", "<", ">"], str]
-    FORMAT_INT = t.Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
-    FORMAT_FLOAT = t.Literal["f", "d", "e"]
-    FORMAT_BOOL = t.Literal["?"]
-    @t.overload
-    def FormatField(
-        endianity: str,
-        format: FORMAT_INT,
-    ) -> _FormatField[int, int]: ...
-    @t.overload
-    def FormatField(
-        endianity: str,
-        format: FORMAT_FLOAT,
-    ) -> _FormatField[float, float]: ...
-    @t.overload
-    def FormatField(
-        endianity: str,
-        format: FORMAT_BOOL,
-    ) -> _FormatField[bool, bool]: ...
-    @t.overload
-    def FormatField(
-        endianity: str,
-        format: str,
-    ) -> _FormatField[t.Any, t.Any]: ...
-
-else:
-    def FormatField(
-        endianity: str,
-        format: str,
-    ) -> _FormatField[t.Any, t.Any]: ...
+    else:
+        def __new__(
+            cls,
+            endianity: str,
+            format: str,
+        ) -> FormatField[t.Any, t.Any]: ...
 
 class BytesInteger(Construct[int, int]):
     length: ConstantOrContextLambda[int]
@@ -308,49 +312,49 @@ Bit: BitsInteger
 Nibble: BitsInteger
 Octet: BitsInteger
 
-Int8ub: _FormatField[int, int]
-Int16ub: _FormatField[int, int]
-Int32ub: _FormatField[int, int]
-Int64ub: _FormatField[int, int]
-Int8sb: _FormatField[int, int]
-Int16sb: _FormatField[int, int]
-Int32sb: _FormatField[int, int]
-Int64sb: _FormatField[int, int]
-Int8ul: _FormatField[int, int]
-Int16ul: _FormatField[int, int]
-Int32ul: _FormatField[int, int]
-Int64ul: _FormatField[int, int]
-Int8sl: _FormatField[int, int]
-Int16sl: _FormatField[int, int]
-Int32sl: _FormatField[int, int]
-Int64sl: _FormatField[int, int]
-Int8un: _FormatField[int, int]
-Int16un: _FormatField[int, int]
-Int32un: _FormatField[int, int]
-Int64un: _FormatField[int, int]
-Int8sn: _FormatField[int, int]
-Int16sn: _FormatField[int, int]
-Int32sn: _FormatField[int, int]
-Int64sn: _FormatField[int, int]
+Int8ub: FormatField[int, int]
+Int16ub: FormatField[int, int]
+Int32ub: FormatField[int, int]
+Int64ub: FormatField[int, int]
+Int8sb: FormatField[int, int]
+Int16sb: FormatField[int, int]
+Int32sb: FormatField[int, int]
+Int64sb: FormatField[int, int]
+Int8ul: FormatField[int, int]
+Int16ul: FormatField[int, int]
+Int32ul: FormatField[int, int]
+Int64ul: FormatField[int, int]
+Int8sl: FormatField[int, int]
+Int16sl: FormatField[int, int]
+Int32sl: FormatField[int, int]
+Int64sl: FormatField[int, int]
+Int8un: FormatField[int, int]
+Int16un: FormatField[int, int]
+Int32un: FormatField[int, int]
+Int64un: FormatField[int, int]
+Int8sn: FormatField[int, int]
+Int16sn: FormatField[int, int]
+Int32sn: FormatField[int, int]
+Int64sn: FormatField[int, int]
 
-Byte: _FormatField[int, int]
-Short: _FormatField[int, int]
-Int: _FormatField[int, int]
-Long: _FormatField[int, int]
+Byte: FormatField[int, int]
+Short: FormatField[int, int]
+Int: FormatField[int, int]
+Long: FormatField[int, int]
 
-Float16b: _FormatField[float, float]
-Float16l: _FormatField[float, float]
-Float16n: _FormatField[float, float]
-Float32b: _FormatField[float, float]
-Float32l: _FormatField[float, float]
-Float32n: _FormatField[float, float]
-Float64b: _FormatField[float, float]
-Float64l: _FormatField[float, float]
-Float64n: _FormatField[float, float]
+Float16b: FormatField[float, float]
+Float16l: FormatField[float, float]
+Float16n: FormatField[float, float]
+Float32b: FormatField[float, float]
+Float32l: FormatField[float, float]
+Float32n: FormatField[float, float]
+Float64b: FormatField[float, float]
+Float64l: FormatField[float, float]
+Float64n: FormatField[float, float]
 
-Half: _FormatField[float, float]
-Single: _FormatField[float, float]
-Double: _FormatField[float, float]
+Half: FormatField[float, float]
+Single: FormatField[float, float]
+Double: FormatField[float, float]
 
 Int24ub: BytesInteger
 Int24ul: BytesInteger
@@ -543,17 +547,19 @@ class Renamed(
 # ===============================================================================
 # miscellaneous
 # ===============================================================================
-class _Const(Subconstruct[None, None, SubconParsedType, SubconBuildTypes]): ...
-
-@t.overload
-def Const(
-    value: bytes,
-) -> _Const[bytes, t.Optional[bytes]]: ...
-@t.overload
-def Const(
-    value: SubconBuildTypes,
-    subcon: Construct[SubconParsedType, SubconBuildTypes],
-) -> _Const[SubconParsedType, t.Optional[SubconBuildTypes]]: ...
+class Const(Subconstruct[None, None, SubconParsedType, SubconBuildTypes]):
+    value: SubconBuildTypes
+    @t.overload
+    def __new__(
+        cls,
+        value: bytes,
+    ) -> Const[bytes, t.Optional[bytes]]: ...
+    @t.overload
+    def __new__(
+        cls,
+        value: SubconBuildTypes,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> Const[SubconParsedType, t.Optional[SubconBuildTypes]]: ...
 
 class Computed(Construct[ParsedType, None]):
     func: ConstantOrContextLambda2[ParsedType]
@@ -658,63 +664,68 @@ def Timestamp(
 K = t.TypeVar("K")
 V = t.TypeVar("V")
 
-class _Hex(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
-    pass
+class Hex(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[int, BuildTypes],
+    ) -> Hex[int, BuildTypes, HexDisplayedInteger, BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[bytes, BuildTypes],
+    ) -> Hex[bytes, BuildTypes, HexDisplayedBytes, BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes],
+    ) -> Hex[
+        RawCopyObj[SubconParsedType],
+        BuildTypes,
+        HexDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
+        BuildTypes,
+    ]: ...
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[Container[t.Any], BuildTypes],
+    ) -> Hex[Container[t.Any], BuildTypes, HexDisplayedDict[str, t.Any], BuildTypes]: ...
+    @t.overload
+    def __new__(
+        cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> Hex[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]: ...
 
-@t.overload
-def Hex(
-    subcon: Construct[int, BuildTypes],
-) -> _Hex[int, BuildTypes, HexDisplayedInteger, BuildTypes]: ...
-@t.overload
-def Hex(
-    subcon: Construct[bytes, BuildTypes],
-) -> _Hex[bytes, BuildTypes, HexDisplayedBytes, BuildTypes]: ...
-@t.overload
-def Hex(
-    subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes],
-) -> _Hex[
-    RawCopyObj[SubconParsedType],
-    BuildTypes,
-    HexDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
-    BuildTypes,
-]: ...
-@t.overload
-def Hex(
-    subcon: Construct[Container[t.Any], BuildTypes],
-) -> _Hex[Container[t.Any], BuildTypes, HexDisplayedDict[str, t.Any], BuildTypes]: ...
-@t.overload
-def Hex(
-    subcon: Construct[SubconParsedType, SubconBuildTypes],
-) -> _Hex[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]: ...
-
-class _HexDump(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
-    pass
-
-@t.overload
-def HexDump(
-    subcon: Construct[bytes, BuildTypes],
-) -> _HexDump[bytes, BuildTypes, HexDumpDisplayedBytes, BuildTypes]: ...
-@t.overload
-def HexDump(
-    subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes],
-) -> _HexDump[
-    RawCopyObj[SubconParsedType],
-    BuildTypes,
-    HexDumpDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
-    BuildTypes,
-]: ...
-@t.overload
-def HexDump(
-    subcon: Construct[Container[t.Any], BuildTypes],
-) -> _HexDump[
-    Container[t.Any], BuildTypes, HexDumpDisplayedDict[str, t.Any], BuildTypes
-]: ...
-@t.overload
-def HexDump(
-    subcon: Construct[SubconParsedType, SubconBuildTypes],
-) -> _HexDump[
-    SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
-]: ...
+class HexDump(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+    @t.overload
+    def __new__(
+            cls,
+        subcon: Construct[bytes, BuildTypes],
+    ) -> HexDump[bytes, BuildTypes, HexDumpDisplayedBytes, BuildTypes]: ...
+    @t.overload
+    def __new__(
+            cls,
+        subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes],
+    ) -> HexDump[
+        RawCopyObj[SubconParsedType],
+        BuildTypes,
+        HexDumpDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
+        BuildTypes,
+    ]: ...
+    @t.overload
+    def __new__(
+            cls,
+        subcon: Construct[Container[t.Any], BuildTypes],
+    ) -> HexDump[
+        Container[t.Any], BuildTypes, HexDumpDisplayedDict[str, t.Any], BuildTypes
+    ]: ...
+    @t.overload
+    def __new__(
+            cls,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> HexDump[
+        SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
+    ]: ...
 
 # ===============================================================================
 # conditional
@@ -772,23 +783,24 @@ def If(
 
 SwitchType = t.TypeVar("SwitchType")
 
-class _Switch(Construct[ParsedType, BuildTypes]):
+class Switch(Construct[ParsedType, BuildTypes]):
     keyfunc: ConstantOrContextLambda[t.Any]
     cases: t.Dict[t.Any, Construct[t.Any, t.Any]]
     default: Construct[t.Any, t.Any]
-
-@t.overload
-def Switch(
-    keyfunc: ConstantOrContextLambda[SwitchType],
-    cases: t.Dict[SwitchType, Construct[int, int]],
-    default: t.Optional[Construct[int, int]] = ...,
-) -> _Switch[int, t.Optional[int]]: ...
-@t.overload
-def Switch(
-    keyfunc: ConstantOrContextLambda[t.Any],
-    cases: t.Dict[t.Any, Construct[t.Any, t.Any]],
-    default: t.Optional[Construct[t.Any, t.Any]] = ...,
-) -> _Switch[t.Any, t.Any]: ...
+    @t.overload
+    def __new__(
+        cls,
+        keyfunc: ConstantOrContextLambda[SwitchType],
+        cases: t.Dict[SwitchType, Construct[int, int]],
+        default: t.Optional[Construct[int, int]] = ...,
+    ) -> Switch[int, t.Optional[int]]: ...
+    @t.overload
+    def __new__(
+        cls,
+        keyfunc: ConstantOrContextLambda[t.Any],
+        cases: t.Dict[t.Any, Construct[t.Any, t.Any]],
+        default: t.Optional[Construct[t.Any, t.Any]] = ...,
+    ) -> Switch[t.Any, t.Any]: ...
 
 class StopIf(Construct[None, None]):
     condfunc: ConstantOrContextLambda[bool]
