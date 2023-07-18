@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # mypy: no-warn-unused-ignores
-from .declarativeunittest import raises, common, commonhex, commondumpdeprecated, commondump, commonbytes, ident, devzero
+from .declarativeunittest import raises, common, ident, devzero
 from construct.core import *
 from construct import *
 from construct.lib import *
@@ -707,10 +707,13 @@ def test_hexdump() -> None:
 
 def test_hexdump_regression_issue_188() -> None:
     # Hex HexDump were not inheriting subcon flags
-    d = Struct(Hex(Const(b"MZ")))
+    a = Hex(Const(b"MZ"))
+    d = Struct(a)
     assert d.parse(b"MZ") == Container()
     assert d.build(dict()) == b"MZ"
-    d = Struct(HexDump(Const(b"MZ")))
+
+    a = HexDump(Const(b"MZ"))
+    d = Struct(a)
     assert d.parse(b"MZ") == Container()
     assert d.build(dict()) == b"MZ"
 
@@ -1688,9 +1691,11 @@ def test_from_issue_244() -> None:
     assert d.parse(b"abcd") == [Container(num=97, index=0),Container(num=98, index=1),Container(num=99, index=2),Container(num=100, index=3),]
 
 def test_from_issue_269() -> None:
-    d = Struct("enabled" / Byte, If(this.enabled, Padding(2)))
+    a = If(this.enabled, Padding(2))
+    d = Struct("enabled" / Byte, a)
     assert d.build(dict(enabled=1)) == b"\x01\x00\x00"
     assert d.build(dict(enabled=0)) == b"\x00"
+    
     d = Struct("enabled" / Byte, "pad" / If(this.enabled, Padding(2)))
     assert d.build(dict(enabled=1)) == b"\x01\x00\x00"
     assert d.build(dict(enabled=0)) == b"\x00"
