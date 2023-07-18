@@ -3,6 +3,10 @@ from construct.debug import *
 from construct.expr import *
 from construct.lib import *
 from construct.version import *
+from construct import lib
+
+__author__: str
+__version__: str
 
 #===============================================================================
 # exposed names

@@ -1,5 +1,6 @@
 import typing as t
 
+PY: t.Tuple[int, int]
 PY2: bool
 PY3: bool
 PYPY: bool

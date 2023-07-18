@@ -1,4 +1,3 @@
-import operator
 import typing as t
 
 from construct.core import *

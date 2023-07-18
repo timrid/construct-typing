@@ -207,7 +207,16 @@ class Tunnel(
     def _decode(self, data: bytes, context: Context, path: PathType) -> bytes: ...
     def _encode(self, data: bytes, context: Context, path: PathType) -> bytes: ...
 
-# TODO: Compiled
+class Compiled(Construct[t.Any, t.Any]):
+    source: t.Optional[str]
+    defersubcon: t.Optional[Construct[t.Any, t.Any]]
+    parsefunc: t.Callable[[StreamType, Context], t.Any]
+    buildfunc: t.Callable[[t.Any, StreamType, Context], t.Any]
+    def __init__(
+        self,
+        parsefunc: t.Callable[[StreamType, Context], t.Any],
+        buildfunc: t.Callable[[t.Any, StreamType, Context], t.Any],
+    ) -> None: ...
 
 # ===============================================================================
 # bytes and bits
@@ -356,6 +365,8 @@ ZigZag: Construct[int, int]
 # ===============================================================================
 # strings
 # ===============================================================================
+possiblestringencodings: t.Dict[str, int]
+
 class StringEncoded(Construct[str, str]):
     if sys.version_info >= (3, 8):
         ENCODING_1 = t.Literal["ascii", "utf8", "utf_8", "u8"]
