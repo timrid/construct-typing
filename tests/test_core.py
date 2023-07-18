@@ -420,11 +420,11 @@ def test_struct_proper_context() -> None:
         "x"/Byte,
         "inner"/Struct(
             "y"/Byte,
-            "a"/Computed[int](this._.x+1),
-            "b"/Computed[int](this.y+2),
+            "a"/Computed(this._.x+1),  # type: ignore
+            "b"/Computed(this.y+2),  # type: ignore
         ),
-        "c"/Computed[int](this.x+3),
-        "d"/Computed[int](this.inner.y+4),
+        "c"/Computed(this.x+3),  # type: ignore
+        "d"/Computed(this.inner.y+4),  # type: ignore
     )
     assert d.parse(b"\x01\x0f") == Container(x=1, inner=Container(y=15, a=2, b=17), c=4, d=19)
 
@@ -511,7 +511,7 @@ def test_const() -> None:
 
 def test_computed() -> None:
     common(Computed(255), b"", 255, 0)
-    common(Computed[int](lambda ctx: 255), b"", 255, 0)
+    common(Computed(lambda ctx: 255), b"", 255, 0)  # type: ignore
     assert Computed(255).build(None) == b""
     assert Struct(Computed(255)).build({}) == b""
     assert raises(Computed(this.missing).parse, b"") == KeyError
