@@ -637,8 +637,7 @@ def test_numpy_error() -> None:
     numpy.load(io.BytesIO(b""))  # type: ignore
 
 def test_namedtuple() -> None:
-    import collections
-    coord = collections.namedtuple("coord", "x y z")
+    coord = t.NamedTuple("coord", [("x", int), ("y", int), ("z", int)])
     d1 = NamedTuple("coord", "x y z", Array(3, Byte))
     common(d1, b"123", coord(49,50,51), 3)
     d2 = NamedTuple("coord", "x y z", GreedyRange(Byte))
@@ -808,8 +807,10 @@ def test_select_buildfromnone_issue_747() -> None:
     assert d.build(dict()) == b""
 
 def test_if() -> None:
-    common(If(True,  Byte), b"\x01", 1, 1)
-    common(If(False, Byte), b"", None, 0)
+    d = If(True,  Byte)
+    common(d, b"\x01", 1, 1)
+    d = If(False, Byte)
+    common(d, b"", None, 0)
 
 def test_ifthenelse() -> None:
     common(IfThenElse(True,  Int8ub, Int16ub), b"\x01", 1, 1)
@@ -1545,7 +1546,7 @@ def test_operators() -> None:
     assert d.docs == "description"
     d = "description" * Byte
     assert d.docs == "description"
-    """
+    _ = """
     description
     """ * \
     Byte
@@ -1796,11 +1797,11 @@ def test_pickling_constructs() -> None:
     )
     data = bytes(100)
 
-    du = cloudpickle.loads(cloudpickle.dumps(d, protocol=-1))
+    du = cloudpickle.loads(cloudpickle.dumps(d, protocol=-1))  # type: ignore
     assert du.parse(data) == d.parse(data)
 
 def test_pickling_constructs_issue_894() -> None:
-    import cloudpickle
+    import cloudpickle  # type: ignore
 
     fundus_header = Struct(
         'width' / Int32un,
@@ -1812,7 +1813,7 @@ def test_pickling_constructs_issue_894() -> None:
         'img' / Int8un,
     )
 
-    cloudpickle.dumps(fundus_header)
+    cloudpickle.dumps(fundus_header)  # type: ignore
 
 def test_exposing_members_attributes() -> None:
     d1 = Struct(
@@ -2023,7 +2024,7 @@ def test_struct_root_topmost() -> None:
     assert d.parse(b"", z=2) == Container(x=1, inner=Container(inner2=Container(x=1,z=2,zz=2)))
 
 def test_parsedhook_repeatersdiscard() -> None:
-    outputs = []
+    outputs: t.List[int] = []
     def printobj1(obj: int, ctx: "Context") -> None:
         outputs.append(obj)
     d1 = GreedyRange(Byte * printobj1, discard=True)
