@@ -712,8 +712,8 @@ def test_hexdump_regression_issue_188() -> None:
     assert d.parse(b"MZ") == Container()
     assert d.build(dict()) == b"MZ"
 
-    a = HexDump(Const(b"MZ"))
-    d = Struct(a)
+    b = HexDump(Const(b"MZ"))
+    d = Struct(b)
     assert d.parse(b"MZ") == Container()
     assert d.build(dict()) == b"MZ"
 

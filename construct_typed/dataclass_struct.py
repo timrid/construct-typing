@@ -102,10 +102,10 @@ def csfield(
 
     # Set default values in case of special sucons
     if isinstance(orig_subcon, cs.Const):
-        const_subcon: "cs.Const[t.Any, t.Any, t.Any, t.Any]" = orig_subcon
+        const_subcon: "cs.Const[t.Any, t.Any]" = orig_subcon
         default = const_subcon.value
     elif isinstance(orig_subcon, cs.Default):
-        default_subcon: "cs.Default[t.Any, t.Any, t.Any, t.Any]" = orig_subcon
+        default_subcon: "cs.Default[t.Any, t.Any]" = orig_subcon
         if callable(default_subcon.value):
             default = None  # context lambda is only defined at parsing/building
         else:

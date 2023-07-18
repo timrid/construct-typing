@@ -22,13 +22,13 @@ IdentType = t.TypeVar("IdentType")
 
 
 class ZeroIO(io.BufferedIOBase):
-    def read(self, __size: t.Optional[int] = None):
+    def read(self, __size: t.Optional[int] = None) -> bytes:
         if __size is not None:
             return bytes(__size)
         else:
             return bytes(0)
 
-    def read1(self, __size: int = 0):
+    def read1(self, __size: int = 0) -> bytes:
         return bytes(__size)
 
 
@@ -176,8 +176,8 @@ def common(
         size = format.sizeof(**kw)
         assert size == sizesample
     else:
-        size = raises(format.sizeof, **kw)
-        assert size == sizesample
+        size_ex = raises(format.sizeof, **kw)
+        assert size_ex == sizesample
 
 
 def setattrs(obj: T, **kwargs: t.Any) -> T:
@@ -187,24 +187,24 @@ def setattrs(obj: T, **kwargs: t.Any) -> T:
     return obj
 
 
-def commonhex(format: "Construct[t.Any, t.Any]", hexdata: str):
+def commonhex(format: "Construct[t.Any, t.Any]", hexdata: str) -> None:
     commonbytes(format, binascii.unhexlify(hexdata))
 
 
-def commondumpdeprecated(format: "Construct[t.Any, t.Any]", filename: str):
+def commondumpdeprecated(format: "Construct[t.Any, t.Any]", filename: str) -> None:
     filename = "tests/deprecated_gallery/blobs/" + filename
     with open(filename, "rb") as f:
         data = f.read()
     commonbytes(format, data)
 
 
-def commondump(format: "Construct[t.Any, t.Any]", filename: str):
+def commondump(format: "Construct[t.Any, t.Any]", filename: str) -> None:
     filename = "tests/gallery/blobs/" + filename
     with open(filename, "rb") as f:
         data = f.read()
     commonbytes(format, data)
 
 
-def commonbytes(format: "Construct[t.Any, t.Any]", data: bytes):
+def commonbytes(format: "Construct[t.Any, t.Any]", data: bytes) -> None:
     obj = format.parse(data)
     format.build(obj)
