@@ -256,32 +256,32 @@ class FormatField(Construct[ParsedType, BuildTypes]):
         FORMAT_BOOL = t.Literal["?"]
         @t.overload
         def __new__(
-            cls,
+            cls: "type[FormatField[int, int]]",
             endianity: str,
             format: FORMAT_INT,
         ) -> FormatField[int, int]: ...
         @t.overload
         def __new__(
-            cls,
+            cls: "type[FormatField[float, float]]",
             endianity: str,
             format: FORMAT_FLOAT,
         ) -> FormatField[float, float]: ...
         @t.overload
         def __new__(
-            cls,
+            cls: "type[FormatField[bool, bool]]",
             endianity: str,
             format: FORMAT_BOOL,
         ) -> FormatField[bool, bool]: ...
         @t.overload
         def __new__(
-            cls,
+            cls: "type[FormatField[t.Any, t.Any]]",
             endianity: str,
             format: str,
         ) -> FormatField[t.Any, t.Any]: ...
 
     else:
         def __new__(
-            cls,
+            cls: "type[FormatField[t.Any, t.Any]]",
             endianity: str,
             format: str,
         ) -> FormatField[t.Any, t.Any]: ...
@@ -547,16 +547,16 @@ class Renamed(
 # ===============================================================================
 # miscellaneous
 # ===============================================================================
-class Const(Subconstruct[None, None, SubconParsedType, SubconBuildTypes]):
-    value: SubconBuildTypes
+class Const(Subconstruct[t.Any, t.Any, ParsedType, BuildTypes]):
+    value: BuildTypes
     @t.overload
     def __new__(
-        cls,
+        cls: "type[Const[bytes, t.Optional[bytes]]]",
         value: bytes,
     ) -> Const[bytes, t.Optional[bytes]]: ...
     @t.overload
     def __new__(
-        cls,
+        cls: "type[Const[SubconParsedType, t.Optional[SubconBuildTypes]]]",
         value: SubconBuildTypes,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> Const[SubconParsedType, t.Optional[SubconBuildTypes]]: ...
@@ -664,68 +664,60 @@ def Timestamp(
 K = t.TypeVar("K")
 V = t.TypeVar("V")
 
-class Hex(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+class Hex(Adapter[t.Any, t.Any, ParsedType, BuildTypes]):
     @t.overload
     def __new__(
-        cls,
+        cls: "type[Hex[HexDisplayedInteger, BuildTypes]]",
         subcon: Construct[int, BuildTypes],
-    ) -> Hex[int, BuildTypes, HexDisplayedInteger, BuildTypes]: ...
+    ) -> Hex[HexDisplayedInteger, BuildTypes]: ...
     @t.overload
     def __new__(
-        cls,
+        cls: "type[Hex[HexDisplayedBytes, BuildTypes]]",
         subcon: Construct[bytes, BuildTypes],
-    ) -> Hex[bytes, BuildTypes, HexDisplayedBytes, BuildTypes]: ...
+    ) -> Hex[HexDisplayedBytes, BuildTypes]: ...
     @t.overload
     def __new__(
-        cls,
+        cls: "type[Hex[HexDisplayedDict[str, t.Union[int, bytes, SubconParsedType]], BuildTypes,]]",
         subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes],
     ) -> Hex[
-        RawCopyObj[SubconParsedType],
-        BuildTypes,
         HexDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
         BuildTypes,
     ]: ...
     @t.overload
     def __new__(
-        cls,
+        cls: "type[Hex[HexDisplayedDict[str, t.Any], BuildTypes]]",
         subcon: Construct[Container[t.Any], BuildTypes],
-    ) -> Hex[Container[t.Any], BuildTypes, HexDisplayedDict[str, t.Any], BuildTypes]: ...
+    ) -> Hex[HexDisplayedDict[str, t.Any], BuildTypes]: ...
     @t.overload
     def __new__(
-        cls,
+        cls: "type[Hex[SubconParsedType, SubconBuildTypes]]",
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-    ) -> Hex[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]: ...
+    ) -> Hex[SubconParsedType, SubconBuildTypes]: ...
 
-class HexDump(Adapter[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes]):
+class HexDump(Adapter[t.Any, t.Any, ParsedType, BuildTypes]):
     @t.overload
     def __new__(
-            cls,
+        cls: "type[HexDump[HexDumpDisplayedBytes, BuildTypes]]",
         subcon: Construct[bytes, BuildTypes],
-    ) -> HexDump[bytes, BuildTypes, HexDumpDisplayedBytes, BuildTypes]: ...
+    ) -> HexDump[HexDumpDisplayedBytes, BuildTypes]: ...
     @t.overload
     def __new__(
-            cls,
+        cls: "type[HexDump[HexDumpDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],BuildTypes,]]",
         subcon: Construct[RawCopyObj[SubconParsedType], BuildTypes],
     ) -> HexDump[
-        RawCopyObj[SubconParsedType],
-        BuildTypes,
         HexDumpDisplayedDict[str, t.Union[int, bytes, SubconParsedType]],
         BuildTypes,
     ]: ...
     @t.overload
     def __new__(
-            cls,
+        cls: "type[HexDump[HexDumpDisplayedDict[str, t.Any], BuildTypes]]",
         subcon: Construct[Container[t.Any], BuildTypes],
-    ) -> HexDump[
-        Container[t.Any], BuildTypes, HexDumpDisplayedDict[str, t.Any], BuildTypes
-    ]: ...
+    ) -> HexDump[HexDumpDisplayedDict[str, t.Any], BuildTypes]: ...
     @t.overload
     def __new__(
-            cls,
+        cls: "type[HexDump[SubconParsedType, SubconBuildTypes]]",
         subcon: Construct[SubconParsedType, SubconBuildTypes],
-    ) -> HexDump[
-        SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes
-    ]: ...
+    ) -> HexDump[SubconParsedType, SubconBuildTypes]: ...
 
 # ===============================================================================
 # conditional
@@ -789,14 +781,14 @@ class Switch(Construct[ParsedType, BuildTypes]):
     default: Construct[t.Any, t.Any]
     @t.overload
     def __new__(
-        cls,
+        cls: "type[Switch[int, t.Optional[int]]]",
         keyfunc: ConstantOrContextLambda[SwitchType],
         cases: t.Dict[SwitchType, Construct[int, int]],
         default: t.Optional[Construct[int, int]] = ...,
     ) -> Switch[int, t.Optional[int]]: ...
     @t.overload
     def __new__(
-        cls,
+        cls: "type[Switch[t.Any, t.Any]]",
         keyfunc: ConstantOrContextLambda[t.Any],
         cases: t.Dict[t.Any, Construct[t.Any, t.Any]],
         default: t.Optional[Construct[t.Any, t.Any]] = ...,
