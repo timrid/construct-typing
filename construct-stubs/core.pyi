@@ -25,10 +25,6 @@ from construct.lib import (
 #   - Higher Kinded Types: https://github.com/python/typing/issues/548
 #   - Higher Kinded Types: https://sobolevn.me/2020/10/higher-kinded-types-in-python
 
-# unfortunalty the static type checkers "pyright" and "mypy" are slight different. pyright is not fully analysing the type hint of the
-# self type in the __init__ (eg. self: Construct[int, int] is not working). but pyright would support such type hints of the return type
-# of __new__. indeed mypy doens not support the type inference for the method __new__, but fully supports the annotation of self in __init__...
-
 StreamType = t.IO[bytes]
 FilenameType = t.Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
 PathType = str
