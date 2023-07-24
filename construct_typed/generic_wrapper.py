@@ -39,7 +39,7 @@ else:
         pass
 
     class Array(
-        t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
+        t.Generic[SubconParsedType, SubconBuildTypes],
         cs.Array,
     ):
         pass
