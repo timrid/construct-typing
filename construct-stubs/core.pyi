@@ -749,25 +749,29 @@ ThenBuildTypes = t.TypeVar("ThenBuildTypes")
 ElseParsedType = t.TypeVar("ElseParsedType")
 ElseBuildTypes = t.TypeVar("ElseBuildTypes")
 
-class IfThenElse(
-    Construct[
-        t.Union[ThenParsedType, ElseParsedType], t.Union[ThenBuildTypes, ElseBuildTypes]
-    ]
-):
+class IfThenElse(Construct[ParsedType, BuildTypes]):
     condfunc: ConstantOrContextLambda[bool]
-    thensubcon: Construct[ThenParsedType, ThenBuildTypes]
-    elsesubcon: Construct[ElseParsedType, ElseBuildTypes]
-    def __init__(
-        self,
+    thensubcon: Construct[t.Any, t.Any]
+    elsesubcon: Construct[t.Any, t.Any]
+    @t.overload
+    def __new__(
+        cls: "type[IfThenElse[t.Union[ThenParsedType, ElseParsedType], t.Union[ThenBuildTypes, ElseBuildTypes]]]",
         condfunc: ConstantOrContextLambda[bool],
         thensubcon: Construct[ThenParsedType, ThenBuildTypes],
         elsesubcon: Construct[ElseParsedType, ElseBuildTypes],
-    ) -> None: ...
+    ) -> "IfThenElse[t.Union[ThenParsedType, ElseParsedType], t.Union[ThenBuildTypes, ElseBuildTypes]]": ...
+    @t.overload
+    def __new__(
+        cls: "type[IfThenElse[t.Any, t.Any]]",
+        condfunc: ConstantOrContextLambda[bool],
+        thensubcon: Construct[t.Any, t.Any],
+        elsesubcon: Construct[t.Any, t.Any],
+    ) -> "IfThenElse[t.Any, t.Any]": ...
 
 def If(
     condfunc: ConstantOrContextLambda[bool],
     subcon: Construct[ThenParsedType, ThenBuildTypes],
-) -> IfThenElse[ThenParsedType, None, ThenBuildTypes, None]: ...
+) -> IfThenElse[t.Optional[ThenParsedType], t.Optional[ThenBuildTypes]]: ...
 
 SwitchType = t.TypeVar("SwitchType")
 

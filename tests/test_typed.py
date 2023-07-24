@@ -72,6 +72,15 @@ def test_dataclass_str_repr() -> None:
         == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
     )
 
+def test_dataclass_ifthenelse() -> None:
+    @dataclasses.dataclass
+    class IfThenElseTest(DataclassMixin):
+        test_if: t.Optional[int] = csfield(cs.If(False, cs.Int8ub))
+        test_ifthenelse: t.Optional[int] = csfield(cs.IfThenElse(True, cs.Int8ub, cs.Pass))
+
+    a = IfThenElseTest(test_if=None, test_ifthenelse=None)
+    assert a.test_if == None
+    assert a.test_ifthenelse == None
 
 def test_dataclass_struct() -> None:
     @dataclasses.dataclass
