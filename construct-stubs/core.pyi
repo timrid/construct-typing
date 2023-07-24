@@ -17,6 +17,7 @@ from construct.lib import (
     ListType,
     RebufferedBytesIO,
 )
+from typing_extensions import Buffer
 
 # unfortunately, there are a few duplications with "typing", e.g. Union and Optional, which is why the t. prefix must be used everywhere
 
@@ -25,6 +26,7 @@ from construct.lib import (
 #   - Higher Kinded Types: https://github.com/python/typing/issues/548
 #   - Higher Kinded Types: https://sobolevn.me/2020/10/higher-kinded-types-in-python
 
+ReadableBuffer: t.TypeAlias = Buffer
 StreamType = t.IO[bytes]
 FilenameType = t.Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
 PathType = str
@@ -95,7 +97,7 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     docs: str
     flagbuildnone: bool
     parsed: t.Optional[t.Callable[[ParsedType, Context], None]]
-    def parse(self, data: bytes, **contextkw: ContextKWType) -> ParsedType: ...
+    def parse(self, data: ReadableBuffer, **contextkw: ContextKWType) -> ParsedType: ...
     def parse_stream(
         self, stream: StreamType, **contextkw: ContextKWType
     ) -> ParsedType: ...
@@ -113,7 +115,9 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     def compile(
         self, filename: FilenameType = ...
     ) -> Construct[ParsedType, BuildTypes]: ...
-    def benchmark(self, sampledata: bytes, filename: FilenameType = ...) -> str: ...
+    def benchmark(
+        self, sampledata: ReadableBuffer, filename: FilenameType = ...
+    ) -> str: ...
     def export_ksy(
         self, schemaname: str = ..., filename: FilenameType = ...
     ) -> str: ...
