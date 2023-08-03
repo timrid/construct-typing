@@ -153,15 +153,6 @@ class DataclassStruct(Adapter[t.Any, t.Any, DataclassType, DataclassType]):
     """
 
     subcon: "cs.Struct"
-    if t.TYPE_CHECKING:
-
-        def __new__(
-            cls,
-            dc_type: t.Type[DataclassType],
-            reverse: bool = False,
-        ) -> "DataclassStruct[DataclassType]":
-            ...
-
     def __init__(
         self,
         dc_type: t.Type[DataclassType],

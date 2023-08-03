@@ -91,14 +91,6 @@ class TEnum(Adapter[int, int, EnumType, EnumType]):
     """
     Typed enum.
     """
-
-    if t.TYPE_CHECKING:
-
-        def __new__(
-            cls, subcon: Construct[int, int], enum_type: t.Type[EnumType]
-        ) -> "TEnum[EnumType]":
-            ...
-
     def __init__(self, subcon: Construct[int, int], enum_type: t.Type[EnumType]):
         if not issubclass(enum_type, EnumBase):
             raise TypeError(
@@ -195,14 +187,6 @@ class TFlagsEnum(Adapter[int, int, FlagsEnumType, FlagsEnumType]):
     """
     Typed enum.
     """
-
-    if t.TYPE_CHECKING:
-
-        def __new__(
-            cls, subcon: Construct[int, int], enum_type: t.Type[FlagsEnumType]
-        ) -> "TFlagsEnum[FlagsEnumType]":
-            ...
-
     def __init__(self, subcon: Construct[int, int], enum_type: t.Type[FlagsEnumType]):
         if not issubclass(enum_type, FlagsEnumBase):
             raise TypeError(
