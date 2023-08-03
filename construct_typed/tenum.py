@@ -1,6 +1,8 @@
 import enum
 import typing as t
 
+from typing_extensions import Self
+
 from .generic_wrapper import *
 
 
@@ -45,7 +47,7 @@ class EnumBase(enum.IntEnum):
         'This is the running state.'
     """
 
-    def __new__(cls, val: t.Union[EnumValue, int]) -> "EnumBase":
+    def __new__(cls, val: t.Union[EnumValue, int]) -> "Self":
         if isinstance(val, EnumValue):
             obj = int.__new__(cls, val.value)
             obj._value_ = val.value
@@ -158,7 +160,7 @@ class FlagsEnumBase(enum.IntFlag):
         'This is option two.'
     """
 
-    def __new__(cls, val: t.Union[EnumValue, int]) -> "FlagsEnumBase":
+    def __new__(cls, val: t.Union[EnumValue, int]) -> "Self":
         if isinstance(val, EnumValue):
             obj = int.__new__(cls, val.value)
             obj._value_ = val.value
