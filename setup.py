@@ -22,7 +22,7 @@ setup(
     author="Tim Riddermann",
     python_requires=">=3.7",
     install_requires=[
-        "construct==2.10.68",
+        "construct==2.10.70",
         "typing_extensions>=4.6.0"
     ],
     keywords=[
