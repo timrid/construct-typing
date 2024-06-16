@@ -182,7 +182,7 @@ class Adapter(
         self, subcon: Construct[SubconParsedType, SubconBuildTypes]
     ) -> None: ...
     def _decode(
-        self, obj: SubconBuildTypes, context: Context, path: PathType
+        self, obj: SubconParsedTypes, context: Context, path: PathType
     ) -> ParsedType: ...
     def _encode(
         self, obj: BuildTypes, context: Context, path: PathType
