@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-latest', 'windows-latest']
-        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
+        python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13' ]
         
     runs-on: ${{ matrix.os }}
     name: OS ${{ matrix.os }}, Python ${{ matrix.python-version }}
@@ -35,6 +35,7 @@ jobs:
       - name: Install pyright
         run: |
           npm install -g pyright
+          pyright --version
 
       # Install this package
       - name: Install this package  

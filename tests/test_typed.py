@@ -2,9 +2,11 @@
 # pyright: strict
 import dataclasses
 import enum
+import textwrap
 import typing as t
 
 import construct as cs
+
 import construct_typed as cst
 from construct_typed import DataclassBitStruct, DataclassMixin, DataclassStruct, csfield
 
@@ -72,15 +74,19 @@ def test_dataclass_str_repr() -> None:
         == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
     )
 
+
 def test_dataclass_ifthenelse() -> None:
     @dataclasses.dataclass
     class IfThenElseTest(DataclassMixin):
         test_if: t.Optional[int] = csfield(cs.If(False, cs.Int8ub))
-        test_ifthenelse: t.Optional[int] = csfield(cs.IfThenElse(True, cs.Int8ub, cs.Pass))
+        test_ifthenelse: t.Optional[int] = csfield(
+            cs.IfThenElse(True, cs.Int8ub, cs.Pass)
+        )
 
     a = IfThenElseTest(test_if=None, test_ifthenelse=None)
     assert a.test_if == None
     assert a.test_ifthenelse == None
+
 
 def test_dataclass_struct() -> None:
     @dataclasses.dataclass
@@ -395,8 +401,9 @@ def test_tenum_no_enumbase() -> None:
 
 def test_tenum_asdict() -> None:
     # see: https://github.com/timrid/construct-typing/issues/21
-    import construct_typed as cst
     import dataclasses
+
+    import construct_typed as cst
 
     class TestEnum(cst.EnumBase):
         one = 1
@@ -436,9 +443,9 @@ def test_tenum_docstring() -> None:
         Value_NoDoc = cst.EnumValue(2)
         Value_NoDoc2 = 3
 
-    assert (
-        TestEnum.__doc__
-        == """
+    assert TestEnum.__doc__ is not None
+    assert textwrap.dedent(TestEnum.__doc__) == textwrap.dedent(
+        """
         This is an test enum.
         """
     )
@@ -508,8 +515,9 @@ def test_tenum_flags() -> None:
 
 
 def test_tenum_flags_asdict() -> None:
-    import construct_typed as cst
     import dataclasses
+
+    import construct_typed as cst
 
     class TestEnum(cst.FlagsEnumBase):
         one = 1
@@ -549,9 +557,9 @@ def test_tenum_flags_docstring() -> None:
         Value_NoDoc = cst.EnumValue(2)
         Value_NoDoc2 = 4
 
-    assert (
-        TestEnum.__doc__
-        == """
+    assert TestEnum.__doc__ is not None
+    assert textwrap.dedent(TestEnum.__doc__) == textwrap.dedent(
+        """
         This is an test flags enum.
         """
     )
