@@ -150,7 +150,7 @@ def test_formatfield_bool_issue_901() -> None:
 	assert d.build(False) == b"\x00"
 	assert d.sizeof() == 1
 
-def test_bytesinteger():
+def test_bytesinteger() -> None:
     d = BytesInteger(0)
     assert raises(d.parse, b"") == IntegerError
     assert raises(d.build, 0) == IntegerError
@@ -170,7 +170,7 @@ def test_bytesinteger():
     assert raises(BytesInteger(8, False).build,  2**64) == IntegerError
     assert raises(BytesInteger(this.missing).sizeof) == SizeofError
 
-def test_bitsinteger():
+def test_bitsinteger() -> None:
     d = BitsInteger(0)
     assert raises(d.parse, b"") == IntegerError
     assert raises(d.build, 0) == IntegerError
@@ -946,16 +946,16 @@ def test_peek() -> None:
     assert d4.build(Container(a=0x01, b=0x0102)) == b""
     assert d4.sizeof() == 0
 
-def test_offsettedend():
-    d = Struct(
+def test_offsettedend() -> None:
+    d1 = Struct(
         "header" / Bytes(2),
         "data" / OffsettedEnd(-2, GreedyBytes),
         "footer" / Bytes(2),
     )
-    common(d, b"\x01\x02\x03\x04\x05\x06\x07", Container(header=b'\x01\x02', data=b'\x03\x04\x05', footer=b'\x06\x07'))
+    common(d1, b"\x01\x02\x03\x04\x05\x06\x07", Container(header=b'\x01\x02', data=b'\x03\x04\x05', footer=b'\x06\x07'))
 
-    d = OffsettedEnd(0, Byte)
-    assert raises(d.sizeof) == SizeofError
+    d2 = OffsettedEnd(0, Byte)
+    assert raises(d2.sizeof) == SizeofError
 
 def test_seek() -> None:
     d = Seek(5)
@@ -1366,7 +1366,7 @@ def test_compressed_prefixed() -> None:
     assert raises(d.sizeof) == SizeofError
 
 @pytest.mark.xfail(ONWINDOWS and PYPY, reason="no wheel for 'cryptography' is currently available for pypy on windows")
-def test_encryptedsym():
+def test_encryptedsym() -> None:
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     key128 = b"\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
     key256 = b"\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
@@ -1392,7 +1392,7 @@ def test_encryptedsym():
     assert raises(EncryptedSym(GreedyBytes, "AES").parse, b"") == CipherError  # type: ignore
 
 @pytest.mark.xfail(ONWINDOWS and PYPY, reason="no wheel for 'cryptography' is currently available for pypy on windows")
-def test_encryptedsym_cbc_example():
+def test_encryptedsym_cbc_example() -> None:
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     d = Struct(
         "iv" / Default(Bytes(16), os.urandom(16)),
@@ -1412,7 +1412,7 @@ def test_encryptedsym_cbc_example():
     assert obj.enc_data == Container(width=5, height=4)
 
 @pytest.mark.xfail(ONWINDOWS and PYPY, reason="no wheel for 'cryptography' is currently available for pypy on windows")
-def test_encryptedsymaead():
+def test_encryptedsymaead() -> None:
     from cryptography.hazmat.primitives.ciphers import aead
     key128 = b"\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
     key256 = b"\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
@@ -1446,7 +1446,7 @@ def test_encryptedsymaead():
     assert raises(EncryptedSymAead(GreedyBytes, "AESGCM", bytes(16)).parse, b"") == CipherError  # type: ignore
 
 @pytest.mark.xfail(ONWINDOWS and PYPY, reason="no wheel for 'cryptography' is currently available for pypy on windows")
-def test_encryptedsymaead_gcm_example():
+def test_encryptedsymaead_gcm_example() -> None:
     from cryptography.hazmat.primitives.ciphers import aead
     d = Struct(
         "nonce" / Default(Bytes(16), os.urandom(16)),
