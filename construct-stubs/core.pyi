@@ -221,14 +221,14 @@ class Compiled(Construct[t.Any, t.Any]):
 # ===============================================================================
 # bytes and bits
 # ===============================================================================
-class Bytes(Construct[bytes, t.Union[bytes, int]]):
+class Bytes(Construct[bytes, t.Union[bytes, bytearray, int]]):
     length: ConstantOrContextLambda[int]
     def __init__(
         self,
         length: ConstantOrContextLambda[int],
     ) -> None: ...
 
-GreedyBytes: Construct[bytes, bytes]
+GreedyBytes: Construct[bytes, t.Union[bytes, bytearray]]
 
 def Bitwise(
     subcon: Construct[SubconParsedType, SubconBuildTypes]
