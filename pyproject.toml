@@ -1,0 +1,76 @@
+
+[build-system]
+requires = ["setuptools >= 75.8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="construct-typing"
+dynamic = ["version"]
+license = { file = "LICENSE" }
+description="Extension for the python package 'construct' that adds typing features"
+readme = "README.md"
+authors=[{ name = "Tim Riddermann" }]
+requires-python = ">=3.9"
+dependencies = [
+    "construct==2.10.70",
+    "typing_extensions>=4.6.0"
+]
+keywords = [
+    "construct",
+    "kaitai",
+    "declarative",
+    "data structure",
+    "struct",
+    "binary",
+    "symmetric",
+    "parser",
+    "builder",
+    "parsing",
+    "building",
+    "pack",
+    "unpack",
+    "packer",
+    "unpacker",
+    "bitstring",
+    "bytestring",
+    "annotation",
+    "type hint",
+    "typing",
+    "typed",
+    "bitstruct",
+    "PEP 561",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Code Generators",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Typing :: Typed",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/timrid/construct-typing"
+"Bug Reports" = "https://github.com/timrid/construct-typing/issues"
+
+[tool.setuptools]
+packages=[
+    "construct-stubs",
+    "construct-stubs.lib",
+    "construct_typed"
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "construct_typed.version.version_string"}
+
+[tool.mypy]
+strict = true
+warn_unused_ignores = false
