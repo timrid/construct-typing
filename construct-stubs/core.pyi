@@ -17,6 +17,9 @@ from construct.lib import (
     ListType,
     RebufferedBytesIO,
 )
+from cryptography.hazmat.primitives.ciphers import Cipher
+from cryptography.hazmat.primitives.ciphers.aead import AESCCM, AESGCM, ChaCha20Poly1305
+from cryptography.hazmat.primitives.ciphers.modes import Mode
 from typing_extensions import Buffer
 
 # unfortunately, there are a few duplications with "typing", e.g. Union and Optional, which is why the t. prefix must be used everywhere
@@ -67,6 +70,7 @@ class RawCopyError(ConstructError): ...
 class RotationError(ConstructError): ...
 class ChecksumError(ConstructError): ...
 class CancelParsing(ConstructError): ...
+class CipherError(ConstructError): ...
 
 # ===============================================================================
 # used internally
@@ -85,6 +89,17 @@ def stream_tell(stream: StreamType, path: t.Optional[PathType]) -> int: ...
 def stream_size(stream: StreamType) -> int: ...
 def stream_iseof(stream: StreamType) -> bool: ...
 def evaluate(param: ConstantOrContextLambda2[T], context: Context) -> T: ...
+
+class BytesIOWithOffsets(io.BytesIO):
+    @staticmethod
+    def from_reading(
+        stream: StreamType, length: int, path: PathType
+    ) -> BytesIOWithOffsets: ...
+    def __init__(
+        self, contents: bytes, parent_stream: StreamType, offset: int
+    ) -> None: ...
+    def tell(self) -> int: ...
+    def seek(self, offset: int, whence: int = ...) -> int: ...
 
 # ===============================================================================
 # abstract constructs
@@ -135,12 +150,19 @@ class Construct(t.Generic[ParsedType, BuildTypes]):
     ) -> Renamed[ParsedType, BuildTypes]: ...
     def __add__(self, other: Construct[t.Any, t.Any]) -> Struct: ...
     def __rshift__(self, other: Construct[t.Any, t.Any]) -> Sequence: ...
-    def __getitem__(
-        self, count: t.Union[int, t.Callable[[Context], int]]
-    ) -> Array[ParsedType, BuildTypes,]: ...
-    def _parse(self, stream: StreamType, context: Context, path: PathType) -> ParsedType: ...
-    def _parsereport(self, stream: StreamType, context: Context, path: PathType) -> ParsedType: ...
-    def _build(self, obj: BuildTypes, stream: StreamType, context: Context, path: PathType) -> int: ...
+    def __getitem__(self, count: t.Union[int, t.Callable[[Context], int]]) -> Array[
+        ParsedType,
+        BuildTypes,
+    ]: ...
+    def _parse(
+        self, stream: StreamType, context: Context, path: PathType
+    ) -> ParsedType: ...
+    def _parsereport(
+        self, stream: StreamType, context: Context, path: PathType
+    ) -> ParsedType: ...
+    def _build(
+        self, obj: BuildTypes, stream: StreamType, context: Context, path: PathType
+    ) -> int: ...
     def _sizeof(self, context: Context, path: PathType) -> int: ...
 
 @t.type_check_only
@@ -234,15 +256,11 @@ class Bytes(Construct[bytes, t.Union[bytes, bytearray, int]]):
 
 GreedyBytes: Construct[bytes, t.Union[bytes, bytearray]]
 
-def Bitwise(
-    subcon: Construct[SubconParsedType, SubconBuildTypes]
-) -> t.Union[
+def Bitwise(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> t.Union[
     Transformed[SubconParsedType, SubconBuildTypes],
     Restreamed[SubconParsedType, SubconBuildTypes],
 ]: ...
-def Bytewise(
-    subcon: Construct[SubconParsedType, SubconBuildTypes]
-) -> t.Union[
+def Bytewise(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> t.Union[
     Transformed[SubconParsedType, SubconBuildTypes],
     Restreamed[SubconParsedType, SubconBuildTypes],
 ]: ...
@@ -880,6 +898,16 @@ class Peek(
         subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> None: ...
 
+class OffsettedEnd(
+    Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
+):
+    endoffset: ConstantOrContextLambda[int]
+    def __init__(
+        self,
+        endoffset: ConstantOrContextLambda[int],
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+    ) -> None: ...
+
 class Seek(Construct[int, None]):
     at: ConstantOrContextLambda[int]
     if sys.version_info >= (3, 8):
@@ -924,9 +952,7 @@ class RawCopy(
 def ByteSwapped(
     subcon: Construct[SubconParsedType, SubconBuildTypes]
 ) -> Transformed[SubconParsedType, SubconBuildTypes]: ...
-def BitsSwapped(
-    subcon: Construct[SubconParsedType, SubconBuildTypes]
-) -> t.Union[
+def BitsSwapped(subcon: Construct[SubconParsedType, SubconBuildTypes]) -> t.Union[
     Transformed[SubconParsedType, SubconBuildTypes],
     Restreamed[SubconParsedType, SubconBuildTypes],
 ]: ...
@@ -946,7 +972,10 @@ class Prefixed(
 def PrefixedArray(
     countfield: Construct[int, int],
     subcon: Construct[SubconParsedType, SubconBuildTypes],
-) -> Array[SubconParsedType, SubconBuildTypes,]: ...
+) -> Array[
+    SubconParsedType,
+    SubconBuildTypes,
+]: ...
 
 class FixedSized(
     Subconstruct[SubconParsedType, SubconBuildTypes, SubconParsedType, SubconBuildTypes]
@@ -1093,6 +1122,26 @@ class Rebuffered(
         self,
         subcon: Construct[SubconParsedType, SubconBuildTypes],
         tailcutoff: t.Optional[int] = ...,
+    ) -> None: ...
+
+class EncryptedSym(Tunnel[SubconParsedType, SubconBuildTypes]):
+    cipher: ConstantOrContextLambda2[Cipher[Mode]]
+    def __init__(
+        self,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        cipher: ConstantOrContextLambda2[Cipher[Mode]],
+    ) -> None: ...
+
+class EncryptedSymAead(Tunnel[SubconParsedType, SubconBuildTypes]):
+    cipher: ConstantOrContextLambda2[t.Union[AESGCM, AESCCM, ChaCha20Poly1305]]
+    nonce: ConstantOrContextLambda2[bytes]
+    associated_data: ConstantOrContextLambda2[bytes]
+    def __init__(
+        self,
+        subcon: Construct[SubconParsedType, SubconBuildTypes],
+        cipher: ConstantOrContextLambda2[t.Union[AESGCM, AESCCM, ChaCha20Poly1305]],
+        nonce: ConstantOrContextLambda2[bytes],
+        associated_data: ConstantOrContextLambda2[bytes] = ...,
     ) -> None: ...
 
 # ===============================================================================

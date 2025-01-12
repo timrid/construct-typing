@@ -1,4 +1,4 @@
-construct==2.10.68
+construct==2.10.70
 pytest>=6.2.0
 numpy
 arrow
@@ -8,3 +8,4 @@ lz4
 black
 isort
 mypy
+cryptography
