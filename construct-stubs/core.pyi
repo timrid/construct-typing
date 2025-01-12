@@ -169,7 +169,7 @@ class Subconstruct(
         subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> None: ...
     @t.overload
-    def __init__(
+    def __init__(  # type: ignore
         self,
         *args: t.Any,
         **kwargs: t.Any,
@@ -1110,9 +1110,9 @@ class Lazy(
 class LazyContainer(t.Generic[ContainerType], t.Dict[str, ContainerType]):
     def __getattr__(self, name: str) -> ContainerType: ...
     def __getitem__(self, index: t.Union[str, int]) -> ContainerType: ...
-    def keys(self) -> t.Iterator[str]: ...
-    def values(self) -> t.List[ContainerType]: ...
-    def items(self) -> t.List[t.Tuple[str, ContainerType]]: ...
+    def keys(self) -> t.Iterator[str]: ...  # type: ignore
+    def values(self) -> t.List[ContainerType]: ...  # type: ignore
+    def items(self) -> t.List[t.Tuple[str, ContainerType]]: ...  # type: ignore
 
 class LazyStruct(Construct[LazyContainer[t.Any], t.Optional[t.Dict[str, t.Any]]]):
     subcons: t.List[Construct[t.Any, t.Any]]

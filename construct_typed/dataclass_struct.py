@@ -152,13 +152,13 @@ class DataclassStruct(Adapter[t.Any, t.Any, DataclassType, DataclassType]):
         Image(width=1, height=2, pixels=b'12')
     """
 
-    subcon: "cs.Struct"
+    subcon: "cs.Struct" # type: ignore
     def __init__(
         self,
         dc_type: t.Type[DataclassType],
         reverse: bool = False,
     ) -> None:
-        if not issubclass(dc_type, DataclassMixin):
+        if not issubclass(dc_type, DataclassMixin):  # type: ignore
             raise TypeError(f"'{repr(dc_type)}' has to be a '{repr(DataclassMixin)}'")
         if not dataclasses.is_dataclass(dc_type):
             raise TypeError(f"'{repr(dc_type)}' has to be a 'dataclasses.dataclass'")

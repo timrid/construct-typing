@@ -19,7 +19,7 @@ def recursion_lock(
 
 class Container(t.Generic[ContainerType], t.Dict[str, ContainerType]):
     def __getattr__(self, name: str) -> ContainerType: ...
-    def update(
+    def update(  # type: ignore
         self,
         seqordict: t.Union[t.Dict[str, ContainerType], t.Tuple[str, ContainerType]],
     ) -> None: ...

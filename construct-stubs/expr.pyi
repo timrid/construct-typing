@@ -469,7 +469,7 @@ class ExprMixin(t.Generic[ReturnType], object):
     @t.overload
     def __eq__(self: ExprMixin[float], other: ConstOrCallable[float]) -> BinExpr[bool]: ...
     @t.overload
-    def __eq__(self, other: t.Any) -> BinExpr[t.Any]: ...
+    def __eq__(self, other: ConstOrCallable[t.Any]) -> BinExpr[t.Any]: ...  # type: ignore
 
     # __ne__ ###########################################################################################################
     @t.overload
@@ -487,7 +487,7 @@ class ExprMixin(t.Generic[ReturnType], object):
     @t.overload
     def __ne__(self: ExprMixin[float], other: ConstOrCallable[float]) -> BinExpr[bool]: ...
     @t.overload
-    def __ne__(self, other: t.Any) -> BinExpr[t.Any]: ...
+    def __ne__(self, other: t.Any) -> BinExpr[t.Any]: ...  # type: ignore
 
     # __neg__ ##########################################################################################################
     @t.overload
