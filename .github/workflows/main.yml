@@ -35,6 +35,7 @@ jobs:
       - name: Install pyright
         run: |
           npm install -g pyright
+          pyright --version
 
       # Install this package
       - name: Install this package  
