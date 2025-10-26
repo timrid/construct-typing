@@ -20,7 +20,7 @@ from construct.lib import (
 from cryptography.hazmat.primitives.ciphers import Cipher
 from cryptography.hazmat.primitives.ciphers.aead import AESCCM, AESGCM, ChaCha20Poly1305
 from cryptography.hazmat.primitives.ciphers.modes import Mode
-from typing_extensions import Buffer
+from typing_extensions import Buffer, TypeAlias
 
 # unfortunately, there are a few duplications with "typing", e.g. Union and Optional, which is why the t. prefix must be used everywhere
 
@@ -29,7 +29,7 @@ from typing_extensions import Buffer
 #   - Higher Kinded Types: https://github.com/python/typing/issues/548
 #   - Higher Kinded Types: https://sobolevn.me/2020/10/higher-kinded-types-in-python
 
-ReadableBuffer: t.TypeAlias = Buffer
+ReadableBuffer: TypeAlias = Buffer
 StreamType = t.IO[bytes]
 FilenameType = t.Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
 PathType = str
