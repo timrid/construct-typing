@@ -62,3 +62,30 @@ jobs:
       - name: Run pyright
         run: |
           pyright
+
+  create_wheel_and_sdist:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+        architecture: x64
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install wheel build
+
+    - name: Build wheel and sdist
+      run: |
+        python -m build
+
+    - name: Upload wheel and sdist as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Package-Distributions-construct-typing
+        path: dist/

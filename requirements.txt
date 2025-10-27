@@ -9,3 +9,6 @@ black
 isort
 mypy
 cryptography
+build
+setuptools
+wheel
