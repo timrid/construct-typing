@@ -17,22 +17,69 @@ def test_dataclass_const_default() -> None:
     class ConstDefaultTest(DataclassMixin):
         const_bytes: bytes = csfield(cs.Const(b"BMP"))
         const_int: int = csfield(cs.Const(5, cs.Int8ub))
-        default_int: int = csfield(cs.Default(cs.Int8ub, 28))
-        default_lambda: bytes = csfield(
-            cs.Default(cs.Bytes(cs.this.const_int), lambda ctx: bytes(ctx.const_int))
+        default_int: int = csfield(cs.Default(cs.Int8ub, 8), default=0)
+        default_lambda: t.Optional[bytes] = csfield(
+            cs.Default(cs.Bytes(cs.this.default_int), lambda ctx: bytes(ctx.default_int)),
+            default=None,
         )
+        computed: t.Optional[bytes] = csfield(cs.Computed(lambda ctx: bytes(i + 49 for i in range(ctx.default_int))))
 
-    a = ConstDefaultTest()
+    format = DataclassStruct(ConstDefaultTest)
+
+    a = ConstDefaultTest(
+        # const_bytes=b"",  # adding this should trigger Pyright error (reportCallIssue)
+        # const_int=0,  # adding this should trigger Pyright error (reportCallIssue)
+        # computed=bytes(),  # adding this should trigger Pyright error (reportCallIssue)
+    )
     assert a.const_bytes == b"BMP"
     assert a.const_int == 5
-    assert a.default_int == 28
-    assert a.default_lambda == None
+    assert a.default_int == 8
+    assert a.default_lambda is None
+    assert a.computed is None
+    assert format.build(a) == b"BMP\x05\x08\x00\x00\x00\x00\x00\x00\x00\x00"
+    a = format.parse(format.build(a))
+    assert a.default_int == 8
+    assert a.default_lambda == bytes(8)
+    assert a.computed == b"12345678"
+
+    # Overriding Default-Values should be OK and modify the `computed` value.
+    b = ConstDefaultTest(
+        default_int=4,
+        default_lambda=b"TEST",
+    )
+    b = format.parse(format.build(b))
+    assert b.default_int == 4
+    assert b.default_lambda == b"TEST"
+    assert b.computed == b"1234"
+
+
+def test_dataclass_padded() -> None:
+    @dataclasses.dataclass
+    class PaddingTest(DataclassMixin):
+        padding: t.Optional[bytes] = csfield(cs.Padding(1))
+        padded_pass: t.Optional[bytes] = csfield(cs.Padded(2, cs.Pass))
+        padded_bytes: bytes = csfield(cs.Padded(7, cs.Bytes(5)))
+        padded_string: str = csfield(cs.PaddedString(4, "utf-8"))
+
+    format = DataclassStruct(PaddingTest)
+
+    a = PaddingTest(
+        # padding=b"\x00",  # adding this should trigger Pyright error (reportCallIssue)
+        # padded_pass=None,  # adding this should trigger Pyright error (reportCallIssue)
+        padded_bytes=b"12345",  # removing this should trigger Pyright error (reportCallIssue)
+        padded_string="abc",  # removing this should trigger Pyright error (reportCallIssue)
+    )
+    assert a.padding is None
+    assert a.padded_pass is None
+    assert a.padded_bytes == b"12345"
+    assert a.padded_string == "abc"
+    assert format.build(a) == b"\x00\x00\x0012345\x00\x00abc\x00"
 
 
 def test_dataclass_access() -> None:
     @dataclasses.dataclass
     class TestTContainer(DataclassMixin):
-        a: t.Optional[int] = csfield(cs.Const(1, cs.Byte))
+        a: int = csfield(cs.Const(1, cs.Byte))
         b: int = csfield(cs.Int8ub)
 
     tcontainer = TestTContainer(b=2)
@@ -51,36 +98,28 @@ def test_dataclass_access() -> None:
     assert tcontainer["a"] == 6
 
     # wrong creation
-    assert raises(lambda: TestTContainer(a=0, b=1)) == TypeError
+    assert raises(lambda: TestTContainer(a=0, b=1)) == TypeError  # type: ignore
 
 
 def test_dataclass_str_repr() -> None:
     @dataclasses.dataclass
     class Image(DataclassMixin):
-        signature: t.Optional[bytes] = csfield(cs.Const(b"BMP"))
+        signature: bytes = csfield(cs.Const(b"BMP"))
         width: int = csfield(cs.Int8ub)
         height: int = csfield(cs.Int8ub)
 
     format = DataclassStruct(Image)
     obj = Image(width=3, height=2)
-    assert (
-        str(obj)
-        == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
-    )
+    assert str(obj) == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
     obj = format.parse(format.build(obj))
-    assert (
-        str(obj)
-        == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
-    )
+    assert str(obj) == "Image: \n    signature = b'BMP' (total 3)\n    width = 3\n    height = 2"
 
 
 def test_dataclass_ifthenelse() -> None:
     @dataclasses.dataclass
     class IfThenElseTest(DataclassMixin):
         test_if: t.Optional[int] = csfield(cs.If(False, cs.Int8ub))
-        test_ifthenelse: t.Optional[int] = csfield(
-            cs.IfThenElse(True, cs.Int8ub, cs.Pass)
-        )
+        test_ifthenelse: t.Optional[int] = csfield(cs.IfThenElse(True, cs.Int8ub, cs.Pass))
 
     a = IfThenElseTest(test_if=None, test_ifthenelse=None)
     assert a.test_if == None
@@ -138,8 +177,8 @@ def test_dataclass_struct_nested() -> None:
 
     common(
         DataclassStruct(TestContainer),
-        b"\x02\x01\xF1\xF2",
-        TestContainer(length=2, a=TestContainer.InnerDataclass(b=1, c=b"\xF1\xF2")),
+        b"\x02\x01\xf1\xf2",
+        TestContainer(length=2, a=TestContainer.InnerDataclass(b=1, c=b"\xf1\xf2")),
     )
 
 
@@ -148,11 +187,12 @@ def test_dataclass_struct_default_field() -> None:
     class Image(DataclassMixin):
         width: int = csfield(cs.Int8ub)
         height: int = csfield(cs.Int8ub)
-        pixels: t.Optional[bytes] = csfield(
+        pixels: bytes = csfield(
             cs.Default(
                 cs.Bytes(cs.this.width * cs.this.height),
                 lambda ctx: bytes(ctx.width * ctx.height),
-            )
+            ),
+            default=bytes(),
         )
 
     common(
@@ -166,7 +206,7 @@ def test_dataclass_struct_default_field() -> None:
 def test_dataclass_struct_const_field() -> None:
     @dataclasses.dataclass
     class TestContainer(DataclassMixin):
-        const_field: t.Optional[bytes] = csfield(cs.Const(b"\x00"))
+        const_field: bytes = csfield(cs.Const(b"\x00"))
 
     common(
         DataclassStruct(TestContainer),
@@ -200,7 +240,7 @@ def test_dataclass_struct_array_field() -> None:
 def test_dataclass_struct_anonymus_fields_1() -> None:
     @dataclasses.dataclass
     class TestContainer(DataclassMixin):
-        _1: t.Optional[bytes] = csfield(cs.Const(b"\x00"))
+        _1: bytes = csfield(cs.Const(b"\x00"))
         _2: None = csfield(cs.Padding(1))
         _3: None = csfield(cs.Pass)
         _4: None = csfield(cs.Terminated)
@@ -217,7 +257,7 @@ def test_dataclass_struct_anonymus_fields_2() -> None:
     @dataclasses.dataclass
     class TestContainer(DataclassMixin):
         _1: int = csfield(cs.Computed(7))
-        _2: t.Optional[bytes] = csfield(cs.Const(b"JPEG"))
+        _2: bytes = csfield(cs.Const(b"JPEG"))
         _3: None = csfield(cs.Pass)
         _4: None = csfield(cs.Terminated)
 
@@ -311,19 +351,14 @@ def test_dataclass_struct_wrong_container() -> None:
         a: int = csfield(cs.Int16ub)
         b: int = csfield(cs.Int8ub)
 
-    assert (
-        raises(DataclassStruct(TestContainer1).build, TestContainer2(a=1, b=2))
-        == TypeError
-    )
+    assert raises(DataclassStruct(TestContainer1).build, TestContainer2(a=1, b=2)) == TypeError
 
 
 def test_dataclass_struct_doc() -> None:
     @dataclasses.dataclass
     class TestContainer(DataclassMixin):
         a: int = csfield(cs.Int16ub, "This is the documentation of a")
-        b: int = csfield(
-            cs.Int8ub, doc="This is the documentation of b\nwhich is multiline"
-        )
+        b: int = csfield(cs.Int8ub, doc="This is the documentation of b\nwhich is multiline")
         c: int = csfield(
             cs.Int8ub,
             """
@@ -337,10 +372,7 @@ def test_dataclass_struct_doc() -> None:
 
     assert format.subcon.a.docs == "This is the documentation of a"
     assert format.subcon.b.docs == "This is the documentation of b\nwhich is multiline"
-    assert (
-        format.subcon.c.docs
-        == "This is the documentation of c\nwhich is also multiline"
-    )
+    assert format.subcon.c.docs == "This is the documentation of c\nwhich is also multiline"
 
 
 def test_dataclass_bitstruct() -> None:
@@ -354,7 +386,7 @@ def test_dataclass_bitstruct() -> None:
 
     common(
         DataclassBitStruct(TestContainer),
-        b"\xFD\x12",
+        b"\xfd\x12",
         TestContainer(a=0x7E, b=1, c=0x12),
         2,
     )

@@ -921,9 +921,14 @@ class Seek(Construct[int, None]):
         whence: ConstantOrContextLambda[WHENCE] = ...,
     ) -> None: ...
 
-Tell: Construct[int, None]
-Pass: Construct[None, None]
-Terminated: Construct[None, None]
+class TellType(Construct[int, None]): ...
+Tell: TellType
+
+class PassType(Construct[None, None]): ...
+Pass: PassType
+
+class TerminatedType(Construct[None, None]): ...
+Terminated: TerminatedType
 
 # ===============================================================================
 # tunneling and byte/bit swapping

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import typing_extensions
 import dataclasses
 import textwrap
 import typing as t
@@ -11,9 +12,151 @@ from construct.lib.containers import (
 )
 from construct.lib.py3compat import bytestringtype, reprstring, unicodestringtype
 
-from .generic_wrapper import Adapter, Construct, Context, ParsedType, PathType
+from construct_typed.generic_wrapper import Adapter, Construct, Context, ParsedType, PathType
 
 
+# Overload 1: Const → init=False (no __init__ parameter, has internal default)
+@t.overload
+def csfield(
+    subcon: "cs.Const[ParsedType, t.Any]",
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    *,
+    init: t.Literal[False] = ...,
+) -> ParsedType: ...
+
+
+# Overload 2: Rebuild → init=False (variable ParsedType, no default)
+@t.overload
+def csfield(
+    subcon: "cs.Rebuild[ParsedType, t.Any]",
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    *,
+    init: t.Literal[False] = ...,
+) -> ParsedType: ...
+
+
+# Overload 3: Computed → init=False (variable ParsedType, no default)
+@t.overload
+def csfield(
+    subcon: "cs.Computed[ParsedType]",
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    *,
+    init: t.Literal[False] = ...,
+) -> ParsedType: ...
+
+
+# Overload 4: Padded[None,None] = Padding() → init=False, returns None
+@t.overload
+def csfield(
+    subcon: "cs.Padded[None, None]",
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    *,
+    init: t.Literal[False] = ...,
+) -> None: ...
+
+
+# Overload 5: cs.Tell → init=False, returns int
+@t.overload
+def csfield(
+    subcon: "cs.TellType",
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    *,
+    init: t.Literal[False] = ...,
+) -> int: ...
+
+
+# Overload 6: cs.Pass, cs.Terminated → init=False, returns None
+@t.overload
+def csfield(
+    subcon: "cs.PassType | cs.TerminatedType",
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    *,
+    init: t.Literal[False] = ...,
+) -> None: ...
+
+
+# Overload 7: Default → optional field but CALLER MUST SPECIFY default= explicitly!
+# For example:
+# ```
+#     default_int: int = csfield(cs.Default(cs.Int8ub, 8), default=0)
+# ```
+# The "second" `default=` value is used only for the typing system so that Pyright can match with this overload.
+# The actual value doesn't matter but should match the `ParsedType`.
+@t.overload
+def csfield(
+    subcon: "cs.Default[ParsedType, t.Any]",
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    *,
+    default: ParsedType = ...,
+) -> ParsedType: ...
+
+
+# Overload 8: all other ctors → mandatory field (no default)
+@t.overload
+def csfield(
+    subcon: Construct[ParsedType, t.Any],
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+) -> ParsedType: ...
+
+
+def csfield(
+    subcon: Construct[ParsedType, t.Any],
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    **_kwargs: t.Any,  # absorbs `init=` and `default=` from overloads (only for type checkers)
+) -> ParsedType:
+    """
+    Helper method for "DataclassStruct" and "DataclassBitStruct" to create the dataclass fields.
+
+    This method also processes Const and Default, to pass these values als default values to the dataclass.
+    """
+    orig_subcon = subcon
+
+    # Rename subcon, if doc or parsed are available
+    if (doc is not None) or (parsed is not None):
+        if doc is not None:
+            doc = textwrap.dedent(doc).strip("\n")
+        subcon = cs.Renamed(subcon, newdocs=doc, newparsed=parsed)
+
+    if orig_subcon.flagbuildnone is True:
+        init = False
+        default = None
+    else:
+        init = True
+        default = dataclasses.MISSING
+
+    # Set default values in case of special sucons
+    if isinstance(orig_subcon, cs.Const):
+        const_subcon = orig_subcon
+        default = const_subcon.value
+    elif isinstance(orig_subcon, cs.Default):
+        default_subcon = orig_subcon
+        # Default-Felder sind immer im __init__ (als optionaler Parameter mit Default), unabhängig von flagbuildnone.
+        init = True
+        if callable(default_subcon.value):
+            default = None  # context lambda is only defined at parsing/building
+        else:
+            default = default_subcon.value
+
+    return t.cast(
+        ParsedType,
+        dataclasses.field(
+            default=default,
+            init=init,
+            metadata={"subcon": subcon},
+        ),
+    )
+
+
+@typing_extensions.dataclass_transform(field_specifiers=(csfield,))
 class DataclassMixin:
     """
     Mixin for the dataclasses which are passed to "DataclassStruct" and "DataclassBitStruct".
@@ -74,52 +217,6 @@ class DataclassMixin:
         return "".join(text)
 
 
-def csfield(
-    subcon: Construct[ParsedType, t.Any],
-    doc: t.Optional[str] = None,
-    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
-) -> ParsedType:
-    """
-    Helper method for "DataclassStruct" and "DataclassBitStruct" to create the dataclass fields.
-
-    This method also processes Const and Default, to pass these values als default values to the dataclass.
-    """
-    orig_subcon = subcon
-
-    # Rename subcon, if doc or parsed are available
-    if (doc is not None) or (parsed is not None):
-        if doc is not None:
-            doc = textwrap.dedent(doc).strip("\n")
-        subcon = cs.Renamed(subcon, newdocs=doc, newparsed=parsed)
-
-    if orig_subcon.flagbuildnone is True:
-        init = False
-        default = None
-    else:
-        init = True
-        default = dataclasses.MISSING
-
-    # Set default values in case of special sucons
-    if isinstance(orig_subcon, cs.Const):
-        const_subcon: "cs.Const[t.Any, t.Any]" = orig_subcon
-        default = const_subcon.value
-    elif isinstance(orig_subcon, cs.Default):
-        default_subcon: "cs.Default[t.Any, t.Any]" = orig_subcon
-        if callable(default_subcon.value):
-            default = None  # context lambda is only defined at parsing/building
-        else:
-            default = default_subcon.value
-
-    return t.cast(
-        ParsedType,
-        dataclasses.field(
-            default=default,
-            init=init,
-            metadata={"subcon": subcon},
-        ),
-    )
-
-
 DataclassType = t.TypeVar("DataclassType", bound=DataclassMixin)
 
 
@@ -151,7 +248,8 @@ class DataclassStruct(Adapter[t.Any, t.Any, DataclassType, DataclassType]):
         Image(width=1, height=2, pixels=b'12')
     """
 
-    subcon: "cs.Struct" # type: ignore
+    subcon: "cs.Struct"  # type: ignore
+
     def __init__(
         self,
         dc_type: t.Type[DataclassType],
