@@ -81,29 +81,14 @@ def csfield(
 ) -> None: ...
 
 
-# Overload 7: Default → optional field but CALLER MUST SPECIFY default= explicitly!
-# For example:
-# ```
-#     default_int: int = csfield(cs.Default(cs.Int8ub, 8), default=0)
-# ```
-# The "second" `default=` value is used only for the typing system so that Pyright can match with this overload.
-# The actual value doesn't matter but should match the `ParsedType`.
+# Overload 7: all other ctors → mandatory field (no default)
 @t.overload
 def csfield(
-    subcon: "cs.Default[ParsedType, t.Any]",
+    subcon: Construct[ParsedType, t.Any],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
     *,
-    default: ParsedType = ...,
-) -> ParsedType: ...
-
-
-# Overload 8: all other ctors → mandatory field (no default)
-@t.overload
-def csfield(
-    subcon: Construct[ParsedType, t.Any],
-    doc: t.Optional[str] = None,
-    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    kw_only: bool = ...,
 ) -> ParsedType: ...
 
 
@@ -111,12 +96,19 @@ def csfield(
     subcon: Construct[ParsedType, t.Any],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
-    **_kwargs: t.Any,  # absorbs `init=` and `default=` from overloads (only for type checkers)
+    *,
+    kw_only: bool = False,
+    **_kwargs: t.Any,  # absorbs `init=` et al. from overloads (only for type checkers)
 ) -> ParsedType:
     """
     Helper method for "DataclassStruct" and "DataclassBitStruct" to create the dataclass fields.
 
     This method also processes Const and Default, to pass these values als default values to the dataclass.
+    However, to have proper Pyright support for Default, use `csdefault()` instead.
+
+    When using any fields _without_ default *after* a Default field, these must be marked as `kw_only` and be
+    passed "by keyword" to the construct's ctor. Otherwise, Pyright will condem your eternal soul to an
+    everlasting vacation on a Caribbean beach. You have been warned! And Pyright will tell you.
     """
     orig_subcon = subcon
 
@@ -139,7 +131,7 @@ def csfield(
         default = const_subcon.value
     elif isinstance(orig_subcon, cs.Default):
         default_subcon = orig_subcon
-        # Default-Felder sind immer im __init__ (als optionaler Parameter mit Default), unabhängig von flagbuildnone.
+        # Default fields are always included in __init__ (as optional param with default), regardless of flagbuildnone.
         init = True
         if callable(default_subcon.value):
             default = None  # context lambda is only defined at parsing/building
@@ -151,11 +143,48 @@ def csfield(
         dataclasses.field(
             default=default,
             init=init,
+            kw_only=kw_only,
             metadata={"subcon": subcon},
         ),
     )
 
 
+def csdefault_field(
+    subcon: Construct[ParsedType, t.Any],
+    default: t.Union[ParsedType, t.Callable[[Context], t.Any]],
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+) -> ParsedType:
+    """
+    Helper method for "DataclassStruct" and "DataclassBitStruct" to create the dataclass fields.
+
+    Use ONLY this method to ONLY process Default fields!
+    """
+    cs_default = cs.Default(subcon, default)
+
+    if (doc is not None) or (parsed is not None):
+        if doc is not None:
+            doc = textwrap.dedent(doc).strip("\n")
+        subcon_field = cs.Renamed(cs_default, newdocs=doc, newparsed=parsed)
+    else:
+        subcon_field = cs_default
+
+    # For lambda defaults, use None as the dataclass default (value only known at parse time)
+    dc_default: t.Any = None if callable(default) else default
+
+    return t.cast(
+        ParsedType,
+        dataclasses.field(
+            default=dc_default,
+            init=True,
+            metadata={"subcon": subcon_field},
+        ),
+    )
+
+
+# Note: `csdefault_field` does not need to be declared in `field_specifiers`. Pyright evaluates the
+# return type of the method which always exists, thus creating the desired effect that the field is
+# optional in the construct declaration.
 @typing_extensions.dataclass_transform(field_specifiers=(csfield,))
 class DataclassMixin:
     """

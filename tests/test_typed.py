@@ -7,7 +7,7 @@ import typing as t
 import construct as cs
 
 import construct_typed as cst
-from construct_typed import DataclassBitStruct, DataclassMixin, DataclassStruct, csfield
+from construct_typed import DataclassBitStruct, DataclassMixin, DataclassStruct, csdefault_field, csfield
 
 from .declarativeunittest import common, raises, setattrs
 
@@ -17,12 +17,13 @@ def test_dataclass_const_default() -> None:
     class ConstDefaultTest(DataclassMixin):
         const_bytes: bytes = csfield(cs.Const(b"BMP"))
         const_int: int = csfield(cs.Const(5, cs.Int8ub))
-        default_int: int = csfield(cs.Default(cs.Int8ub, 8), default=0)
-        default_lambda: t.Optional[bytes] = csfield(
-            cs.Default(cs.Bytes(cs.this.default_int), lambda ctx: bytes(ctx.default_int)),
-            default=None,
-        )
+        default_int: int = csdefault_field(cs.Int8ub, 8)
+        default_lambda: t.Optional[bytes] = csdefault_field(cs.Bytes(cs.this.default_int), lambda ctx: bytes(ctx.default_int))
         computed: t.Optional[bytes] = csfield(cs.Computed(lambda ctx: bytes(i + 49 for i in range(ctx.default_int))))
+        # Construct allows to put non-default values after Default. Dataclass and Pyright don't like that too much. It is necessary to
+        # specify the field `kw_only` and pass it "by keyword".
+        normal_int: int = csfield(cs.Int8ub, kw_only=True)
+        const_int2: int = csfield(cs.Const(5, cs.Int8ub))
 
     format = DataclassStruct(ConstDefaultTest)
 
@@ -30,13 +31,14 @@ def test_dataclass_const_default() -> None:
         # const_bytes=b"",  # adding this should trigger Pyright error (reportCallIssue)
         # const_int=0,  # adding this should trigger Pyright error (reportCallIssue)
         # computed=bytes(),  # adding this should trigger Pyright error (reportCallIssue)
+        normal_int=7,
     )
     assert a.const_bytes == b"BMP"
     assert a.const_int == 5
     assert a.default_int == 8
     assert a.default_lambda is None
     assert a.computed is None
-    assert format.build(a) == b"BMP\x05\x08\x00\x00\x00\x00\x00\x00\x00\x00"
+    assert format.build(a) == b"BMP\x05\x08\x00\x00\x00\x00\x00\x00\x00\x00\x07\x05"
     a = format.parse(format.build(a))
     assert a.default_int == 8
     assert a.default_lambda == bytes(8)
@@ -46,6 +48,7 @@ def test_dataclass_const_default() -> None:
     b = ConstDefaultTest(
         default_int=4,
         default_lambda=b"TEST",
+        normal_int=1,
     )
     b = format.parse(format.build(b))
     assert b.default_int == 4
@@ -187,12 +190,9 @@ def test_dataclass_struct_default_field() -> None:
     class Image(DataclassMixin):
         width: int = csfield(cs.Int8ub)
         height: int = csfield(cs.Int8ub)
-        pixels: bytes = csfield(
-            cs.Default(
-                cs.Bytes(cs.this.width * cs.this.height),
-                lambda ctx: bytes(ctx.width * ctx.height),
-            ),
-            default=bytes(),
+        pixels: bytes = csdefault_field(
+            cs.Bytes(cs.this.width * cs.this.height),
+            lambda ctx: bytes(ctx.width * ctx.height),
         )
 
     common(
@@ -200,6 +200,21 @@ def test_dataclass_struct_default_field() -> None:
         b"\x02\x03\x00\x00\x00\x00\x00\x00",
         setattrs(Image(2, 3), pixels=bytes(6)),
         sample_building=Image(2, 3),
+    )
+
+
+def test_dataclass_struct_computed_field() -> None:
+    @dataclasses.dataclass
+    class Image(DataclassMixin):
+        width: int = csfield(cs.Int8ub)
+        height: int = csfield(cs.Int8ub)
+        size: bytes = csfield(cs.Computed(lambda ctx: ctx.width * ctx.height))
+
+    common(
+        DataclassStruct(Image),
+        b"\x02\x03",
+        setattrs(Image(2, 3), size=6),
+        2,
     )
 
 
@@ -247,7 +262,7 @@ def test_dataclass_struct_anonymus_fields_1() -> None:
 
     common(
         DataclassStruct(TestContainer),
-        bytes(2),
+        b"\x00\x00",
         setattrs(TestContainer(), _1=b"\x00"),
         cs.SizeofError,
     )
@@ -357,12 +372,12 @@ def test_dataclass_struct_wrong_container() -> None:
 def test_dataclass_struct_doc() -> None:
     @dataclasses.dataclass
     class TestContainer(DataclassMixin):
-        a: int = csfield(cs.Int16ub, "This is the documentation of a")
-        b: int = csfield(cs.Int8ub, doc="This is the documentation of b\nwhich is multiline")
+        a: int = csfield(cs.Int16ub, "This is the documentation of `a`")
+        b: int = csfield(cs.Int8ub, doc="This is the documentation of `b`\nwhich is multiline")
         c: int = csfield(
             cs.Int8ub,
             """
-            This is the documentation of c
+            This is the documentation of `c`
             which is also multiline
             """,
         )
@@ -370,9 +385,9 @@ def test_dataclass_struct_doc() -> None:
     format = DataclassStruct(TestContainer)
     common(format, b"\x00\x01\x02\x03", TestContainer(a=1, b=2, c=3), 4)
 
-    assert format.subcon.a.docs == "This is the documentation of a"
-    assert format.subcon.b.docs == "This is the documentation of b\nwhich is multiline"
-    assert format.subcon.c.docs == "This is the documentation of c\nwhich is also multiline"
+    assert format.subcon.a.docs == "This is the documentation of `a`"
+    assert format.subcon.b.docs == "This is the documentation of `b`\nwhich is multiline"
+    assert format.subcon.c.docs == "This is the documentation of `c`\nwhich is also multiline"
 
 
 def test_dataclass_bitstruct() -> None:

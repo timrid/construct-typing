@@ -7,6 +7,7 @@ from .dataclass_struct import (
     TContainerMixin,
     TStruct,
     TStructField,
+    csdefault_field,
     csfield,
     sfield,
 )
@@ -30,6 +31,7 @@ __all__ = [
     "TContainerMixin",
     "TStruct",
     "TStructField",
+    "csdefault_field",
     "csfield",
     "sfield",
     "EnumBase",
