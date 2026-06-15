@@ -81,7 +81,18 @@ def csfield(
 ) -> None: ...
 
 
-# Overload 7: all other ctors → mandatory field (no default)
+# Overload 7: all other ctors with explicit default
+@t.overload
+def csfield(
+    subcon: Construct[ParsedType, t.Any],
+    doc: t.Optional[str] = None,
+    parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
+    *,
+    default: ParsedType = ...,
+) -> ParsedType: ...
+
+
+# Overload 8: all other ctors → mandatory field (no default)
 @t.overload
 def csfield(
     subcon: Construct[ParsedType, t.Any],
