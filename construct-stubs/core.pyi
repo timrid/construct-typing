@@ -585,9 +585,15 @@ class Const(Subconstruct[t.Any, t.Any, ParsedType, BuildTypes]):
 
 class Computed(Construct[ParsedType, None]):
     func: ConstantOrContextLambda2[ParsedType]
+    @t.overload
     def __init__(
         self,
-        func: ConstantOrContextLambda2[ParsedType],
+        func: t.Callable[[Context], ParsedType],
+    ) -> None: ...
+    @t.overload
+    def __init__(
+        self,
+        func: ParsedType,
     ) -> None: ...
 
 Index: Construct[int, t.Any]
