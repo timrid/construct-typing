@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# mypy: no-warn-unused-ignores
 from .declarativeunittest import raises, common, ident, devzero
 from construct.core import *
 from construct import *
@@ -1284,8 +1283,8 @@ def test_checksum_warnings_issue_841() -> None:
                     import warnings
                     warnings.warn(
                         "wrong checksum, read %r, computed %r, path %s" % (
-                            hash1 if not isinstance(hash1,bytestringtype) else binascii.hexlify(hash1),
-                            hash2 if not isinstance(hash2,bytestringtype) else binascii.hexlify(hash2), 
+                            hash1 if not isinstance(hash1, bytestringtype) else binascii.hexlify(hash1),
+                            hash2 if not isinstance(hash2, bytestringtype) else binascii.hexlify(hash2),
                             path),
                         ChecksumWarning
                     )
@@ -1306,7 +1305,8 @@ def test_checksum_warnings_issue_841() -> None:
         )),
         "checksum" / Checksum2(Bytes(64), lambda data: hashlib.sha512(data).digest(), this.fields.data),
     )
-    d.parse(bytes(66))
+    with pytest.warns(ChecksumWarning):
+        d.parse(bytes(66))
 
 def test_compressed_zlib() -> None:
     zeros = bytes(10000)
@@ -1826,7 +1826,7 @@ def test_from_issue_269() -> None:
     d = Struct("enabled" / Byte, a)
     assert d.build(dict(enabled=1)) == b"\x01\x00\x00"
     assert d.build(dict(enabled=0)) == b"\x00"
-    
+
     d = Struct("enabled" / Byte, "pad" / If(this.enabled, Padding(2)))
     assert d.build(dict(enabled=1)) == b"\x01\x00\x00"
     assert d.build(dict(enabled=0)) == b"\x00"
@@ -1898,7 +1898,7 @@ def test_from_issue_781() -> None:
 
     x = d2.parse(b"\x01")
     assert x.animal == "giraffe"  # works
-    assert x.animal == d2.animal.giraffe  # type: ignore # AttributeError: 'Transformed' object has no attribute 'animal'  
+    assert x.animal == d2.animal.giraffe  # type: ignore # AttributeError: 'Transformed' object has no attribute 'animal'
 
 def test_this_expresion_compare_container() -> None:
     st = Struct(
@@ -2397,4 +2397,3 @@ def test_parsetype_covariance() -> None:
 
     assert ReversedList(Array(4, Byte)).build([1, 2, 3, 4]) == b'\x04\x03\x02\x01'
     assert ReversedList(Array(4, Byte)).parse(b'\x01\x02\x03\x04') == [4, 3, 2, 1]
-    

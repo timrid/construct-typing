@@ -12,40 +12,44 @@ from construct.lib.containers import (
 )
 from construct.lib.py3compat import bytestringtype, reprstring, unicodestringtype
 
-from construct_typed.generic_wrapper import Adapter, Construct, Context, ParsedType, PathType
+from construct_typed.generic_wrapper import Adapter, Construct, Context, PathType
+
+# csfield/csdefault_field need an *invariant* type var, because ParsedType (covariant)
+# cannot be used as a parameter type (mypy: "Cannot use a covariant type variable as a parameter").
+FieldType = t.TypeVar("FieldType")
 
 
 # Overload 1: Const → init=False (no __init__ parameter, has internal default)
 @t.overload
 def csfield(
-    subcon: "cs.Const[ParsedType, t.Any]",
+    subcon: "cs.Const[FieldType, t.Any]",
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
     *,
     init: t.Literal[False] = ...,
-) -> ParsedType: ...
+) -> FieldType: ...
 
 
 # Overload 2: Rebuild → init=False (variable ParsedType, no default)
 @t.overload
 def csfield(
-    subcon: "cs.Rebuild[ParsedType, t.Any]",
+    subcon: "cs.Rebuild[FieldType, t.Any]",
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
     *,
     init: t.Literal[False] = ...,
-) -> ParsedType: ...
+) -> FieldType: ...
 
 
 # Overload 3: Computed → init=False (variable ParsedType, no default)
 @t.overload
 def csfield(
-    subcon: "cs.Computed[ParsedType]",
+    subcon: "cs.Computed[FieldType]",
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
     *,
     init: t.Literal[False] = ...,
-) -> ParsedType: ...
+) -> FieldType: ...
 
 
 # Overload 4: Padded[None,None] = Padding() → init=False, returns None
@@ -84,38 +88,38 @@ def csfield(
 # Overload 7: all other ctors with explicit default
 @t.overload
 def csfield(
-    subcon: Construct[ParsedType, t.Any],
+    subcon: Construct[FieldType, t.Any],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
     *,
-    default: ParsedType = ...,
-) -> ParsedType: ...
+    default: FieldType = ...,
+) -> FieldType: ...
 
 
 # Overload 8: all other ctors → mandatory field (no default)
 @t.overload
 def csfield(
-    subcon: Construct[ParsedType, t.Any],
+    subcon: Construct[FieldType, t.Any],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
     *,
     kw_only: bool = ...,
-) -> ParsedType: ...
+) -> FieldType: ...
 
 
 def csfield(
-    subcon: Construct[ParsedType, t.Any],
+    subcon: Construct[FieldType, t.Any],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
     *,
     kw_only: bool = False,
     **_kwargs: t.Any,  # absorbs `init=` et al. from overloads (only for type checkers)
-) -> ParsedType:
+) -> FieldType:
     """
     Helper method for "DataclassStruct" and "DataclassBitStruct" to create the dataclass fields.
 
-    This method also processes Const and Default, to pass these values als default values to the dataclass.
-    However, to have proper Pyright support for Default, use `csdefault()` instead.
+    This method also processes Const and Default, to pass these values as default values to the dataclass.
+    However, to have proper Pyright support for Default, use `csdefault_field()` instead.
 
     When using any fields _without_ default *after* a Default field, these must be marked as `kw_only` and be
     passed "by keyword" to the construct's ctor. Otherwise, Pyright will condem your eternal soul to an
@@ -150,7 +154,7 @@ def csfield(
             default = default_subcon.value
 
     return t.cast(
-        ParsedType,
+        FieldType,
         dataclasses.field(
             default=default,
             init=init,
@@ -161,11 +165,11 @@ def csfield(
 
 
 def csdefault_field(
-    subcon: Construct[ParsedType, t.Any],
-    default: t.Union[ParsedType, t.Callable[[Context], t.Any]],
+    subcon: Construct[FieldType, t.Any],
+    default: t.Union[FieldType, t.Callable[[Context], t.Any]],
     doc: t.Optional[str] = None,
     parsed: t.Optional[t.Callable[[t.Any, Context], None]] = None,
-) -> ParsedType:
+) -> FieldType:
     """
     Helper method for "DataclassStruct" and "DataclassBitStruct" to create the dataclass fields.
 
@@ -173,6 +177,7 @@ def csdefault_field(
     """
     cs_default = cs.Default(subcon, default)
 
+    subcon_field: cs.Renamed[FieldType, t.Any | None] | cs.Default[FieldType, t.Any]
     if (doc is not None) or (parsed is not None):
         if doc is not None:
             doc = textwrap.dedent(doc).strip("\n")
@@ -184,7 +189,7 @@ def csdefault_field(
     dc_default: t.Any = None if callable(default) else default
 
     return t.cast(
-        ParsedType,
+        FieldType,
         dataclasses.field(
             default=dc_default,
             init=True,

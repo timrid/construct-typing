@@ -18,8 +18,8 @@ def test_dataclass_const_default() -> None:
         const_bytes: bytes = csfield(cs.Const(b"BMP"))
         const_int: int = csfield(cs.Const(5, cs.Int8ub))
         default_int: int = csdefault_field(cs.Int8ub, 8)
-        default_lambda: t.Optional[bytes] = csdefault_field(cs.Bytes(cs.this.default_int), lambda ctx: bytes(ctx.default_int))
-        computed: t.Optional[bytes] = csfield(cs.Computed(lambda ctx: bytes(i + 49 for i in range(ctx.default_int))))
+        default_lambda: bytes = csdefault_field(cs.Bytes(cs.this.default_int), lambda ctx: bytes(ctx.default_int))
+        computed: bytes = csfield(cs.Computed(lambda ctx: bytes(i + 49 for i in range(ctx.default_int))))
         # Construct allows to put non-default values after Default. Dataclass and Pyright don't like that too much. It is necessary to
         # specify the field `kw_only` and pass it "by keyword".
         normal_int: int = csfield(cs.Int8ub, kw_only=True)
@@ -59,8 +59,8 @@ def test_dataclass_const_default() -> None:
 def test_dataclass_padded() -> None:
     @dataclasses.dataclass
     class PaddingTest(DataclassMixin):
-        padding: t.Optional[bytes] = csfield(cs.Padding(1))
-        padded_pass: t.Optional[bytes] = csfield(cs.Padded(2, cs.Pass))
+        padding: None = csfield(cs.Padding(1))
+        padded_pass: None = csfield(cs.Padded(2, cs.Pass))
         padded_bytes: bytes = csfield(cs.Padded(7, cs.Bytes(5)))
         padded_string: str = csfield(cs.PaddedString(4, "utf-8"))
 
@@ -208,7 +208,7 @@ def test_dataclass_struct_computed_field() -> None:
     class Image(DataclassMixin):
         width: int = csfield(cs.Int8ub)
         height: int = csfield(cs.Int8ub)
-        size: bytes = csfield(cs.Computed(lambda ctx: ctx.width * ctx.height))
+        size: int = csfield(cs.Computed(lambda ctx: ctx.width * ctx.height))
 
     common(
         DataclassStruct(Image),
