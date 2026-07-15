@@ -142,9 +142,9 @@ def test_formatfield_floats_randomized() -> None:
 
 def test_formatfield_bool_issue_901() -> None:
 	d = FormatField(">","?")
-	assert d.parse(b"\x01") == True
-	assert d.parse(b"\xff") == True
-	assert d.parse(b"\x00") == False
+	assert d.parse(b"\x01") is True
+	assert d.parse(b"\xff") is True
+	assert d.parse(b"\x00") is False
 	assert d.build(True) == b"\x01"
 	assert d.build(False) == b"\x00"
 	assert d.sizeof() == 1
@@ -290,7 +290,7 @@ def test_flag() -> None:
     d = Flag
     common(d, b"\x00", False, 1)
     common(d, b"\x01", True, 1)
-    assert d.parse(b"\xff") == True
+    assert d.parse(b"\xff") is True
 
 def test_enum() -> None:
     d = Enum(Byte, one=1, two=2, four=4, eight=8)
@@ -307,7 +307,7 @@ def test_enum() -> None:
     assert d.one == "one"
     assert int(d.one) == 1
     assert raises(d.build, "unknown") == MappingError
-    assert raises(lambda: d.missing) == AttributeError
+    assert raises(lambda: d.missing) is AttributeError
 
 def test_enum_enum34() -> None:
     import enum
@@ -351,7 +351,7 @@ def test_enum_issue_298() -> None:
     # Flag is not affected by same bug
     d = Struct(
         "flag" / Flag,
-        Check(lambda ctx: ctx.flag == True),
+        Check(lambda ctx: ctx.flag is True),
     )
     common(d, b"\x01", dict(flag=True), 1)
 
@@ -386,7 +386,7 @@ def test_flagsenum() -> None:
     assert raises(d.build, "unknown") == MappingError
     assert d.one == "one"
     assert d.one|d.two == "one|two"
-    assert raises(lambda: d.missing) == AttributeError
+    assert raises(lambda: d.missing) is AttributeError
 
 def test_flagsenum_enum34() -> None:
     import enum
@@ -420,8 +420,8 @@ def test_struct() -> None:
     common(Struct("a"/Int16ub, "b"/Int8ub), b"\x00\x01\x02", Container(a=1,b=2), 3)
     common(Struct("a"/Struct("b"/Byte)), b"\x01", Container(a=Container(b=1)), 1)
     common(Struct(Const(b"\x00"), Padding(1), Pass, Terminated), bytes(2), {}, SizeofError)
-    assert raises(Struct("missingkey"/Byte).build, {}) == KeyError
-    assert raises(Struct(Bytes(this.missing)).sizeof) == SizeofError
+    assert raises(Struct("missingkey"/Byte).build, {}) is KeyError
+    assert raises(Struct(Bytes(this.missing)).sizeof) is SizeofError
     d = Struct(Computed(7), Const(b"JPEG"), Pass, Terminated)
     assert d.build(None) == d.build({})
 
@@ -533,8 +533,8 @@ def test_computed() -> None:
     common(Computed(lambda ctx: 255), b"", 255, 0)  # type: ignore
     assert Computed(255).build(None) == b""
     assert Struct(Computed(255)).build({}) == b""
-    assert raises(Computed(this.missing).parse, b"") == KeyError
-    assert raises(Computed(this["missing"]).parse, b"") == KeyError
+    assert raises(Computed(this.missing).parse, b"") is KeyError
+    assert raises(Computed(this["missing"]).parse, b"") is KeyError
 
 def test_index() -> None:
     d1 = Array(3, Bytes(this._index+1))
@@ -631,12 +631,12 @@ def test_focusedseq() -> None:
     common(FocusedSeq(this._.s, Const(b"MZ"), "num"/Byte, Terminated), b"MZ\xff", 255, SizeofError, s="num")
 
     d = FocusedSeq("missing", Pass)
-    assert raises(d.parse, b"") == UnboundLocalError
-    assert raises(d.build, {}) == UnboundLocalError
+    assert raises(d.parse, b"") is UnboundLocalError
+    assert raises(d.build, {}) is UnboundLocalError
     assert raises(d.sizeof) == 0
     d = FocusedSeq(this.missing, Pass)
-    assert raises(d.parse, b"") == KeyError
-    assert raises(d.build, {}) == KeyError
+    assert raises(d.parse, b"") is KeyError
+    assert raises(d.build, {}) is KeyError
     assert raises(d.sizeof) == 0
 
 def test_pickled() -> None:
@@ -740,11 +740,11 @@ def test_hexdump_regression_issue_188() -> None:
 def test_union() -> None:
     d = Union(None, "a"/Bytes(2), "b"/Int16ub)
     assert d.parse(b"\x01\x02") == Container(a=b"\x01\x02", b=0x0102)
-    assert raises(Union(123, Pass).parse, b"") == KeyError
-    assert raises(Union("missing", Pass).parse, b"") == KeyError
+    assert raises(Union(123, Pass).parse, b"") is KeyError
+    assert raises(Union("missing", Pass).parse, b"") is KeyError
     assert d.build(dict(a=b"zz"))  == b"zz"
     assert d.build(dict(b=0x0102)) == b"\x01\x02"
-    assert raises(d.build, {}) == UnionError
+    assert raises(d.build, {}) is UnionError
 
     d = Union(None, "a"/Bytes(2), "b"/Int16ub, Pass)
     assert d.build({}) == b""
@@ -794,8 +794,8 @@ def test_optional() -> None:
     d = Optional(Int32ul)
     assert d.parse(b"\x01\x00\x00\x00") == 1
     assert d.build(1) == b"\x01\x00\x00\x00"
-    assert d.parse(b"???") == None
-    assert d.parse(b"") == None
+    assert d.parse(b"???") is None
+    assert d.parse(b"") is None
     assert d.build(None) == b""
     assert raises(d.sizeof) == SizeofError
 
@@ -843,7 +843,7 @@ def test_switch() -> None:
     d = Switch(this.x, {1:Int8ub, 2:Int16ub, 4:Int32ub})
     common(d, b"\x01", 0x01, 1, x=1)
     common(d, b"\x01\x02", 0x0102, 2, x=2)
-    assert d.parse(b"", x=255) == None
+    assert d.parse(b"", x=255) is None
     assert d.build(None, x=255) == b""
     assert raises(d.sizeof) == SizeofError
     assert raises(d.sizeof, x=1) == 1
@@ -932,7 +932,7 @@ def test_pointer() -> None:
 def test_peek() -> None:
     d1 = Peek(Int8ub)
     assert d1.parse(b"\x01") == 1
-    assert d1.parse(b"") == None
+    assert d1.parse(b"") is None
     assert d1.build(1) == b""
     assert d1.build(None) == b""
     assert d1.sizeof() == 0
