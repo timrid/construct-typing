@@ -28,9 +28,6 @@ def test_dataclass_const_default() -> None:
     format = DataclassStruct(ConstDefaultTest)
 
     a = ConstDefaultTest(
-        # const_bytes=b"",  # adding this should trigger Pyright error (reportCallIssue)
-        # const_int=0,  # adding this should trigger Pyright error (reportCallIssue)
-        # computed=bytes(),  # adding this should trigger Pyright error (reportCallIssue)
         normal_int=7,
     )
     assert a.const_bytes == b"BMP"
@@ -59,19 +56,14 @@ def test_dataclass_const_default() -> None:
 def test_dataclass_padded() -> None:
     @dataclasses.dataclass
     class PaddingTest(DataclassMixin):
-        padding: None = csfield(cs.Padding(1))
-        padded_pass: None = csfield(cs.Padded(2, cs.Pass))
+        padding: t.Optional[bytes] = csfield(cs.Padding(1))
+        padded_pass: t.Optional[bytes] = csfield(cs.Padded(2, cs.Pass))
         padded_bytes: bytes = csfield(cs.Padded(7, cs.Bytes(5)))
         padded_string: str = csfield(cs.PaddedString(4, "utf-8"))
 
     format = DataclassStruct(PaddingTest)
 
-    a = PaddingTest(
-        # padding=b"\x00",  # adding this should trigger Pyright error (reportCallIssue)
-        # padded_pass=None,  # adding this should trigger Pyright error (reportCallIssue)
-        padded_bytes=b"12345",  # removing this should trigger Pyright error (reportCallIssue)
-        padded_string="abc",  # removing this should trigger Pyright error (reportCallIssue)
-    )
+    a = PaddingTest(padded_bytes=b"12345", padded_string="abc")
     assert a.padding is None
     assert a.padded_pass is None
     assert a.padded_bytes == b"12345"
@@ -447,10 +439,6 @@ def test_tenum_no_enumbase() -> None:
 
 def test_tenum_asdict() -> None:
     # see: https://github.com/timrid/construct-typing/issues/21
-    import dataclasses
-
-    import construct_typed as cst
-
     class TestEnum(cst.EnumBase):
         one = 1
         two = 2
@@ -561,10 +549,6 @@ def test_tenum_flags() -> None:
 
 
 def test_tenum_flags_asdict() -> None:
-    import dataclasses
-
-    import construct_typed as cst
-
     class TestEnum(cst.FlagsEnumBase):
         one = 1
         two = 2

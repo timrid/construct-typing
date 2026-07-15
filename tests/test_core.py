@@ -141,13 +141,13 @@ def test_formatfield_floats_randomized() -> None:
                 assert d.build(d.parse(b)) == b
 
 def test_formatfield_bool_issue_901() -> None:
-	d = FormatField(">","?")
-	assert d.parse(b"\x01") is True
-	assert d.parse(b"\xff") is True
-	assert d.parse(b"\x00") is False
-	assert d.build(True) == b"\x01"
-	assert d.build(False) == b"\x00"
-	assert d.sizeof() == 1
+    d = FormatField(">","?")
+    assert d.parse(b"\x01") is True
+    assert d.parse(b"\xff") is True
+    assert d.parse(b"\x00") is False
+    assert d.build(True) == b"\x01"
+    assert d.build(False) == b"\x00"
+    assert d.sizeof() == 1
 
 def test_bytesinteger() -> None:
     d = BytesInteger(0)

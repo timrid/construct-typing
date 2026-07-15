@@ -93,7 +93,7 @@ strict = true
 warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
-module = "tests.test_typed"
+module = ["tests.test_typed", "tests.test_typed_pyright"]
 disable_error_code = ["call-arg", "arg-type"]
 
 [tool.pyright]
