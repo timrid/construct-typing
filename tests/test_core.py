@@ -541,14 +541,14 @@ def test_index() -> None:
     common(d1, b"abbccc", [b"a", b"bb", b"ccc"])
     d2 = GreedyRange(Bytes(this._index+1))
     common(d2, b"abbccc", [b"a", b"bb", b"ccc"])
-    d3 = RepeatUntil(lambda o,l,ctx: ctx._index == 2, Bytes(this._index+1))
+    d3 = RepeatUntil(lambda o, lst, ctx: ctx._index == 2, Bytes(this._index+1))
     common(d3, b"abbccc", [b"a", b"bb", b"ccc"])
 
     d4 = Array(3, Struct("i" / Index))
     common(d4, b"", [Container(i=0),Container(i=1),Container(i=2)], 0)
     d5 = GreedyRange(Struct("i" / Index, "d" / Bytes(this.i+1)))
     common(d5, b"abbccc", [Container(i=0,d=b"a"),Container(i=1,d=b"bb"),Container(i=2,d=b"ccc")])
-    d6 = RepeatUntil(lambda o,l,ctx: ctx._index == 2, Index)
+    d6 = RepeatUntil(lambda o, lst, ctx: ctx._index == 2, Index)
     common(d6, b"", [0,1,2])
 
 def test_rebuild() -> None:
