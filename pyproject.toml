@@ -5,7 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "construct-typing"
 version = "0.8.0"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 description="Extension for the python package 'construct' that adds typing features"
 readme = "README.md"
 authors = [{ name = "Tim Riddermann" }]
