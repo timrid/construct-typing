@@ -1,5 +1,9 @@
 # Changelog
 
+## [UNRELEASED]
+**New features:**
+- Added `Subconstruct`, `SymmetricAdapter`, `Tunnel` and `Validator` to `construct_typed` as subscriptable types.
+
 ## [0.8.0] - 2026-07-20
 **Breaking changes:**
 - `csfield` should only be used for constructs that cannot build from `None`. Every other construct should use the new `csfield_noinit`, `csfield_const` or `csfield_default`.
