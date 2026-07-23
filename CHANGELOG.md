@@ -1,8 +1,9 @@
 # Changelog
 
-## [UNRELEASED]
+## [0.8.1] - 2026-07-23
 **New features:**
 - Added `Subconstruct`, `SymmetricAdapter`, `Tunnel` and `Validator` to `construct_typed` as subscriptable types.
+
 
 ## [0.8.0] - 2026-07-20
 **Breaking changes:**
