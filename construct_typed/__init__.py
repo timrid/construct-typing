@@ -21,6 +21,10 @@ from .generic_wrapper import (
     Context,
     ListContainer,
     PathType,
+    Subconstruct,
+    SymmetricAdapter,
+    Tunnel,
+    Validator,
 )
 from .tenum import EnumBase, EnumValue, FlagsEnumBase, TEnum, TFlagsEnum
 
@@ -43,6 +47,7 @@ __all__ = [
     "FlagsEnumBase",
     "TEnum",
     "TFlagsEnum",
+    "Subconstruct",
     "Adapter",
     "ConstantOrContextLambda",
     "Construct",
@@ -50,4 +55,7 @@ __all__ = [
     "ListContainer",
     "PathType",
     "Array",
+    "SymmetricAdapter",
+    "Tunnel",
+    "Validator",
 ]

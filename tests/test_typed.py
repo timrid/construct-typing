@@ -203,9 +203,7 @@ def test_dataclass_ifthenelse() -> None:
     @dataclasses.dataclass
     class IfThenElseTest(DataclassMixin):
         test_if: int | None = csfield(cs.If(False, cs.Int8ub))
-        test_ifthenelse: int | None = csfield(
-            cs.IfThenElse(True, cs.Int8ub, cs.Pass)
-        )
+        test_ifthenelse: int | None = csfield(cs.IfThenElse(True, cs.Int8ub, cs.Pass))
 
     a = IfThenElseTest(test_if=None, test_ifthenelse=None)
     assert a.test_if is None
@@ -745,3 +743,115 @@ def test_tenum_flags_docstring() -> None:
     assert TestEnum.Value_NoDoc.__doc__ == ""
     assert TestEnum.Value_NoDoc2.__doc__ == ""
     assert TestEnum(8).__doc__ == "missing value"
+
+
+def test_construct_subscriptable() -> None:
+    """Construct has to be subscriptable at runtime."""
+
+    class MyByte(cst.Construct[int, int]):
+        def _parse(
+            self, stream: t.IO[bytes], context: cst.Context, path: cst.PathType
+        ) -> int:
+            return cs.stream_read(stream, 1, path)[0]
+
+        def _build(
+            self,
+            obj: int,
+            stream: t.IO[bytes],
+            context: cst.Context,
+            path: cst.PathType,
+        ) -> int:
+            cs.stream_write(stream, bytes([obj]), 1, path)
+            return obj
+
+        def _sizeof(self, context: cst.Context, path: cst.PathType) -> int:
+            return 1
+
+    fmt = MyByte()
+    assert fmt.parse(b"\x05") == 5
+    assert fmt.build(5) == b"\x05"
+    assert fmt.sizeof() == 1
+
+
+def test_subconstruct_subscriptable() -> None:
+    """Subconstruct has to be subscriptable at runtime."""
+
+    class MyPaddedBytes(cst.Subconstruct[bytes, bytes, bytes, bytes]):
+        def __init__(self) -> None:
+            pass
+
+    fmt = MyPaddedBytes()
+    assert fmt is not None
+
+
+def test_adapter_subscriptable() -> None:
+    """Adapter has to be subscriptable at runtime."""
+
+    class IpAddressAdapter(cst.Adapter[cst.ListContainer[int], list[int], str, str]):
+        def _encode(
+            self, obj: str, context: cst.Context, path: cst.PathType
+        ) -> list[int]:
+            return list(map(int, obj.split(".")))
+
+        def _decode(
+            self, obj: list[int], context: cst.Context, path: cst.PathType
+        ) -> str:
+            return "{0}.{1}.{2}.{3}".format(*obj)
+
+    IpAddress2 = IpAddressAdapter(cs.Byte[4])
+
+    assert IpAddress2.parse(b"\x7f\x80\x81\x82") == "127.128.129.130"
+    assert IpAddress2.build("127.1.2.3") == b"\x7f\x01\x02\x03"
+    assert IpAddress2.sizeof() == 4
+
+
+def test_symmetric_adapter_subscriptable() -> None:
+    """SymmetricAdapter has to be subscriptable at runtime."""
+
+    T = t.TypeVar("T")
+
+    class ReversedList(cst.SymmetricAdapter[list[T], list[T], list[T], list[T]]):
+        def _decode(
+            self, obj: list[T], context: cst.Context, path: cst.PathType
+        ) -> list[T]:
+            return list(reversed(obj))
+
+    assert ReversedList(cs.Array(4, cs.Byte)).build([1, 2, 3, 4]) == b"\x04\x03\x02\x01"
+    assert ReversedList(cs.Array(4, cs.Byte)).parse(b"\x01\x02\x03\x04") == [4, 3, 2, 1]
+
+
+def test_validator_subscriptable() -> None:
+    """Validator has to be subscriptable at runtime."""
+
+    class OneOf(cst.Validator[int, int]):
+        def _validate(
+            self, obj: int, context: cst.Context, path: cst.PathType
+        ) -> bool:
+            return obj in (1, 2, 3)
+
+    fmt = OneOf(cs.Byte)
+
+    assert fmt.parse(b"\x01") == 1
+    assert fmt.build(2) == b"\x02"
+    assert raises(fmt.build, 4) is cs.ValidationError
+    assert raises(fmt.parse, b"\x04") is cs.ValidationError
+
+
+def test_tunnel_subscriptable() -> None:
+    """Tunnel has to be subscriptable at runtime."""
+
+    class ROT1(cst.Tunnel[bytes, bytes]):
+        def _decode(
+            self, data: bytes, context: cst.Context, path: cst.PathType
+        ) -> bytes:
+            return bytes((b - 1) % 256 for b in data)
+
+        def _encode(
+            self, data: bytes, context: cst.Context, path: cst.PathType
+        ) -> bytes:
+            return bytes((b + 1) % 256 for b in data)
+
+    fmt = ROT1(cs.GreedyBytes)
+
+    assert fmt.parse(b"\x02\x03\x04") == b"\x01\x02\x03"
+    assert fmt.build(b"\x01\x02\x03") == b"\x02\x03\x04"
