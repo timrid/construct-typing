@@ -185,8 +185,8 @@ ValueType = t.TypeVar("ValueType")
 ConstantOrContextLambda = ValueType | t.Callable[[Context], t.Any]
 ConstantOrContextLambda2 = ValueType | t.Callable[[Context], ValueType]
 
-SubconParsedType = t.TypeVar("SubconParsedType", covariant=True)
-SubconBuildTypes = t.TypeVar("SubconBuildTypes", contravariant=True)
+SubconParsedType = t.TypeVar("SubconParsedType")
+SubconBuildTypes = t.TypeVar("SubconBuildTypes")
 
 class Subconstruct(
     t.Generic[SubconParsedType, SubconBuildTypes, ParsedType, BuildTypes],
@@ -498,11 +498,11 @@ class Sequence(Construct[ListContainer[t.Any], t.List[t.Any] | None]):
 # arrays ranges and repeaters
 # ===============================================================================
 class Array(
-    Subconstruct[  # ty: ignore[invalid-generic-class]
+    Subconstruct[
         SubconParsedType,
         SubconBuildTypes,
-        ListContainer[SubconParsedType],  # type: ignore
-        t.List[SubconBuildTypes],  # type: ignore
+        ListContainer[SubconParsedType],
+        t.List[SubconBuildTypes],
     ]
 ):
     count: ConstantOrContextLambda[int]
@@ -515,11 +515,11 @@ class Array(
     ) -> None: ...
 
 class GreedyRange(
-    Subconstruct[  # ty: ignore[invalid-generic-class]
+    Subconstruct[
         SubconParsedType,
         SubconBuildTypes,
-        ListContainer[SubconParsedType],  # type: ignore
-        t.List[SubconBuildTypes],  # type: ignore
+        ListContainer[SubconParsedType],
+        t.List[SubconBuildTypes],
     ]
 ):
     discard: bool
@@ -530,11 +530,11 @@ class GreedyRange(
     ) -> None: ...
 
 class RepeatUntil(
-    Subconstruct[  # ty: ignore[invalid-generic-class]
+    Subconstruct[
         SubconParsedType,
         SubconBuildTypes,
-        ListContainer[SubconParsedType],  # type: ignore
-        t.List[SubconBuildTypes],  # type: ignore
+        ListContainer[SubconParsedType],
+        t.List[SubconBuildTypes],
     ]
 ):
     predicate: bool | t.Callable[[SubconParsedType, ListContainer[SubconParsedType], Context], bool]
@@ -948,7 +948,7 @@ class RawCopyObj(t.Generic[ParsedType], Container[t.Any]):
     length: int
 
 class RawCopy(
-    Subconstruct[  # ty: ignore[invalid-generic-class]
+    Subconstruct[
         SubconParsedType,
         SubconBuildTypes,
         RawCopyObj[SubconParsedType],
@@ -1154,7 +1154,7 @@ class EncryptedSymAead(Tunnel[SubconParsedType, SubconBuildTypes]):
 # lazy equivalents
 # ===============================================================================
 class Lazy(
-    Subconstruct[  # ty: ignore[invalid-generic-class]
+    Subconstruct[
         SubconParsedType,
         SubconBuildTypes,
         t.Callable[[], SubconParsedType],
@@ -1187,11 +1187,11 @@ class LazyStruct(Construct[LazyContainer[t.Any], t.Dict[str, t.Any] | None]):
 class LazyListContainer(t.List[ListType]): ...
 
 class LazyArray(
-    Subconstruct[  # ty: ignore[invalid-generic-class]
+    Subconstruct[
         SubconParsedType,
         SubconBuildTypes,
-        ListContainer[SubconParsedType],  # type: ignore
-        t.List[SubconBuildTypes],  # type: ignore
+        ListContainer[SubconParsedType],
+        t.List[SubconBuildTypes],
     ]
 ):
     count: ConstantOrContextLambda[int]
@@ -1251,11 +1251,11 @@ def Filter(
 ]: ...
 
 class Slicing(
-    Adapter[  # ty: ignore[invalid-generic-class]
+    Adapter[
         SubconParsedType,
         SubconBuildTypes,
-        ListContainer[SubconParsedType],  # type: ignore
-        t.List[SubconBuildTypes],  # type: ignore
+        ListContainer[SubconParsedType],
+        t.List[SubconBuildTypes],
     ]
 ):
     def __init__(

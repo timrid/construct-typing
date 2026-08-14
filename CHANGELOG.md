@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+**Fixes:**
+- Made `SubconParsedType` and `SubconBuildTypes` invariant.
+
 ## [0.8.1] - 2026-07-23
 **New features:**
 - Added `Subconstruct`, `SymmetricAdapter`, `Tunnel` and `Validator` to `construct_typed` as subscriptable types.
