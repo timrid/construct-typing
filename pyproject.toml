@@ -63,10 +63,10 @@ dev = [
     "pyright>=1.1.411",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
-    "ruff>=0.15.21",
-    "ty>=0.0.59",
+    "ruff>=0.16.3",
+    "ty>=0.0.73",
     "setuptools>=83.0.0",
-    "mypy>=2.3.0",
+    "mypy>=2.3.1",
     "cloudpickle",  # optional "extra" from construct that the user may or may not have installed
     "cryptography",  # optional "extra" from construct that the user may or may not have installed
     "lz4",  # optional "extra" from construct that the user may or may not have installed
@@ -86,6 +86,9 @@ packages=[
 ]
 
 [tool.uv]
+# Use a 1 week cooldown phase to prevent potential supply chain attacks.
+# See for example: https://blog.yossarian.net/2025/11/21/We-should-all-be-using-dependency-cooldowns
+exclude-newer = "1w"
 # mypy will only find the stubs from "construct-stubs" when using "compat" mode during development.
 config-settings = { editable_mode = "compat" }
 

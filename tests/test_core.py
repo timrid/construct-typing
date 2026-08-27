@@ -214,7 +214,10 @@ def test_bytes_issue_827() -> None:
 
 
 def test_bitwise() -> None:
-    common(Bitwise(Bytes(8)), b"\xff", b"\x01\x01\x01\x01\x01\x01\x01\x01", 1)
+    # There's a problem in `ty` (confirmed in 0.0.73) : inlining `bitwise` (ie. writing `common(Bitwise(Bytes(8)), ...)`) leads to:
+    # "error[no-matching-overload] No overload of function `common` matches arguments"
+    bitwise = Bitwise(Bytes(8))
+    common(bitwise, b"\xff", b"\x01\x01\x01\x01\x01\x01\x01\x01", 1)
     common(Bitwise(Array(8, Bit)), b"\xff", [1, 1, 1, 1, 1, 1, 1, 1], 1)
     common(Bitwise(Array(2, Nibble)), b"\xff", [15, 15], 1)
     common(Bitwise(Array(1, Octet)), b"\xff", [255], 1)
