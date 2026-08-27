@@ -1781,6 +1781,16 @@ def test_checksum_warnings_issue_841() -> None:
                 hashfunc: t.Callable[[bytes], BuildTypes],
                 bytesfunc: t.Callable[[Context], bytes],
             ) -> None: ...
+
+            def _parse(self, stream: t.IO[bytes], context: Context, path: str) -> ParsedType:
+                ...
+
+            def _build(self, obj: BuildTypes, stream: t.IO[bytes], context: Context, path: str) -> t.Any:
+                ...
+
+            def _sizeof(self, context: Context, path: str) -> int:
+                ...
+
     else:
         import binascii
 
