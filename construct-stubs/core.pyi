@@ -1,7 +1,6 @@
 import enum
 import io
 import os
-import sys
 import typing as t
 
 import arrow
@@ -15,10 +14,7 @@ from construct.lib import (
     ListContainer,
     RebufferedBytesIO,
 )
-from construct.lib.containers import (
-    ContainerType,
-    ListType,
-)
+from construct.lib.containers import ContainerType, ListType
 from cryptography.hazmat.primitives.ciphers import Cipher
 from cryptography.hazmat.primitives.ciphers.aead import AESCCM, AESGCM, ChaCha20Poly1305
 from cryptography.hazmat.primitives.ciphers.modes import Mode
@@ -273,42 +269,34 @@ def Bytewise(
 class FormatField(Construct[ParsedType, BuildTypes]):
     fmtstr: str
     length: int
-    if sys.version_info >= (3, 8):
-        ENDIANITY = t.Literal["=", "<", ">"] | str
-        FORMAT_INT = t.Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
-        FORMAT_FLOAT = t.Literal["f", "d", "e"]
-        FORMAT_BOOL = t.Literal["?"]
-        @t.overload
-        def __new__(
-            cls: "type[FormatField[int, int]]",
-            endianity: str,
-            format: FORMAT_INT,
-        ) -> FormatField[int, int]: ...
-        @t.overload
-        def __new__(
-            cls: "type[FormatField[float, float]]",
-            endianity: str,
-            format: FORMAT_FLOAT,
-        ) -> FormatField[float, float]: ...
-        @t.overload
-        def __new__(
-            cls: "type[FormatField[bool, bool]]",
-            endianity: str,
-            format: FORMAT_BOOL,
-        ) -> FormatField[bool, bool]: ...
-        @t.overload
-        def __new__(
-            cls: "type[FormatField[t.Any, t.Any]]",
-            endianity: str,
-            format: str,
-        ) -> FormatField[t.Any, t.Any]: ...
-
-    else:
-        def __new__(
-            cls: "type[FormatField[t.Any, t.Any]]",
-            endianity: str,
-            format: str,
-        ) -> FormatField[t.Any, t.Any]: ...
+    ENDIANITY = t.Literal["=", "<", ">"] | str
+    FORMAT_INT = t.Literal["B", "H", "L", "Q", "b", "h", "l", "q"]
+    FORMAT_FLOAT = t.Literal["f", "d", "e"]
+    FORMAT_BOOL = t.Literal["?"]
+    @t.overload
+    def __new__(
+        cls: "type[FormatField[int, int]]",
+        endianity: str,
+        format: FORMAT_INT,
+    ) -> FormatField[int, int]: ...
+    @t.overload
+    def __new__(
+        cls: "type[FormatField[float, float]]",
+        endianity: str,
+        format: FORMAT_FLOAT,
+    ) -> FormatField[float, float]: ...
+    @t.overload
+    def __new__(
+        cls: "type[FormatField[bool, bool]]",
+        endianity: str,
+        format: FORMAT_BOOL,
+    ) -> FormatField[bool, bool]: ...
+    @t.overload
+    def __new__(
+        cls: "type[FormatField[t.Any, t.Any]]",
+        endianity: str,
+        format: str,
+    ) -> FormatField[t.Any, t.Any]: ...
 
 class BytesInteger(Construct[int, int]):
     length: ConstantOrContextLambda[int]
@@ -396,13 +384,10 @@ ZigZag: Construct[int, int]
 possiblestringencodings: t.Dict[str, int]
 
 class StringEncoded(Construct[str, str]):
-    if sys.version_info >= (3, 8):
-        ENCODING_1 = t.Literal["ascii", "utf8", "utf_8", "u8"]
-        ENCODING_2 = t.Literal["utf16", "utf_16", "u16", "utf_16_be", "utf_16_le"]
-        ENCODING_4 = t.Literal["utf32", "utf_32", "u32", "utf_32_be", "utf_32_le"]
-        ENCODING = str | ENCODING_1 | ENCODING_2 | ENCODING_4
-    else:
-        ENCODING = str
+    ENCODING_1 = t.Literal["ascii", "utf8", "utf_8", "u8"]
+    ENCODING_2 = t.Literal["utf16", "utf_16", "u16", "utf_16_be", "utf_16_le"]
+    ENCODING_4 = t.Literal["utf32", "utf_32", "u32", "utf_32_be", "utf_32_le"]
+    ENCODING = str | ENCODING_1 | ENCODING_2 | ENCODING_4
     encoding: ENCODING
     def __init__(
         self,
@@ -671,10 +656,7 @@ class NamedTuple(
         subcon: Construct[SubconParsedType, SubconBuildTypes],
     ) -> None: ...
 
-if sys.version_info >= (3, 8):
-    MSDOS = t.Literal["msdos"]
-else:
-    MSDOS = str
+MSDOS = t.Literal["msdos"]
 
 class TimestampAdapter(
     Adapter[SubconParsedType, SubconBuildTypes, arrow.Arrow, arrow.Arrow]
@@ -921,10 +903,7 @@ class OffsettedEnd(
 
 class Seek(Construct[int, None]):
     at: ConstantOrContextLambda[int]
-    if sys.version_info >= (3, 8):
-        WHENCE = t.Literal[0, 1, 2]
-    else:
-        WHENCE = int
+    WHENCE = t.Literal[0, 1, 2]
     whence: ConstantOrContextLambda[WHENCE]
     def __init__(
         self,
